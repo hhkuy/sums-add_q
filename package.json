@@ -1,7 +1,7 @@
 {
-  "name": "quiz-manager-merged",
+  "name": "quiz-manager",
   "version": "1.0.0",
-  "description": "Same code, now with custom modals for alert and confirm, no logic changed",
+  "description": "Same code with custom modals for all messages, plus Save Topics green next to Add Topic",
   "scripts": {
     "start": "node server.js"
   },
