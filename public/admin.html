@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Converter + Subtopic Manager (No Alerts, No back-to-topics, Custom Q# Start)</title>
+  <title>Quiz Converter + Subtopic Manager + 3 additions</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5;
@@ -11,6 +11,7 @@
     .container {
       max-width:1200px; margin:0 auto; background:#fff; padding:20px;
       border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
     }
     h1 {
       text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px;
@@ -52,7 +53,20 @@
       border:1px solid #ccc; padding:8px; border-radius:4px; margin-bottom:5px;
     }
 
-    /* لإخفاء أي تنبيهات (alerts) أزلناها منطقياً */
+    /* الزر العائم الدائري */
+    #floatScrollBtn {
+      position: fixed;
+      width: 50px; height: 50px;
+      bottom: 30px; right: 30px;
+      background: #4a90e2; color: #fff;
+      border: none; border-radius: 50%;
+      text-align:center; font-size:24px; line-height:50px;
+      cursor: pointer;
+      z-index:999;
+    }
+    #floatScrollBtn:hover {
+      opacity:0.8;
+    }
   </style>
 </head>
 <body>
@@ -86,7 +100,6 @@
       <label>Prefix (optional):</label>
       <input type="text" id="prefixInput" placeholder="e.g. Dr. Ali -">
 
-      <!-- خانة لتحديد رقم السؤال الابتدائي -->
       <label>Start Question Number:</label>
       <input type="number" id="startQNumber" value="1" min="1" style="width:120px;">
 
@@ -96,9 +109,9 @@
       <button class="btn-orange" style="margin-top:5px;" onclick="addImageField()">Add Image Field</button>
       <div id="imageContainer" style="margin-top:10px;"></div>
 
-      <!-- زر Convert & Append + Save Questions على نفس السطر -->
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="convertAndAppend()">Convert & Append</button>
+        <!-- زر Save Questions على نفس السطر -->
         <button class="btn-green" onclick="saveSubtopic()">Save Questions</button>
       </div>
 
@@ -108,6 +121,9 @@
     </div>
   </div>
 
+  <!-- زر عائم للتنقل السريع بين أعلى/أسفل الصفحة -->
+  <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
+
 <script>
 let cachedTopics=[];
 let topicsSha=null;
@@ -116,19 +132,38 @@ let currentSubtopicPath=null;
 let currentSubtopicSha=null;
 let currentQuestions=[];
 
+// إضافة 1) الرسالة عند الحفظ
+function showSaveMessage() {
+  // بدلاً من alert (قد يكون user لا يريد alerts؟ لكنه ذكر إظهار رسالة)
+  // ننفذ سطر بسيط:
+  // يمكنك مثلاً إنشاء عنصر يظهر لفترة. أو نستعمل نافذة بسيطة:
+  alert("Operation completed."); 
+}
+
 // ==== Manage Topics ====
 async function loadTopics(){
   try {
     const r=await fetch('/api/topics');
     const j=await r.json();
-    if(!j.success) return; // لا نعرض أي alert
+    if(!j.success)return;
     cachedTopics=j.topics;
     topicsSha=j.sha;
     renderTopics();
     fillSubtopics();
-  } catch(err){
-    // لا alert
-  }
+  } catch(err){}
+}
+async function saveTopics(){
+  if(!topicsSha) return;
+  try{
+    const body={ topics:cachedTopics, sha:topicsSha };
+    await fetch('/api/topics',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    // عند النجاح نظهر الرسالة
+    showSaveMessage();
+  }catch(err){}
 }
 function renderTopics(){
   const list=document.getElementById('topicsList');
@@ -220,23 +255,10 @@ function renderTopics(){
     list.appendChild(div);
   });
 }
-
-async function saveTopics(){
-  if(!topicsSha) return;
-  try{
-    const body={ topics:cachedTopics, sha:topicsSha };
-    await fetch('/api/topics',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
-  }catch(err){}
-}
-
 function addTopic(){
   const nm=document.getElementById('newTopicName').value.trim();
   const ds=document.getElementById('newTopicDesc').value.trim();
-  if(!nm) return;
+  if(!nm)return;
   cachedTopics.push({
     topicName:nm,
     description:ds,
@@ -263,6 +285,7 @@ function fillSubtopics(){
     }
   });
 }
+
 async function loadSubtopic(){
   const sel=document.getElementById('subtopicSelect');
   if(!sel.value) return;
@@ -273,17 +296,22 @@ async function loadSubtopic(){
     if(!j.success)return;
     currentSubtopicSha=j.sha;
     currentQuestions=j.content;
-    renderSubtopicQuestions();
+    renderSubtopicQuestions(); // مع الترقيم التلقائي
   }catch(err){}
 }
+
+// 2) إضافة ترقيم تصاعدي عند عرض الأسئلة
 function renderSubtopicQuestions(){
   const box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
-  currentQuestions.forEach((q, idx)=>{
+  for(let i=0; i<currentQuestions.length; i++){
+    const q = currentQuestions[i];
     const div=document.createElement('div');
     div.classList.add('q-item');
-    // عرض كامل محتوى السؤال (HTML)
-    div.innerHTML = q.question ? q.question : 'No question text';
+    // الترقيم يبدأ من 1
+    let numbering = (i+1)+". "; 
+    // عرض محتوى السؤال كاملاً
+    div.innerHTML = numbering + (q.question ? q.question : 'No question text');
     // زر حذف فردي
     const del=document.createElement('button');
     del.textContent='Delete';
@@ -291,16 +319,17 @@ function renderSubtopicQuestions(){
     del.style.marginLeft='5px';
     del.onclick=()=>{
       if(confirm('Delete this question?')){
-        currentQuestions.splice(idx,1);
+        currentQuestions.splice(i,1);
         renderSubtopicQuestions();
       }
     };
     div.appendChild(del);
     box.appendChild(div);
-  });
+  }
 }
+
 async function saveSubtopic(){
-  if(!currentSubtopicPath) return;
+  if(!currentSubtopicPath)return;
   try{
     const body={ path:currentSubtopicPath, content:currentQuestions, sha: currentSubtopicSha };
     await fetch('/api/update-subtopic-file',{
@@ -308,10 +337,12 @@ async function saveSubtopic(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
+    // إظهار رسالة النجاح
+    showSaveMessage();
   } catch(err){}
 }
 
-// ==== Add new questions, custom numbering ====
+// ==== Add new questions with images (same code) ====
 function addImageField(){
   const container=document.getElementById('imageContainer');
   const row=document.createElement('div');
@@ -344,8 +375,9 @@ function addImageField(){
   row.appendChild(prog);
   container.appendChild(row);
 }
+
 async function convertAndAppend(){
-  if(!currentSubtopicPath) return;
+  if(!currentSubtopicPath)return;
   let prefix=document.getElementById('prefixInput').value.trim();
   let startNumber = parseInt(document.getElementById('startQNumber').value,10);
   if(isNaN(startNumber) || startNumber<1) startNumber=1;
@@ -353,7 +385,7 @@ async function convertAndAppend(){
   let text=document.getElementById('questionsText').value.trim();
   if(!text) return;
 
-  // حاول parse JSON
+  // جرّب parse JSON
   let arr=null;
   try {
     if(text.startsWith('let quizData =')){
@@ -362,26 +394,22 @@ async function convertAndAppend(){
     }
     arr=JSON.parse(text);
     if(Array.isArray(arr)){
-      // ادمج الصور
       await handleImagesAndBind(arr);
       currentQuestions=currentQuestions.concat(arr);
       renderSubtopicQuestions();
       return;
     }
-  } catch(e){
-    // تابع لصيغة نص
-  }
+  } catch(e){}
 
-  // صيغة نص
+  // تنسيق نص
   let lines=text.split('\n');
   let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
   let out=[];
   for(let i=0;i<lines.length;i++){
     let ln=lines[i].trim();
-    // نتجاهل الرقم في بداية السطر (^\d+\.\s+) ونستخدم startNumber بدلاً منه
+    // تجاهل الرقم من النص، استخدم startNumber
     let qM=ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
-      // لو لدينا سؤال سابق
       if(questionText!==null){
         out.push({
           question:questionText,
@@ -389,7 +417,6 @@ async function convertAndAppend(){
           userAnswer:null
         });
       }
-      // بناء السؤال بالرقم المخصص
       questionText=`<span style='color: darkred; font-weight:bold;'>${prefix? prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
       startNumber++;
       options=[]; ansIdx=-1; ansText=null; explanation=null;
@@ -418,7 +445,6 @@ async function convertAndAppend(){
       userAnswer:null
     });
   }
-  // رفع الصور
   await handleImagesAndBind(out);
   currentQuestions=currentQuestions.concat(out);
   renderSubtopicQuestions();
@@ -438,7 +464,6 @@ async function handleImagesAndBind(questionsArr){
       const pbar=prog.querySelector('.progress-bar');
       let url=await uploadImageToImgHippo(file, prog, pbar);
       if(url){
-        // ابحث عن السؤال المطابق qNum
         for(let q of questionsArr){
           let match=q.question.match(/Question\s+(\d+)/);
           if(match){
@@ -454,20 +479,16 @@ async function handleImagesAndBind(questionsArr){
   }
 }
 
-// الدالة الجديدة لاستدعاء imghippo بنفس الكود
+// الدالة نفسها
 function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
   return new Promise((resolve) => {
     if (!file) {
       return resolve("");
     }
 
-    if (progressBarContainer) {
-      progressBarContainer.style.display = "block";
-    }
-    if (progressBar) {
-      progressBar.style.width = "0%";
-      progressBar.textContent = "0%";
-    }
+    progressBarContainer.style.display = "block";
+    progressBar.style.width = "0%";
+    progressBar.textContent = "0%";
 
     let formData = new FormData();
     formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c"); 
@@ -480,11 +501,8 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
     xhr.upload.onprogress = function(event) {
       if (event.lengthComputable) {
         const percentComplete = Math.floor((event.loaded / event.total) * 100);
-        if (progressBar) {
-          progressBar.style.width = percentComplete + "%";
-          progressBar.setAttribute("aria-valuenow", percentComplete);
-          progressBar.textContent = percentComplete + "%";
-        }
+        progressBar.style.width = percentComplete + "%";
+        progressBar.textContent = percentComplete + "%";
       }
     };
 
@@ -493,36 +511,26 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
         try {
           const response = JSON.parse(xhr.responseText);
           if (response.success && response.data && response.data.url) {
-            if (progressBar) {
-              progressBar.style.width = "100%";
-              progressBar.textContent = "تم رفع الصورة";
-            }
+            progressBar.style.width = "100%";
+            progressBar.textContent = "تم رفع الصورة";
             return resolve(response.data.url);
           } else {
-            if (progressBar) {
-              progressBar.textContent = "فشل الرفع";
-            }
+            progressBar.textContent = "فشل الرفع";
             return resolve("");
           }
         } catch (error) {
-          if (progressBar) {
-            progressBar.textContent = "فشل الرفع";
-          }
+          progressBar.textContent = "فشل الرفع";
           return resolve("");
         }
       } else {
-        if (progressBar) {
-          progressBar.textContent = "فشل الرفع";
-        }
+        progressBar.textContent = "فشل الرفع";
         return resolve("");
       }
     };
 
     xhr.onerror = function() {
-      if (progressBar) {
-        progressBar.textContent = "فشل الرفع";
-      }
-      return resolve("");
+      progressBar.textContent = "فشل الرفع";
+      resolve("");
     };
 
     xhr.send(formData);
@@ -531,10 +539,10 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
 
 // حذف بالاعتماد على الكلام الغامق
 async function deleteByPrefix(){
-  if(!currentSubtopicPath) return;
+  if(!currentSubtopicPath)return;
   const p=document.getElementById('deletePrefix').value.trim();
-  if(!p) return;
-  if(!currentSubtopicSha && currentQuestions.length===0) return;
+  if(!p)return;
+  if(!currentSubtopicSha && currentQuestions.length===0)return;
   try{
     const body={ path: currentSubtopicPath, sha: currentSubtopicSha, prefix:p };
     await fetch('/api/delete-questions-by-prefix',{
@@ -546,6 +554,27 @@ async function deleteByPrefix(){
   }catch(err){}
 }
 
+/** 3) زر عائم للتنقل أعلى/أسفل الصفحة */
+let scrollState = false; // false=goDown, true=goUp
+function toggleScroll(){
+  if(!scrollState){
+    // اذهب للأسفل
+    window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
+    document.getElementById('floatScrollBtn').textContent='↑';
+    scrollState=true;
+  } else {
+    // اذهب للأعلى
+    window.scrollTo({ top: 0, behavior:'smooth' });
+    document.getElementById('floatScrollBtn').textContent='↓';
+    scrollState=false;
+  }
+}
+
+/** الرسالة عند حفظ (تمت إضافتها) */
+function showSaveMessage(){
+  // أضف أي طريقة لعرض "Operation completed."
+  alert("Operation completed.");
+}
 </script>
 </body>
 </html>
