@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Full Auto Quiz Converter</title>
     <style>
-        /* نفس ستايلات الكود الأصلي + تعديلات */
+        /* نفس تصميمك الأصلي مع تعديلات طفيفة */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -167,7 +167,7 @@
             }
         }
 
-        /* قسم إدارة الـtopics */
+        /* قسم إدارة الـtopics.json */
         #topicsSection {
             margin-top: 40px;
             background: #eef6fc;
@@ -186,14 +186,15 @@
         .subtopic-list li {
             margin: 4px 0;
         }
-        .btn-edit, .btn-del {
-            margin-left: 10px;
-            background-color: #ffc107;
-            color: #000;
-        }
         .btn-del {
             background-color: #dc3545;
             color: #fff;
+            margin-left: 5px;
+        }
+        .btn-edit {
+            background-color: #ffc107;
+            color: #000;
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -201,17 +202,18 @@
     <div class="container">
         <h1>Full Auto Quiz Converter</h1>
         <div class="instructions">
-            <p>Please enter your questions in the following format ...</p>
+            <p>Please enter your questions in this format:</p>
             <pre>
-1. ...
-A. ...
-B. ...
-C. ... ***
+1. Question text ...
+A. Option ...
+B. Option ...
+C. Option ... ***
 Explanation : any word
-*** => correct answer
+*** means correct answer
             </pre>
         </div>
 
+        <!-- quiz converter inputs -->
         <label for="prefixInput">Enter Prefix (optional):</label>
         <input type="text" id="prefixInput" placeholder="e.g. Dr. Smith -">
 
@@ -228,14 +230,15 @@ Explanation : any word
             <button id="clearButton" onclick="clearAll()">Clear All</button>
         </div>
 
+        <!-- output code -->
         <div id="outputSection">
             <h2>Generated Code:</h2>
             <pre id="outputCode">// Your converted quizData will appear here...</pre>
         </div>
 
-        <!-- قسم topics -->
+        <!-- ادارة topics.json -->
         <div id="topicsSection">
-            <h2>Manage topics.json (Auto)</h2>
+            <h2>Manage topics.json (Auto in data/)</h2>
             <button onclick="loadTopics()">Load topics.json</button>
             <button onclick="saveTopics()">Save topics.json</button>
             <div id="topicsResult" style="white-space:pre-wrap; background:#f9f9f9; padding:10px; margin-top:10px; border-radius:4px;"></div>
@@ -249,7 +252,9 @@ Explanation : any word
     </div>
 
     <script>
-        // ---- EXACT QUIZ CONVERTER CODE ---- (with slight modifications for /api/upload-image)
+        /* نفس الكود المذكور في الأجوبة السابقة */
+        // ... [كل ما في الاجابات السابقة (uploadImageToServer, collectImageData, convertToQuizData, copyToClipboard, clearAll)]
+
         function addImageField() {
             const container = document.getElementById('imageFieldsContainer');
             const row = document.createElement('div');
@@ -291,62 +296,62 @@ Explanation : any word
             return new Promise((resolve) => {
                 if (!file) return resolve("");
 
-                if (progressBarContainer) progressBarContainer.style.display = "block";
+                if (progressBarContainer) progressBarContainer.style.display="block";
                 if (progressBar) {
-                    progressBar.style.width = "0%";
-                    progressBar.textContent = "0%";
+                    progressBar.style.width="0%";
+                    progressBar.textContent="0%";
                 }
 
                 const xhr = new XMLHttpRequest();
                 xhr.open("POST", "/api/upload-image", true);
-                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.setRequestHeader("Content-Type","application/json");
 
-                xhr.upload.onprogress = function(e) {
+                xhr.upload.onprogress = function(e){
                     if (e.lengthComputable) {
                         let percent = Math.floor((e.loaded/e.total)*100);
                         if (progressBar) {
-                            progressBar.style.width = percent + "%";
-                            progressBar.textContent = percent + "%";
+                            progressBar.style.width=percent+"%";
+                            progressBar.textContent=percent+"%";
                         }
                     }
                 };
 
-                xhr.onload = function() {
-                    if (xhr.status === 200) {
+                xhr.onload = function(){
+                    if (xhr.status===200){
                         try {
                             const response = JSON.parse(xhr.responseText);
                             if (response.success && response.url) {
                                 if (progressBar) {
-                                    progressBar.style.width = "100%";
-                                    progressBar.textContent = "تم رفع الصورة";
+                                    progressBar.style.width="100%";
+                                    progressBar.textContent="تم رفع الصورة";
                                 }
                                 return resolve(response.url);
                             } else {
-                                if (progressBar) progressBar.textContent = "فشل الرفع";
+                                if(progressBar) progressBar.textContent="فشل الرفع";
                                 return resolve("");
                             }
-                        } catch(e) {
-                            if (progressBar) progressBar.textContent = "فشل الرفع";
+                        }catch(err){
+                            if(progressBar) progressBar.textContent="فشل الرفع";
                             return resolve("");
                         }
-                    } else {
-                        if (progressBar) progressBar.textContent = "فشل الرفع";
+                    }else{
+                        if(progressBar) progressBar.textContent="فشل الرفع";
                         resolve("");
                     }
                 };
 
-                xhr.onerror = function() {
-                    if (progressBar) progressBar.textContent = "فشل الرفع";
+                xhr.onerror=()=>{
+                    if(progressBar) progressBar.textContent="فشل الرفع";
                     resolve("");
                 };
 
-                // تحويل file ل base64
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const base64data = reader.result.split(",")[1];
+                // قراءة الملف Base64
+                const reader=new FileReader();
+                reader.onload=()=>{
+                    const base64data=reader.result.split(",")[1];
                     xhr.send(JSON.stringify({
-                        name: file.name,
-                        base64: base64data
+                        name:file.name,
+                        base64:base64data
                     }));
                 };
                 reader.readAsDataURL(file);
@@ -355,19 +360,19 @@ Explanation : any word
 
         async function collectImageData() {
             const rows = document.querySelectorAll('.image-field-row');
-            const data = {};
-            for (const row of rows) {
+            const data={};
+            for(const row of rows){
                 const inputs = row.querySelectorAll('input');
-                const qNum = parseInt(inputs[0].value, 10);
-                if (!qNum) continue;
+                const qNum = parseInt(inputs[0].value,10);
+                if(!qNum) continue;
                 const fileInput = inputs[1];
-                if (fileInput.files && fileInput.files.length>0) {
+                if(fileInput.files && fileInput.files.length>0){
                     const file = fileInput.files[0];
                     const progressContainer = row.querySelector('.progress');
-                    const progressBar = progressContainer.querySelector('.progress-bar');
-                    const url = await uploadImageToServer(file, progressContainer, progressBar);
-                    if (url) {
-                        if (!data[qNum]) data[qNum] = [];
+                    const progressBar= progressContainer.querySelector('.progress-bar');
+                    const url = await uploadImageToServer(file,progressContainer,progressBar);
+                    if(url){
+                        if(!data[qNum]) data[qNum]=[];
                         data[qNum].push(url);
                     }
                 }
@@ -375,233 +380,239 @@ Explanation : any word
             return data;
         }
 
-        async function convertToQuizData() {
-            const input = document.getElementById('inputText').value;
-            const prefix = document.getElementById('prefixInput').value.trim();
-            const lines = input.split('\n');
-            let questionText = null, options=[], correctAnswerIndex=null, answerText=null, explanation=null;
-            let output = [];
-
-            for (let i=0; i<lines.length; i++) {
-                let line = lines[i].trim();
-                let qMatch = line.match(/^(\d+)\.\s+(.*)/);
-                if (qMatch) {
-                    if (questionText!==null) {
+        async function convertToQuizData(){
+            const input=document.getElementById('inputText').value;
+            const prefix=document.getElementById('prefixInput').value.trim();
+            const lines=input.split('\n');
+            let questionText=null, options=[], correctAnswerIndex=null, answerText=null, explanation=null;
+            let output=[];
+            for(let i=0; i<lines.length; i++){
+                let line=lines[i].trim();
+                let qMatch=line.match(/^(\d+)\.\s+(.*)/);
+                if(qMatch){
+                    if(questionText!==null){
                         output.push({
-                            question: questionText,
+                            question:questionText,
                             options,
-                            answer: correctAnswerIndex,
+                            answer:correctAnswerIndex,
                             answerText,
                             explanation,
-                            userAnswer: null
+                            userAnswer:null
                         });
                     }
-                    let qNum = parseInt(qMatch[1],10);
-                    questionText = `<span style='color: darkred; font-weight: bold;'>${prefix? prefix+' ':''}Question ${qNum}</span> ${qMatch[2]}`;
-                    options = [];
+                    let qNum=parseInt(qMatch[1],10);
+                    questionText= `<span style='color: darkred; font-weight: bold;'>${prefix? prefix+' ':''}Question ${qNum}</span> ${qMatch[2]}`;
+                    options=[];
                     correctAnswerIndex=null;
                     answerText=null;
                     explanation=null;
                 } else {
-                    let optMatch = line.match(/^([A-F])\.\s+(.*)/i);
-                    if (optMatch) {
-                        let text = optMatch[2].trim();
-                        if (text.endsWith('***')) {
-                            text = text.slice(0, -3).trim();
-                            correctAnswerIndex = options.length;
-                            answerText = text;
+                    let opt=line.match(/^([A-F])\.\s+(.*)/i);
+                    if(opt){
+                        let txt=opt[2].trim();
+                        if(txt.endsWith('***')){
+                            txt=txt.slice(0,-3).trim();
+                            correctAnswerIndex=options.length;
+                            answerText=txt;
                         }
-                        options.push(text);
+                        options.push(txt);
                     } else {
-                        let expMatch = line.match(/^Explanation\s*:\s*(.*)/i);
-                        if (expMatch) {
-                            explanation = expMatch[1];
+                        let exp=line.match(/^Explanation\s*:\s*(.*)/i);
+                        if(exp){
+                            explanation=exp[1];
                         }
                     }
                 }
             }
-            if (questionText!==null) {
+            if(questionText!==null){
                 output.push({
-                    question: questionText,
+                    question:questionText,
                     options,
-                    answer: correctAnswerIndex,
+                    answer:correctAnswerIndex,
                     answerText,
                     explanation,
                     userAnswer:null
                 });
             }
-            const imageMap = await collectImageData();
-            output.forEach(obj => {
-                const qm = obj.question.match(/Question\s+(\d+)/);
-                if (qm) {
-                    const qn = parseInt(qm[1],10);
-                    if (imageMap[qn]) {
-                        imageMap[qn].forEach(url => {
-                            obj.question += `<br><img src='${url}' style='max-width: 100%; height:auto;'>`;
+            const imageMap=await collectImageData();
+            output.forEach(obj=>{
+                const qm=obj.question.match(/Question\s+(\d+)/);
+                if(qm){
+                    const qn=parseInt(qm[1],10);
+                    if(imageMap[qn]){
+                        imageMap[qn].forEach(url=>{
+                            obj.question+=`<br><img src='${url}' style='max-width: 100%; height:auto;'>`;
                         });
                     }
                 }
             });
-            const code = 'let quizData = ' + JSON.stringify(output, null,4) + ';';
-            document.getElementById('outputCode').textContent = code;
-            document.getElementById('copyButton').disabled = code.trim()==='';
+            const code='let quizData = '+JSON.stringify(output,null,4)+';';
+            document.getElementById('outputCode').textContent=code;
+            document.getElementById('copyButton').disabled=(code.trim()==='');
         }
 
-        function copyToClipboard() {
-            const code = document.getElementById('outputCode').textContent;
-            if (!code) return;
+        function copyToClipboard(){
+            const code=document.getElementById('outputCode').textContent;
+            if(!code)return;
             navigator.clipboard.writeText(code).then(()=>alert('Copied!'));
         }
 
-        function clearAll() {
-            if (confirm('Clear all?')) {
-                document.getElementById('prefixInput').value = '';
-                document.getElementById('inputText').value = '';
-                document.getElementById('outputCode').textContent = '// Your converted quizData will appear here...';
+        function clearAll(){
+            if(confirm('Clear all?')){
+                document.getElementById('prefixInput').value='';
+                document.getElementById('inputText').value='';
+                document.getElementById('outputCode').textContent='// Your converted quizData will appear here...';
                 document.getElementById('copyButton').disabled=true;
                 document.getElementById('imageFieldsContainer').innerHTML='';
             }
         }
 
-        // =========== Topics.json Management ===========
-        let cachedTopics = [];
-        let topicsSha = null;
+        // ---- إدارة topics.json تلقائيًا ----
+        let cachedTopics=[];
+        let topicsSha=null;
 
-        async function loadTopics() {
-            const resDiv = document.getElementById('topicsResult');
-            resDiv.textContent = 'Loading topics.json...';
+        async function loadTopics(){
+            const resDiv=document.getElementById('topicsResult');
+            resDiv.textContent='Loading topics.json...';
             try {
-                const res = await fetch('/api/topics');
-                const json = await res.json();
-                if (!json.success) {
-                    resDiv.textContent = 'Error: '+ json.error;
+                const res=await fetch('/api/topics');
+                const json=await res.json();
+                if(!json.success){
+                    resDiv.textContent='Error: '+json.error;
                     return;
                 }
-                cachedTopics = json.topics;
-                topicsSha = json.sha;
-                resDiv.textContent = 'Loaded topics.json. sha='+json.sha;
+                cachedTopics=json.topics;
+                topicsSha=json.sha;
+                resDiv.textContent='Loaded topics.json (sha='+json.sha+').';
                 renderTopicsUI();
-            } catch(err) {
-                resDiv.textContent = 'Error: '+ err;
+            } catch(err){
+                resDiv.textContent='Error: '+err;
             }
         }
-        function renderTopicsUI() {
-            const container = document.getElementById('topicsContainer');
-            container.innerHTML = '';
-            if (!Array.isArray(cachedTopics)) return;
-            cachedTopics.forEach((t, idx)=>{
-                const div = document.createElement('div');
+        function renderTopicsUI(){
+            const container=document.getElementById('topicsContainer');
+            container.innerHTML='';
+            if(!Array.isArray(cachedTopics))return;
+            cachedTopics.forEach((t,idx)=>{
+                const div=document.createElement('div');
                 div.classList.add('topic-item');
-                div.innerHTML = `<strong>${t.topicName}</strong> (subTopics: ${t.subTopics? t.subTopics.length:0})<br>${t.description || ''}`;
+                div.innerHTML=`
+                    <strong>${t.topicName}</strong> (subTopics: ${t.subTopics ? t.subTopics.length : 0})<br>
+                    ${t.description||''}
+                `;
                 // delete button
-                const delBtn = document.createElement('button');
+                const delBtn=document.createElement('button');
                 delBtn.textContent='Delete';
                 delBtn.classList.add('btn-del');
                 delBtn.onclick=()=>{
-                    if (confirm('Delete this topic?')) {
+                    if(confirm('Delete this topic?')){
                         cachedTopics.splice(idx,1);
                         renderTopicsUI();
                     }
                 };
                 div.appendChild(delBtn);
-
                 // edit button
-                const editBtn = document.createElement('button');
+                const editBtn=document.createElement('button');
                 editBtn.textContent='Edit';
                 editBtn.classList.add('btn-edit');
                 editBtn.onclick=()=>{
                     const newName=prompt('Topic name:', t.topicName);
-                    if (newName) t.topicName=newName;
-                    const newDesc=prompt('Topic desc:', t.description||'');
-                    if (newDesc!==null) t.description=newDesc;
+                    if(newName) t.topicName=newName;
+                    const newDesc=prompt('Topic description:', t.description||'');
+                    if(newDesc!==null) t.description=newDesc;
                     renderTopicsUI();
                 };
                 div.appendChild(editBtn);
 
-                // show subtopics
-                if (t.subTopics && t.subTopics.length>0) {
-                    const ul = document.createElement('ul');
+                // subtopics
+                if(t.subTopics && t.subTopics.length>0){
+                    const ul=document.createElement('ul');
                     ul.classList.add('subtopic-list');
                     t.subTopics.forEach((st, stidx)=>{
-                        const li = document.createElement('li');
+                        const li=document.createElement('li');
                         li.textContent=`${st.name} -> ${st.file}`;
-                        const stdel = document.createElement('button');
-                        stdel.textContent='X';
-                        stdel.classList.add('btn-del');
-                        stdel.style.marginLeft='10px';
-                        stdel.onclick=()=>{
-                            if (confirm('Delete this subtopic?')) {
+                        // delete
+                        const sdel=document.createElement('button');
+                        sdel.textContent='X';
+                        sdel.classList.add('btn-del');
+                        sdel.style.marginLeft='10px';
+                        sdel.onclick=()=>{
+                            if(confirm('Delete subtopic?')){
                                 t.subTopics.splice(stidx,1);
                                 renderTopicsUI();
                             }
                         };
-                        li.appendChild(stdel);
-                        // edit subtopic
-                        const stedit = document.createElement('button');
-                        stedit.textContent='Edit';
-                        stedit.classList.add('btn-edit');
-                        stedit.onclick=()=>{
+                        li.appendChild(sdel);
+                        // edit
+                        const sedit=document.createElement('button');
+                        sedit.textContent='Edit';
+                        sedit.classList.add('btn-edit');
+                        sedit.onclick=()=>{
                             const nn=prompt('Subtopic name:', st.name);
-                            if (nn) st.name=nn;
+                            if(nn) st.name=nn;
                             const nf=prompt('Subtopic file:', st.file);
                             if(nf) st.file=nf;
                             renderTopicsUI();
                         };
-                        li.appendChild(stedit);
+                        li.appendChild(sedit);
 
                         ul.appendChild(li);
                     });
                     div.appendChild(ul);
                 }
-                // add new subtopic
-                const stAddBtn = document.createElement('button');
-                stAddBtn.textContent='Add Subtopic';
-                stAddBtn.style.marginTop='5px';
-                stAddBtn.onclick=()=>{
+                // add subtopic
+                const addSt=document.createElement('button');
+                addSt.textContent='Add Subtopic';
+                addSt.style.marginTop='5px';
+                addSt.onclick=()=>{
                     const nm=prompt('Subtopic name?');
                     if(!nm)return;
-                    const fl=prompt('Subtopic file path?');
+                    const fl=prompt('Subtopic file path? (like data/cns_anatomy.json)');
                     if(!fl)return;
                     if(!t.subTopics) t.subTopics=[];
-                    t.subTopics.push({name:nm,file:fl});
+                    t.subTopics.push({name:nm, file:fl});
                     renderTopicsUI();
                 };
-                div.appendChild(stAddBtn);
+                div.appendChild(addSt);
 
                 container.appendChild(div);
             });
         }
-        async function saveTopics() {
+        async function saveTopics(){
             const resDiv=document.getElementById('topicsResult');
-            if (!topicsSha) {
+            if(!topicsSha){
                 resDiv.textContent='No loaded topics.json to save.';
                 return;
             }
             try {
-                const body={topics:cachedTopics, sha:topicsSha};
+                const body={ topics: cachedTopics, sha: topicsSha };
                 const res=await fetch('/api/topics',{
                     method:'POST',
-                    headers:{'Content-Type':'application/json'},
-                    body:JSON.stringify(body)
+                    headers:{ 'Content-Type':'application/json' },
+                    body: JSON.stringify(body)
                 });
                 const json=await res.json();
-                if(!json.success) {
-                    resDiv.textContent='Error: '+ json.error;
+                if(!json.success){
+                    resDiv.textContent='Error: '+json.error;
                     return;
                 }
                 resDiv.textContent='Saved topics.json. commit='+JSON.stringify(json.commit);
-            } catch(err) {
-                resDiv.textContent='Error: '+ err;
+            } catch(err){
+                resDiv.textContent='Error: '+err;
             }
         }
-        function addTopic() {
+        function addTopic(){
             const name=document.getElementById('newTopicName').value.trim();
             const desc=document.getElementById('newTopicDesc').value.trim();
-            if(!name) {
+            if(!name){
                 alert('Enter topic name');
                 return;
             }
-            cachedTopics.push({ topicName:name, description:desc, subTopics:[] });
+            cachedTopics.push({
+                topicName:name,
+                description:desc,
+                subTopics:[]
+            });
             document.getElementById('newTopicName').value='';
             document.getElementById('newTopicDesc').value='';
             renderTopicsUI();
