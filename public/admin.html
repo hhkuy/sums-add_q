@@ -2,15 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Manager with Custom Modals & Save Topics next to Add Topic</title>
+  <title>All Popups Custom + Reorder Topics & Subtopics</title>
   <style>
     body {
-      margin: 0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333; position:relative;
+      margin:0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333; position:relative;
     }
     .container {
-      max-width:1200px; margin:0 auto; background:#fff; padding:20px;
-      border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
-      position:relative;
+      max-width:1200px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
     h1 {
       text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px;
@@ -18,9 +16,8 @@
     .section {
       background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px;
     }
-    .section h2 {
-      color:#4a90e2; margin-top:0; margin-bottom:10px; font-size:22px;
-    }
+    .section h2 { color:#4a90e2; font-size:22px; margin:0 0 10px; }
+
     button {
       padding:12px 24px; border:none; border-radius:4px; cursor:pointer;
       margin-right:5px; margin-top:5px; font-size:16px;
@@ -30,6 +27,12 @@
     .btn-green { background:#28a745; color:#fff; }
     .btn-red { background:#dc3545; color:#fff; }
     .btn-orange { background:#ff9800; color:#fff; }
+
+    .arrow-btn {
+      background:#6c757d; color:#fff; font-size:14px; margin-left:5px; cursor:pointer;
+      padding:4px 8px; border-radius:4px; border:none;
+    }
+    .arrow-btn:hover { opacity:0.8; }
 
     input[type="text"], input[type="number"], textarea, select {
       width:100%; padding:12px; margin-bottom:8px; border:1px solid #ccc; border-radius:4px; font-size:16px;
@@ -53,22 +56,14 @@
       transition:width 0.3s; font-size:14px;
     }
 
-    /* زر عائم للتنقل */
     #floatScrollBtn {
-      position: fixed;
-      width: 50px; height: 50px;
-      bottom: 30px; right: 30px;
-      background: #4a90e2; color: #fff;
-      border: none; border-radius: 50%;
-      cursor: pointer; z-index:999;
-      display:flex; align-items:center; justify-content:center;
-      font-size:24px;
+      position: fixed; width:50px; height:50px; bottom:30px; right:30px;
+      background:#4a90e2; color:#fff; border:none; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; z-index:999;
     }
-    #floatScrollBtn:hover {
-      opacity:0.8;
-    }
+    #floatScrollBtn:hover { opacity:0.8; }
 
-    /* مودالات مخصصة للرسائل */
+    /* Custom modals for alert/confirm/prompt */
     .modal-overlay {
       position:fixed; top:0; left:0; right:0; bottom:0;
       background: rgba(0,0,0,0.5);
@@ -78,36 +73,35 @@
     }
     .modal-box {
       background:#fff; border-radius:8px; padding:20px;
-      max-width:500px; width:90%;
+      max-width:400px; width:90%;
       text-align:center;
     }
+    .modal-box h3 { margin-bottom:20px; font-size:1.1rem; color:#333; }
     .modal-buttons {
-      margin-top:15px; display:flex; justify-content:center; gap:10px;
+      display:flex; justify-content:center; gap:10px; margin-top:10px;
     }
     .btn-modal {
       padding:8px 16px; border:none; border-radius:4px; cursor:pointer; font-size:0.9em;
     }
     .btn-modal-primary { background:#007bff; color:#fff; }
     .btn-modal-danger { background:#dc3545; color:#fff; }
-    .btn-modal-close { background:#6c757d; color:#fff; }
+    .btn-modal-cancel { background:#6c757d; color:#fff; }
+
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Quiz Manager + Custom Modals</h1>
+    <h1>All Popups Custom + Reorder Topics/Subtopics</h1>
 
     <!-- Manage Topics -->
     <div class="section">
       <h2>Manage Topics (data/topics.json)</h2>
-      <div style="margin-bottom:10px;">
-        <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
-      </div>
+      <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
       <div id="topicsList"></div>
       <div style="margin-top:10px;">
         <input type="text" id="newTopicName" placeholder="Topic Name...">
         <input type="text" id="newTopicDesc" placeholder="Topic Description...">
         <button class="btn-blue" onclick="addTopic()">Add Topic</button>
-        <!-- زر Save topics.json بجوار Add Topic ولونه أخضر -->
         <button class="btn-green" onclick="saveTopics()">Save topics.json</button>
       </div>
     </div>
@@ -115,22 +109,20 @@
     <!-- Subtopic Manager -->
     <div class="section">
       <h2>Subtopic Questions Manager</h2>
-      <p>Select a subtopic after loading topics, then load or save its questions.</p>
       <select id="subtopicSelect"></select>
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="loadSubtopic()">Load Questions</button>
       </div>
       <div id="subtopicQuestions"></div>
 
-      <h3 style="margin-top:20px; font-size:18px;">Add New Questions</h3>
+      <h3 style="margin-top:20px;">Add New Questions</h3>
       <label>Prefix (optional):</label>
       <input type="text" id="prefixInput" placeholder="e.g. Dr. Ali -">
-      <label>Start Question Number:</label>
+      <label>Start Q#:</label>
       <input type="number" id="startQNumber" value="1" min="1" style="width:120px;">
-      <label>Questions Text (larger box):</label>
-      <textarea id="questionsText" rows="8" style="font-size:16px;"></textarea>
-
-      <button class="btn-orange" style="margin-top:5px;" onclick="addImageField()">Add Image Field</button>
+      <label>Questions Text:</label>
+      <textarea id="questionsText" rows="6"></textarea>
+      <button class="btn-orange" onclick="addImageField()">Add Image Field</button>
       <div id="imageContainer" style="margin-top:10px;"></div>
 
       <div style="margin-top:10px;">
@@ -138,51 +130,68 @@
         <button class="btn-green" onclick="saveSubtopic()">Save Questions</button>
       </div>
 
-      <h3 style="margin-top:20px; font-size:18px;">Delete Questions by Bold Prefix</h3>
+      <h3 style="margin-top:20px;">Delete by Bold Prefix</h3>
       <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
       <button class="btn-red" onclick="deleteByPrefix()">Delete</button>
     </div>
   </div>
 
-  <!-- زر عائم للscroll -->
+  <!-- زر عائم scroll -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
 
   <!-- مودال alert -->
   <div class="modal-overlay" id="alertOverlay">
-    <div class="modal-box" id="alertBox">
-      <h3 id="alertMessage">رسالة تنبيه</h3>
+    <div class="modal-box">
+      <h3 id="alertMsg"></h3>
       <div class="modal-buttons">
         <button class="btn-modal btn-modal-primary" id="alertOkBtn">OK</button>
       </div>
     </div>
   </div>
-
   <!-- مودال confirm -->
   <div class="modal-overlay" id="confirmOverlay">
     <div class="modal-box">
-      <h3 id="confirmMessage">هل انت متأكد؟</h3>
+      <h3 id="confirmMsg"></h3>
       <div class="modal-buttons">
         <button class="btn-modal btn-modal-primary" id="confirmYesBtn">Yes</button>
         <button class="btn-modal btn-modal-danger" id="confirmNoBtn">No</button>
       </div>
     </div>
   </div>
+  <!-- مودال prompt -->
+  <div class="modal-overlay" id="promptOverlay">
+    <div class="modal-box">
+      <h3 id="promptMsg"></h3>
+      <input type="text" id="promptInput" style="width:80%; margin-bottom:10px;">
+      <div class="modal-buttons">
+        <button class="btn-modal btn-modal-primary" id="promptOkBtn">OK</button>
+        <button class="btn-modal btn-modal-cancel" id="promptCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
 
 <script>
-/** 1) Override alert/confirm with custom modals */
+/** 1) Override alert, confirm, prompt with custom modals (busy loop) */
 (function(){
   const alertOverlay=document.getElementById('alertOverlay');
-  const alertMessage=document.getElementById('alertMessage');
+  const alertMsg=document.getElementById('alertMsg');
   const alertOkBtn=document.getElementById('alertOkBtn');
 
   const confirmOverlay=document.getElementById('confirmOverlay');
-  const confirmMessage=document.getElementById('confirmMessage');
+  const confirmMsg=document.getElementById('confirmMsg');
   const confirmYesBtn=document.getElementById('confirmYesBtn');
   const confirmNoBtn=document.getElementById('confirmNoBtn');
 
-  function customAlert(msg){
+  const promptOverlay=document.getElementById('promptOverlay');
+  const promptMsg=document.getElementById('promptMsg');
+  const promptInput=document.getElementById('promptInput');
+  const promptOkBtn=document.getElementById('promptOkBtn');
+  const promptCancelBtn=document.getElementById('promptCancelBtn');
+
+  //Custom
+  function showAlert(msg){
     return new Promise(resolve=>{
-      alertMessage.textContent=msg;
+      alertMsg.textContent=msg;
       alertOverlay.style.display='flex';
       alertOkBtn.onclick=()=>{
         alertOverlay.style.display='none';
@@ -190,9 +199,9 @@
       };
     });
   }
-  function customConfirm(msg){
+  function showConfirm(msg){
     return new Promise(resolve=>{
-      confirmMessage.textContent=msg;
+      confirmMsg.textContent=msg;
       confirmOverlay.style.display='flex';
       confirmYesBtn.onclick=()=>{
         confirmOverlay.style.display='none';
@@ -204,33 +213,54 @@
       };
     });
   }
-
-  // نستبدل 
-  let nativeAlert=window.alert;
-  let nativeConfirm=window.confirm;
-  
-  window.alert=function(msg){
-    // نجعلها async
-    customAlert(msg); 
-  };
-  
-  window.confirm=function(msg){
-    // نحاكي confirm متزامن, مع busy loop
-    let wasConfirmed=false;
-    let done=false;
-
-    customConfirm(msg).then(res=>{
-      wasConfirmed=res; 
-      done=true;
+  function showPrompt(msg, defaultVal){
+    return new Promise(resolve=>{
+      promptMsg.textContent=msg;
+      promptInput.value=defaultVal||'';
+      promptOverlay.style.display='flex';
+      promptOkBtn.onclick=()=>{
+        let val=promptInput.value;
+        promptOverlay.style.display='none';
+        resolve(val);
+      };
+      promptCancelBtn.onclick=()=>{
+        promptOverlay.style.display='none';
+        resolve(null);
+      };
     });
-    // busy loop
+  }
+
+  //override
+  let nativeAlert=window.alert, nativeConfirm=window.confirm, nativePrompt=window.prompt;
+
+  window.alert=function(message){
+    let done=false;
+    showAlert(message).then(()=>{ done=true; });
     const start=Date.now();
     while(!done){
-      if(Date.now()-start>300000){ // 5 دقائق
-        break;
-      }
+      if(Date.now()-start>600000) break; 
     }
-    return wasConfirmed;
+  };
+  window.confirm=function(message){
+    let done=false, result=false;
+    showConfirm(message).then(r=>{result=r; done=true;});
+    const start=Date.now();
+    while(!done){
+      if(Date.now()-start>600000) break;
+    }
+    return result;
+  };
+  window.prompt=function(message, defaultVal){
+    let done=false, finalVal=null;
+    showPrompt(message, defaultVal).then(r=>{
+      finalVal=r; 
+      done=true;
+    });
+    const start=Date.now();
+    while(!done){
+      if(Date.now()-start>600000) break;
+    }
+    return finalVal;
   };
 })();
 
@@ -249,21 +279,18 @@ function toggleScroll(){
   }
 }
 
-// بقية الكود كما هو (Load Topics, Save Topics, subtopic, etc.)
+// بقية الكود كما هو
 let cachedTopics=[];
 let topicsSha=null;
 let currentSubtopicPath=null;
 let currentSubtopicSha=null;
 let currentQuestions=[];
 
-// Display a "Operation completed" after saving
-function showSaveMessage() {
-  alert("Operation completed.");
-}
+function showSaveMessage(){ alert("Operation completed."); }
 
-// Manage Topics
+// Load/Save Topics
 async function loadTopics(){
-  try {
+  try{
     let r=await fetch('/api/topics');
     let j=await r.json();
     if(!j.success)return;
@@ -271,40 +298,70 @@ async function loadTopics(){
     topicsSha=j.sha;
     renderTopics();
     fillSubtopics();
-  }catch(err){}
+  }catch(e){}
 }
 async function saveTopics(){
   if(!topicsSha)return;
   try{
-    let body={ topics:cachedTopics, sha:topicsSha };
+    let body={topics:cachedTopics, sha:topicsSha};
     let r=await fetch('/api/topics',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
     let j=await r.json();
-    if(!j.success){alert("Saving topics failed: "+j.error); return;}
+    if(!j.success){alert("Saving topics failed: "+j.error);return;}
     showSaveMessage();
-  }catch(err){}
+  }catch(e){}
 }
+
+// Render Topics + Reordering
 function renderTopics(){
-  const list=document.getElementById('topicsList');
+  let list=document.getElementById('topicsList');
   list.innerHTML='';
   cachedTopics.forEach((t,idx)=>{
-    const d=document.createElement('div');
+    let d=document.createElement('div');
     d.style.border='1px solid #ccc';
     d.style.padding='8px';
     d.style.borderRadius='4px';
     d.style.marginBottom='8px';
     d.innerHTML=`
-      <strong>${t.topicName}</strong> (sub:${t.subTopics? t.subTopics.length:0})
+      <strong>${t.topicName}</strong> (sub:${t.subTopics?t.subTopics.length:0})
       <br>${t.description||''}
     `;
+
+    // Move up arrow
+    let upBtn=document.createElement('button');
+    upBtn.className='arrow-btn';
+    upBtn.textContent='▲';
+    upBtn.onclick=()=>{
+      // swap with above if idx>0
+      if(idx>0){
+        [cachedTopics[idx-1], cachedTopics[idx]]=[cachedTopics[idx], cachedTopics[idx-1]];
+        renderTopics();
+        fillSubtopics();
+      }
+    };
+    d.appendChild(upBtn);
+
+    // Move down arrow
+    let downBtn=document.createElement('button');
+    downBtn.className='arrow-btn';
+    downBtn.textContent='▼';
+    downBtn.onclick=()=>{
+      if(idx<cachedTopics.length-1){
+        [cachedTopics[idx], cachedTopics[idx+1]]=[cachedTopics[idx+1], cachedTopics[idx]];
+        renderTopics();
+        fillSubtopics();
+      }
+    };
+    d.appendChild(downBtn);
+
     let delBtn=document.createElement('button');
     delBtn.textContent='Delete';
     delBtn.classList.add('btn-red');
     delBtn.onclick=()=>{
-      if(confirm('Delete this topic?')){
+      if(confirm("Delete this topic?")){
         cachedTopics.splice(idx,1);
         renderTopics();
         fillSubtopics();
@@ -316,9 +373,9 @@ function renderTopics(){
     edBtn.textContent='Edit';
     edBtn.classList.add('btn-orange');
     edBtn.onclick=()=>{
-      let newName=prompt('Topic name:', t.topicName);
+      let newName=prompt("Topic name:", t.topicName);
       if(newName) t.topicName=newName;
-      let newDesc=prompt('Topic desc:', t.description||'');
+      let newDesc=prompt("Topic desc:", t.description||'');
       if(newDesc!==null) t.description=newDesc;
       renderTopics();
       fillSubtopics();
@@ -326,17 +383,42 @@ function renderTopics(){
     d.appendChild(edBtn);
 
     if(t.subTopics && t.subTopics.length>0){
-      t.subTopics.forEach((st,stidx)=>{
+      t.subTopics.forEach((st, stidx)=>{
         let stDiv=document.createElement('div');
         stDiv.style.marginLeft='15px';
         stDiv.style.marginTop='5px';
-        stDiv.textContent=`${st.name} => ${st.file}`;
-        
+        stDiv.innerHTML=`${st.name} => ${st.file}`;
+
+        // subtopic reorder
+        let subUp=document.createElement('button');
+        subUp.className='arrow-btn';
+        subUp.textContent='▲';
+        subUp.onclick=()=>{
+          if(stidx>0){
+            [t.subTopics[stidx-1], t.subTopics[stidx]]=[t.subTopics[stidx], t.subTopics[stidx-1]];
+            renderTopics();
+            fillSubtopics();
+          }
+        };
+        stDiv.appendChild(subUp);
+
+        let subDown=document.createElement('button');
+        subDown.className='arrow-btn';
+        subDown.textContent='▼';
+        subDown.onclick=()=>{
+          if(stidx<t.subTopics.length-1){
+            [t.subTopics[stidx], t.subTopics[stidx+1]]=[t.subTopics[stidx+1], t.subTopics[stidx]];
+            renderTopics();
+            fillSubtopics();
+          }
+        };
+        stDiv.appendChild(subDown);
+
         let sdel=document.createElement('button');
         sdel.textContent='X';
         sdel.classList.add('btn-red');
         sdel.onclick=()=>{
-          if(confirm('Delete subtopic?')){
+          if(confirm("Delete subtopic?")){
             t.subTopics.splice(stidx,1);
             renderTopics();
             fillSubtopics();
@@ -348,7 +430,7 @@ function renderTopics(){
         sedit.textContent='Edit';
         sedit.classList.add('btn-orange');
         sedit.onclick=()=>{
-          let rename=prompt('Subtopic name:', st.name);
+          let rename=prompt("Subtopic name:", st.name);
           if(rename){
             st.name=rename;
             renderTopics();
@@ -365,7 +447,7 @@ function renderTopics(){
     addSt.textContent='Add Subtopic';
     addSt.classList.add('btn-blue');
     addSt.onclick=()=>{
-      let sbName=prompt('Subtopic name?');
+      let sbName=prompt("Subtopic name?");
       if(!sbName)return;
       let fileName=(t.topicName.replace(/\s+/g,'_')+"_"+sbName.replace(/\s+/g,'_')).toLowerCase()+'.json';
       let path='data/'+fileName;
@@ -379,18 +461,20 @@ function renderTopics(){
     list.appendChild(d);
   });
 }
+
+//Add topic
 function addTopic(){
   let nm=document.getElementById('newTopicName').value.trim();
   let ds=document.getElementById('newTopicDesc').value.trim();
   if(!nm)return;
-  cachedTopics.push({topicName:nm, description:ds, subTopics:[]});
+  cachedTopics.push({topicName:nm,description:ds,subTopics:[]});
   document.getElementById('newTopicName').value='';
   document.getElementById('newTopicDesc').value='';
   renderTopics();
   fillSubtopics();
 }
 
-// subtopic
+// fill subtopic list
 function fillSubtopics(){
   let sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -405,6 +489,8 @@ function fillSubtopics(){
     }
   });
 }
+
+// load subtopic
 async function loadSubtopic(){
   let sel=document.getElementById('subtopicSelect');
   if(!sel.value)return;
@@ -416,12 +502,12 @@ async function loadSubtopic(){
     currentSubtopicSha=j.sha;
     currentQuestions=j.content;
     renderSubtopicQuestions();
-  }catch(err){}
+  }catch(e){}
 }
 function renderSubtopicQuestions(){
   let box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
-  for(let i=0; i<currentQuestions.length; i++){
+  for(let i=0;i<currentQuestions.length;i++){
     let q=currentQuestions[i];
     let d=document.createElement('div');
     d.classList.add('q-item');
@@ -433,7 +519,7 @@ function renderSubtopicQuestions(){
     del.classList.add('btn-red');
     del.style.marginLeft='5px';
     del.onclick=()=>{
-      if(confirm('Delete this question?')){
+      if(confirm("Delete this question?")){
         currentQuestions.splice(i,1);
         renderSubtopicQuestions();
       }
@@ -443,6 +529,8 @@ function renderSubtopicQuestions(){
     box.appendChild(d);
   }
 }
+
+// Save subtopic
 async function saveSubtopic(){
   if(!currentSubtopicPath)return;
   try{
@@ -455,19 +543,19 @@ async function saveSubtopic(){
     let j=await r.json();
     if(!j.success)return;
     showSaveMessage();
-  }catch(err){}
+  }catch(e){}
 }
 
-// الصور
+// Add new images
 function addImageField(){
   let c=document.getElementById('imageContainer');
   let row=document.createElement('div');
   row.classList.add('image-field-row');
 
-  let qNum=document.createElement('input');
-  qNum.type='number';
-  qNum.placeholder='Q#';
-  qNum.min=1;
+  let qnum=document.createElement('input');
+  qnum.type='number';
+  qnum.placeholder='Q#';
+  qnum.min=1;
 
   let fileIn=document.createElement('input');
   fileIn.type='file';
@@ -476,7 +564,7 @@ function addImageField(){
   let delBtn=document.createElement('button');
   delBtn.textContent='Remove';
   delBtn.classList.add('btn-orange');
-  delBtn.onclick=()=> c.removeChild(row);
+  delBtn.onclick=()=>c.removeChild(row);
 
   let prog=document.createElement('div');
   prog.classList.add('progress');
@@ -485,12 +573,14 @@ function addImageField(){
   pbar.textContent='0%';
   prog.appendChild(pbar);
 
-  row.appendChild(qNum);
+  row.appendChild(qnum);
   row.appendChild(fileIn);
   row.appendChild(delBtn);
   row.appendChild(prog);
   c.appendChild(row);
 }
+
+// convert & append
 async function convertAndAppend(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('prefixInput').value.trim();
@@ -514,7 +604,6 @@ async function convertAndAppend(){
       return;
     }
   }catch(e){}
-
   let lines=text.split('\n');
   let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
   let out=[];
@@ -523,9 +612,9 @@ async function convertAndAppend(){
     let qM=ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
       if(questionText!==null){
-        out.push({question:questionText, options, answer:ansIdx, answerText:ansText, explanation, userAnswer:null});
+        out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
       }
-      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix? prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
+      questionText=`<span style='color:darkred; font-weight:bold;'>${prefix?prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
       startNumber++;
       options=[]; ansIdx=-1; ansText=null; explanation=null;
     } else {
@@ -547,15 +636,15 @@ async function convertAndAppend(){
     }
   }
   if(questionText!==null){
-    out.push({question:questionText, options, answer:ansIdx, answerText:ansText, explanation, userAnswer:null});
+    out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
   }
   await handleImagesAndBind(out);
   currentQuestions=currentQuestions.concat(out);
   renderSubtopicQuestions();
 }
 async function handleImagesAndBind(questionsArr){
-  let container=document.getElementById('imageContainer');
-  let rows=container.querySelectorAll('.image-field-row');
+  let c=document.getElementById('imageContainer');
+  let rows=c.querySelectorAll('.image-field-row');
   for(const row of rows){
     let inputs=row.querySelectorAll('input');
     let qn=parseInt(inputs[0].value,10);
@@ -565,14 +654,14 @@ async function handleImagesAndBind(questionsArr){
       let file=fileIn.files[0];
       let prog=row.querySelector('.progress');
       let pbar=prog.querySelector('.progress-bar');
-      let url=await uploadImage(file, prog, pbar);
+      let url=await uploadOneImage(file, prog, pbar);
       if(url){
-        for(let q of questionsArr){
-          let match=q.question.match(/Question\s+(\d+)/);
+        for(let obj of questionsArr){
+          let match=obj.question.match(/Question\s+(\d+)/);
           if(match){
             let num=parseInt(match[1],10);
             if(num===qn){
-              q.question+=`<br><img src='${url}' alt='Image for Question ${qn}' style='max-width:100%; height:auto;'>`;
+              obj.question+=`<br><img src='${url}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
               break;
             }
           }
@@ -581,7 +670,7 @@ async function handleImagesAndBind(questionsArr){
     }
   }
 }
-function uploadImage(file, progressBarContainer, progressBar){
+function uploadOneImage(file, progressBarContainer, progressBar){
   return new Promise(resolve=>{
     if(!file)return resolve("");
     progressBarContainer.style.display="block";
@@ -601,7 +690,7 @@ function uploadImage(file, progressBarContainer, progressBar){
       if(xhr.status===200){
         try{
           let resp=JSON.parse(xhr.responseText);
-          if(resp.success&&resp.url){
+          if(resp.success && resp.url){
             progressBar.style.width="100%";
             progressBar.textContent="تم رفع الصورة";
             return resolve(resp.url);
@@ -613,7 +702,7 @@ function uploadImage(file, progressBarContainer, progressBar){
           progressBar.textContent="فشل الرفع";
           resolve("");
         }
-      } else {
+      }else{
         progressBar.textContent="فشل الرفع";
         resolve("");
       }
@@ -636,9 +725,9 @@ async function deleteByPrefix(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('deletePrefix').value.trim();
   if(!prefix)return;
-  if(!currentSubtopicSha&&currentQuestions.length===0)return;
+  if(!currentSubtopicSha && currentQuestions.length===0)return;
   try{
-    let body={path:currentSubtopicPath, sha:currentSubtopicSha, prefix};
+    let body={path:currentSubtopicPath,sha:currentSubtopicSha,prefix};
     await fetch('/api/delete-questions-by-prefix',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -646,6 +735,16 @@ async function deleteByPrefix(){
     });
     loadSubtopic();
   }catch(e){}
+}
+
+// time format
+function formatTo12Hour(tVal){
+  if(!tVal)return "";
+  let [hh,mm]=tVal.split(":");
+  hh=parseInt(hh,10);
+  let period=(hh>=12)?"م":"ص";
+  let newH=(hh%12)||12;
+  return newH+":"+mm+" "+period;
 }
 </script>
 </body>
