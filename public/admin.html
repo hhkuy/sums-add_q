@@ -2,18 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Custom Modals (No Freeze) - All Buttons Work</title>
+  <title>All Original Features + Reorder Topics/Subtopics + Save Topics next to Add Topic</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333;
     }
     .container {
-      max-width:1200px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      max-width:1200px; margin:0 auto; background:#fff; padding:20px;
+      border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
       position:relative;
     }
-    h1 { text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px; }
-    .section { background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px; }
+    h1 {
+      text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px;
+    }
+    .section {
+      background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px;
+    }
     .section h2 { color:#4a90e2; margin:0 0 10px; font-size:22px; }
+
     button {
       padding:12px 24px; border:none; border-radius:4px; cursor:pointer;
       margin-right:5px; margin-top:5px; font-size:16px;
@@ -23,6 +29,14 @@
     .btn-green { background:#28a745; color:#fff; }
     .btn-red { background:#dc3545; color:#fff; }
     .btn-orange { background:#ff9800; color:#fff; }
+
+    /* لأسهم الترتيب */
+    .arrow-btn {
+      background:#6c757d; color:#fff; font-size:14px; 
+      margin-left:3px; cursor:pointer; border:none; border-radius:4px;
+      padding:4px 8px;
+    }
+    .arrow-btn:hover { opacity:0.8; }
 
     input[type="text"], input[type="number"], textarea, select {
       width:100%; padding:12px; margin-bottom:8px; border:1px solid #ccc; border-radius:4px; font-size:16px;
@@ -40,10 +54,10 @@
       width:100%; background:#e0e0e0; border-radius:5px; overflow:hidden; height:24px; display:none;
     }
     .progress-bar {
-      background:#4a90e2; height:100%; width:0%; color:#fff; text-align:center; line-height:24px;
-      transition:width 0.3s; font-size:14px;
+      background:#4a90e2; height:100%; width:0%; color:#fff; text-align:center; line-height:24px; transition:width 0.3s; font-size:14px;
     }
 
+    /* الزر العائم */
     #floatScrollBtn {
       position: fixed; width:50px; height:50px; bottom:30px; right:30px;
       background:#4a90e2; color:#fff; border:none; border-radius:50%;
@@ -51,10 +65,10 @@
     }
     #floatScrollBtn:hover { opacity:0.8; }
 
-    /* المودالات */
+    /* المودالات (لا تغيير) */
     .modal-overlay {
       position:fixed; top:0; left:0; right:0; bottom:0;
-      background:rgba(0,0,0,0.5); 
+      background:rgba(0,0,0,0.5);
       display:none; 
       justify-content:center; align-items:center;
       z-index:9999;
@@ -68,28 +82,30 @@
     .modal-buttons {
       display:flex; justify-content:center; gap:10px; margin-top:10px;
     }
-    .btn-modal {
-      padding:8px 16px; border:none; border-radius:4px; cursor:pointer; font-size:0.9em;
-    }
+    .btn-modal { padding:8px 16px; border:none; border-radius:4px; cursor:pointer; font-size:0.9em; }
     .btn-modal-primary { background:#007bff; color:#fff; }
     .btn-modal-danger { background:#dc3545; color:#fff; }
     .btn-modal-cancel { background:#6c757d; color:#fff; }
+
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Custom Modals (No Freeze), All Buttons Work</h1>
+    <h1>All Original + Reorder Topics/Subtopics + Save Next to Add Topic</h1>
 
     <!-- Manage Topics -->
     <div class="section">
       <h2>Manage Topics</h2>
+      <!-- زر تحميل فقط -->
       <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
-      <button class="btn-green" onclick="saveTopics()">Save topics.json</button>
+
       <div id="topicsList"></div>
+      <!-- اسفلها زر Add topic و زر Save Topics بجانب بعض -->
       <div style="margin-top:10px;">
         <input type="text" id="newTopicName" placeholder="Topic Name...">
         <input type="text" id="newTopicDesc" placeholder="Topic Description...">
         <button class="btn-blue" onclick="addTopic()">Add Topic</button>
+        <button class="btn-green" onclick="saveTopics()">Save topics.json</button>
       </div>
     </div>
 
@@ -123,10 +139,10 @@
     </div>
   </div>
 
-  <!-- زر عائم -->
+  <!-- زر عائم scroll -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
 
-  <!-- modal alert -->
+  <!-- المودالات  alert/confirm/prompt  كما في النسخة السابقة دون تغيير -->
   <div class="modal-overlay" id="alertOverlay">
     <div class="modal-box">
       <h3 id="alertMsg"></h3>
@@ -135,17 +151,15 @@
       </div>
     </div>
   </div>
-  <!-- modal confirm -->
   <div class="modal-overlay" id="confirmOverlay">
     <div class="modal-box">
-      <h3 id="confirmMsg">Confirm??</h3>
+      <h3 id="confirmMsg"></h3>
       <div class="modal-buttons">
         <button class="btn-modal btn-modal-primary" id="confirmYesBtn">Yes</button>
         <button class="btn-modal btn-modal-danger" id="confirmNoBtn">No</button>
       </div>
     </div>
   </div>
-  <!-- modal prompt -->
   <div class="modal-overlay" id="promptOverlay">
     <div class="modal-box">
       <h3 id="promptMsg"></h3>
@@ -158,24 +172,23 @@
   </div>
 
 <script>
-/** لاستخدام المودالات بشكل لا يسبب تجمّد */
+/** نفس override previous code for alert/confirm/prompt (async approach) */
+
+// ... override code ...
 let alertOverlay=document.getElementById('alertOverlay');
 let alertMsg=document.getElementById('alertMsg');
 let alertOkBtn=document.getElementById('alertOkBtn');
-
 let confirmOverlay=document.getElementById('confirmOverlay');
 let confirmMsg=document.getElementById('confirmMsg');
 let confirmYesBtn=document.getElementById('confirmYesBtn');
 let confirmNoBtn=document.getElementById('confirmNoBtn');
-
 let promptOverlay=document.getElementById('promptOverlay');
 let promptMsg=document.getElementById('promptMsg');
 let promptInput=document.getElementById('promptInput');
 let promptOkBtn=document.getElementById('promptOkBtn');
 let promptCancelBtn=document.getElementById('promptCancelBtn');
 
-// دوال رد الوعد:
-function customAlert(message) {
+function customAlert(message){
   return new Promise(resolve=>{
     alertMsg.textContent=message;
     alertOverlay.style.display='flex';
@@ -185,7 +198,6 @@ function customAlert(message) {
     };
   });
 }
-
 function customConfirm(message){
   return new Promise(resolve=>{
     confirmMsg.textContent=message;
@@ -200,11 +212,10 @@ function customConfirm(message){
     };
   });
 }
-
-function customPrompt(message, defVal){
+function customPrompt(message, defaultVal){
   return new Promise(resolve=>{
     promptMsg.textContent=message;
-    promptInput.value=defVal||'';
+    promptInput.value=defaultVal||'';
     promptOverlay.style.display='flex';
     promptOkBtn.onclick=()=>{
       let val=promptInput.value;
@@ -218,29 +229,17 @@ function customPrompt(message, defVal){
   });
 }
 
-// نستبدل الثلاثة بدون استخدام busy loop:
-window.alert= async function(msg){
+window.alert=async function(msg){
   await customAlert(msg);
 };
-
-window.confirm= async function(msg){
-  // بدل return مباشرة,
-  // نجعل الدالة تعيد promise => لكن الكود الأصلي ينتظر boolean
-  // إذن: أي استدعاء confirm(...) في الكود الأصلي "يُهمل" النتيجة
-  // أو نعتمد callback. 
-  // الأسلم: سنُجري refactor minimal: الأسطر التي تستخدم confirm(...) 
-  // لن تعمل بتزامن 100%. 
-  // لذا نكتفي بإعادة promise. 
-  console.warn("confirm(...) called, returning promise, the original code won't freeze now.");
+window.confirm=async function(msg){
   return customConfirm(msg);
 };
-
-window.prompt= async function(msg, defVal){
-  console.warn("prompt(...) called, returning promise-based solution.");
+window.prompt=async function(msg, defVal){
   return customPrompt(msg, defVal);
 };
 
-/** زر العائم */
+// بقية الكود كما هو
 let scrollState=false;
 function toggleScroll(){
   let btn=document.getElementById('floatScrollBtn');
@@ -248,16 +247,14 @@ function toggleScroll(){
     window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
     btn.textContent='↑';
     scrollState=true;
-  }else{
+  } else {
     window.scrollTo({top:0,behavior:'smooth'});
     btn.textContent='↓';
     scrollState=false;
   }
 }
 
-/** بقية الكود دون تغيير المنطق */
-
-// Variables
+// Vars
 let cachedTopics=[];
 let topicsSha=null;
 let currentSubtopicPath=null;
@@ -283,18 +280,19 @@ async function loadTopics(){
 async function saveTopics(){
   if(!topicsSha)return;
   try{
-    let body={topics:cachedTopics, sha:topicsSha};
+    let body={ topics:cachedTopics, sha:topicsSha };
     let r=await fetch('/api/topics',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
     let j=await r.json();
-    if(!j.success){ alert("Saving topics failed: "+j.error);return;}
+    if(!j.success){alert("Saving topics failed: "+j.error);return;}
     showSaveMessage();
   }catch(e){}
 }
 
+// 2) render topics with reordering
 function renderTopics(){
   let list=document.getElementById('topicsList');
   list.innerHTML='';
@@ -308,7 +306,32 @@ function renderTopics(){
       <strong>${t.topicName}</strong> (sub:${t.subTopics?t.subTopics.length:0})
       <br>${t.description||''}
     `;
-    // delete
+    // أزرار تحريك Topic للأعلى/أسفل
+    let upBtn=document.createElement('button');
+    upBtn.className='arrow-btn';
+    upBtn.textContent='▲';
+    upBtn.onclick=()=>{
+      if(idx>0){
+        [cachedTopics[idx-1], cachedTopics[idx]]=[cachedTopics[idx], cachedTopics[idx-1]];
+        renderTopics();
+        fillSubtopics();
+      }
+    };
+    d.appendChild(upBtn);
+
+    let downBtn=document.createElement('button');
+    downBtn.className='arrow-btn';
+    downBtn.textContent='▼';
+    downBtn.onclick=()=>{
+      if(idx<cachedTopics.length-1){
+        [cachedTopics[idx], cachedTopics[idx+1]]=[cachedTopics[idx+1], cachedTopics[idx]];
+        renderTopics();
+        fillSubtopics();
+      }
+    };
+    d.appendChild(downBtn);
+
+    // زر delete
     let delBtn=document.createElement('button');
     delBtn.textContent='Delete';
     delBtn.classList.add('btn-red');
@@ -322,11 +345,11 @@ function renderTopics(){
     };
     d.appendChild(delBtn);
 
-    // edit
+    // زر edit
     let edBtn=document.createElement('button');
     edBtn.textContent='Edit';
     edBtn.classList.add('btn-orange');
-    edBtn.onclick= async ()=>{
+    edBtn.onclick=async ()=>{
       let newName=await prompt("Topic name:", t.topicName);
       if(newName!==null && newName!=='') t.topicName=newName;
       let newDesc=await prompt("Topic desc:", t.description||'');
@@ -336,14 +359,39 @@ function renderTopics(){
     };
     d.appendChild(edBtn);
 
-    // subtopics
+    // subTopics
     if(t.subTopics && t.subTopics.length>0){
       t.subTopics.forEach((st, stidx)=>{
         let stDiv=document.createElement('div');
         stDiv.style.marginLeft='15px';
         stDiv.style.marginTop='5px';
         stDiv.innerHTML=`${st.name} => ${st.file}`;
-        // x
+
+        // reorder subtopic
+        let subUp=document.createElement('button');
+        subUp.className='arrow-btn';
+        subUp.textContent='▲';
+        subUp.onclick=()=>{
+          if(stidx>0){
+            [t.subTopics[stidx-1], t.subTopics[stidx]]=[t.subTopics[stidx], t.subTopics[stidx-1]];
+            renderTopics();
+            fillSubtopics();
+          }
+        };
+        stDiv.appendChild(subUp);
+
+        let subDown=document.createElement('button');
+        subDown.className='arrow-btn';
+        subDown.textContent='▼';
+        subDown.onclick=()=>{
+          if(stidx<t.subTopics.length-1){
+            [t.subTopics[stidx], t.subTopics[stidx+1]]=[t.subTopics[stidx+1], t.subTopics[stidx]];
+            renderTopics();
+            fillSubtopics();
+          }
+        };
+        stDiv.appendChild(subDown);
+
         let sdel=document.createElement('button');
         sdel.textContent='X';
         sdel.classList.add('btn-red');
@@ -382,8 +430,8 @@ function renderTopics(){
       if(!sbName)return;
       let fileName=(t.topicName.replace(/\s+/g,'_')+"_"+sbName.replace(/\s+/g,'_')).toLowerCase()+'.json';
       let path='data/'+fileName;
-      if(!t.subTopics)t.subTopics=[];
-      t.subTopics.push({name:sbName,file:path});
+      if(!t.subTopics) t.subTopics=[];
+      t.subTopics.push({name:sbName, file:path});
       renderTopics();
       fillSubtopics();
     };
@@ -393,6 +441,7 @@ function renderTopics(){
   });
 }
 
+// addTopic
 function addTopic(){
   let nm=document.getElementById('newTopicName').value.trim();
   let ds=document.getElementById('newTopicDesc').value.trim();
@@ -404,7 +453,7 @@ function addTopic(){
   fillSubtopics();
 }
 
-// 2) Subtopic Manager
+// fill subtopics
 function fillSubtopics(){
   let sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -420,6 +469,7 @@ function fillSubtopics(){
   });
 }
 
+// load subtopic
 async function loadSubtopic(){
   let sel=document.getElementById('subtopicSelect');
   if(!sel.value)return;
@@ -436,7 +486,7 @@ async function loadSubtopic(){
 function renderSubtopicQuestions(){
   let box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
-  for(let i=0; i<currentQuestions.length;i++){
+  for(let i=0;i<currentQuestions.length;i++){
     let q=currentQuestions[i];
     let d=document.createElement('div');
     d.classList.add('q-item');
@@ -474,7 +524,7 @@ async function saveSubtopic(){
   }catch(e){}
 }
 
-// 3) Add new questions
+// convert & append
 function addImageField(){
   let c=document.getElementById('imageContainer');
   let row=document.createElement('div');
@@ -507,11 +557,13 @@ function addImageField(){
   row.appendChild(prog);
   c.appendChild(row);
 }
+
 async function convertAndAppend(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('prefixInput').value.trim();
   let startNumber=parseInt(document.getElementById('startQNumber').value,10);
   if(isNaN(startNumber)||startNumber<1) startNumber=1;
+
   let text=document.getElementById('questionsText').value.trim();
   if(!text)return;
 
@@ -529,7 +581,6 @@ async function convertAndAppend(){
       return;
     }
   }catch(e){}
-
   let lines=text.split('\n');
   let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
   let out=[];
@@ -540,7 +591,7 @@ async function convertAndAppend(){
       if(questionText!==null){
         out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
       }
-      questionText=`<span style='color:darkred; font-weight:bold;'>${prefix?prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
+      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix?prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
       startNumber++;
       options=[]; ansIdx=-1; ansText=null; explanation=null;
     } else {
@@ -573,21 +624,21 @@ async function handleImagesAndBind(questionsArr){
   let rows=c.querySelectorAll('.image-field-row');
   for(const row of rows){
     let inputs=row.querySelectorAll('input');
-    let qnum=parseInt(inputs[0].value,10);
-    if(!qnum)continue;
+    let qn=parseInt(inputs[0].value,10);
+    if(!qn)continue;
     let fileIn=inputs[1];
     if(fileIn.files&&fileIn.files.length>0){
       let file=fileIn.files[0];
       let prog=row.querySelector('.progress');
       let pbar=prog.querySelector('.progress-bar');
-      let url=await uploadOneImg(file, prog, pbar);
+      let url=await uploadOneImage(file,prog,pbar);
       if(url){
         for(let obj of questionsArr){
           let match=obj.question.match(/Question\s+(\d+)/);
           if(match){
             let num=parseInt(match[1],10);
-            if(num===qnum){
-              obj.question+=`<br><img src='${url}' alt='Image for Q${qnum}' style='max-width:100%; height:auto;'>`;
+            if(num===qn){
+              obj.question+=`<br><img src='${url}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
               break;
             }
           }
@@ -596,10 +647,10 @@ async function handleImagesAndBind(questionsArr){
     }
   }
 }
-function uploadOneImg(file, progressBarContainer, progressBar){
+function uploadOneImage(file,progressBarContainer,progressBar){
   return new Promise(resolve=>{
-    if(!file) return resolve("");
-    progressBarContainer.style.display="block";
+    if(!file)return resolve("");
+    progressBarContainer.style.display='block';
     progressBar.style.width="0%";
     progressBar.textContent="0%";
     let xhr=new XMLHttpRequest();
@@ -646,12 +697,12 @@ function uploadOneImg(file, progressBarContainer, progressBar){
   });
 }
 
-// delete prefix
+// delete by prefix
 async function deleteByPrefix(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('deletePrefix').value.trim();
   if(!prefix)return;
-  if(!currentSubtopicSha && currentQuestions.length===0)return;
+  if(!currentSubtopicSha&&currentQuestions.length===0)return;
   try{
     let body={path:currentSubtopicPath, sha:currentSubtopicSha, prefix};
     await fetch('/api/delete-questions-by-prefix',{
@@ -661,6 +712,16 @@ async function deleteByPrefix(){
     });
     loadSubtopic();
   }catch(e){}
+}
+
+// time format if needed
+function formatTo12Hour(tVal){
+  if(!tVal)return "";
+  let [hh,mm]=tVal.split(":");
+  hh=parseInt(hh,10);
+  let period=(hh>=12)?"م":"ص";
+  let newH=(hh%12)||12;
+  return newH+":"+mm+" "+period;
 }
 </script>
 </body>
