@@ -1,7 +1,7 @@
 {
-  "name": "my-quiz-converter",
+  "name": "my-complete-converter",
   "version": "1.0.0",
-  "description": "Quiz Data Converter + GitHub Control in one page",
+  "description": "All-in-one: Quiz converter + topics management + image upload + GitHub integration",
   "scripts": {
     "start": "node server.js"
   },
