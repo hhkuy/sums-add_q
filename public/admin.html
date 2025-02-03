@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Converter + Subtopic Manager (No Logs)</title>
+  <title>Quiz Converter + Subtopic Manager (No Logs, Updated Upload)</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5;
@@ -14,15 +14,16 @@
     }
     h1 {
       text-align:center; color:#4a90e2; margin-bottom:20px;
+      font-size:28px;
     }
     .section {
       background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px;
     }
     .section h2 {
-      color:#4a90e2; margin-top:0; margin-bottom:10px;
+      color:#4a90e2; margin-top:0; margin-bottom:10px; font-size:22px;
     }
     button {
-      padding:10px 20px; border:none; border-radius:4px; cursor:pointer;
+      padding:12px 24px; border:none; border-radius:4px; cursor:pointer;
       margin-right:5px; margin-top:5px; font-size:16px;
     }
     button:hover {opacity:0.9;}
@@ -30,6 +31,12 @@
     .btn-red { background:#dc3545; color:#fff; }
     .btn-orange { background:#ff9800; color:#fff; }
     .btn-green { background:#28a745; color:#fff; }
+    /* زر الرجوع للمواضيع بلون رمادي فاتح */
+    #back-to-topics {
+      background:#d3d3d3; 
+      color:#000;
+    }
+
     input[type="text"], input[type="number"], textarea, select {
       width:100%; padding:12px; margin-bottom:8px;
       border:1px solid #ccc; border-radius:4px; font-size:16px;
@@ -63,7 +70,7 @@
       <button class="btn-blue" onclick="saveTopics()">Save topics.json</button>
       <div id="topicsList"></div>
 
-      <h3 style="margin-top:15px;">Add New Topic</h3>
+      <h3 style="margin-top:15px; font-size:18px;">Add New Topic</h3>
       <input type="text" id="newTopicName" placeholder="Topic Name...">
       <input type="text" id="newTopicDesc" placeholder="Topic Description...">
       <button class="btn-blue" onclick="addTopic()">Add Topic</button>
@@ -77,10 +84,12 @@
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="loadSubtopic()">Load Questions</button>
         <button class="btn-blue" onclick="saveSubtopic()">Save Questions</button>
+        <!-- زر الرجوع للمواضيع بلون رمادي فاتح -->
+        <button id="back-to-topics" onclick="alert('Back to topics clicked!')">Back to Topics</button>
       </div>
       <div id="subtopicQuestions"></div>
 
-      <h3 style="margin-top:20px;">Add New Questions (Convert & Append)</h3>
+      <h3 style="margin-top:20px; font-size:18px;">Add New Questions (Convert & Append)</h3>
       <label>Prefix (optional):</label>
       <input type="text" id="prefixInput" placeholder="e.g. Dr. Ali -">
 
@@ -92,23 +101,22 @@
 
       <button class="btn-blue" style="margin-top:10px;" onclick="convertAndAppend()">Convert & Append</button>
 
-      <h3 style="margin-top:20px;">Delete Questions by Bold Prefix</h3>
+      <h3 style="margin-top:20px; font-size:18px;">Delete Questions by Bold Prefix</h3>
       <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
       <button class="btn-red" onclick="deleteByPrefix()">Delete</button>
     </div>
-
   </div>
 
 <script>
 let cachedTopics=[];
 let topicsSha=null;
 
-// subtopic data
+// subtopic
 let currentSubtopicPath=null;
 let currentSubtopicSha=null;
 let currentQuestions=[];
 
-// ============ 1) Manage Topics =============
+// ============ Manage Topics ============
 async function loadTopics(){
   try {
     const r=await fetch('/api/topics');
@@ -162,7 +170,6 @@ function renderTopics(){
     };
     div.appendChild(ed);
 
-    // subtopics
     if(t.subTopics && t.subTopics.length>0){
       t.subTopics.forEach((st,stidx)=>{
         const stDiv=document.createElement('div');
@@ -197,8 +204,6 @@ function renderTopics(){
         div.appendChild(stDiv);
       });
     }
-
-    // add subtopic
     const addSt=document.createElement('button');
     addSt.textContent='Add Subtopic';
     addSt.classList.add('btn-blue');
@@ -337,7 +342,7 @@ async function saveSubtopic(){
   }
 }
 
-// ===== Add new questions with images (Convert & Append) =====
+// إضافة حقل صورة
 function addImageField(){
   const container=document.getElementById('imageContainer');
   const row=document.createElement('div');
@@ -371,19 +376,20 @@ function addImageField(){
   container.appendChild(row);
 }
 
+// تحويل النص + رفع الصور وإدراجها
 async function convertAndAppend(){
   if(!currentSubtopicPath){
     alert('No subtopic selected to append questions');
     return;
   }
-  const prefix=document.getElementById('prefixInput').value.trim();
+  let prefix=document.getElementById('prefixInput').value.trim();
   let text=document.getElementById('questionsText').value.trim();
   if(!text){
     alert('No questions text');
     return;
   }
 
-  // 1) نحاول JSON
+  // 1) جرّب parse JSON
   let arr=null;
   try {
     if(text.startsWith('let quizData =')){
@@ -392,16 +398,15 @@ async function convertAndAppend(){
     }
     arr=JSON.parse(text);
     if(Array.isArray(arr)){
-      // append
-      // لكن سنرفع الصور لربطها
-      await uploadImagesAndBind(arr);
+      // ادمج الصور
+      await handleImagesAndBind(arr);
       currentQuestions=currentQuestions.concat(arr);
       alert(`Appended ${arr.length} questions (JSON). Now total ${currentQuestions.length}`);
       renderSubtopicQuestions();
       return;
     }
   }catch(e){
-    // لا شيء => نستخدم التنسيق النصي
+    // نستمر للتنسيق النصي
   }
 
   // 2) تنسيق نصي
@@ -447,41 +452,39 @@ async function convertAndAppend(){
       userAnswer:null
     });
   }
-  // رفع الصور
-  await uploadImagesAndBind(out);
+
+  // رفع الصور ودمجها
+  await handleImagesAndBind(out);
   currentQuestions=currentQuestions.concat(out);
   alert(`Converted & appended ${out.length} questions. Now total: ${currentQuestions.length}`);
   renderSubtopicQuestions();
 }
 
-// رفع الصور + إدراجها في السؤال
-async function uploadImagesAndBind(questionsArr){
-  // نحن نعتمد على Q#
+/**
+ * رفع كل الصور وإضافة رابط الصورة في السؤال المناسب
+ */
+async function handleImagesAndBind(questionsArr){
   const container=document.getElementById('imageContainer');
   const rows=container.querySelectorAll('.image-field-row');
-
   for(const row of rows){
     const inputs=row.querySelectorAll('input');
-    const qnum=parseInt(inputs[0].value,10);
-    if(!qnum) continue;
+    const qNum=parseInt(inputs[0].value,10);
+    if(!qNum) continue;
     const fileIn=inputs[1];
     if(fileIn.files && fileIn.files.length>0){
-      const file=fileIn.files[0];
+      let file=fileIn.files[0];
       const prog=row.querySelector('.progress');
       const pbar=prog.querySelector('.progress-bar');
-      // رفع
-      const url=await uploadSingleFile(file,prog,pbar);
+      let url=await uploadImageToImgHippo(file, prog, pbar); // ← الدالة الجديدة
+
       if(url){
-        // نعثر على السؤال المطابق qnum
-        // question = "... Question qnum</span>"
-        // note: if user has prefix => "Question 2" or "Question 2"
+        // ندمجه في السؤال المطابق qNum
         for(let q of questionsArr){
           let match=q.question.match(/Question\s+(\d+)/);
           if(match){
             let num=parseInt(match[1],10);
-            if(num===qnum){
-              // append <img> to question
-              q.question+=`<br><img src='${url}' alt='Image for Question ${qnum}' style='max-width: 100%; height: auto;'>`;
+            if(num===qNum){
+              q.question+=`<br><img src='${url}' alt='Image for Question ${qNum}' style='max-width: 100%; height: auto;'>`;
               break;
             }
           }
@@ -491,59 +494,89 @@ async function uploadImagesAndBind(questionsArr){
   }
 }
 
-function uploadSingleFile(file, progressDiv, progressBar){
-  return new Promise((resolve)=>{
-    progressDiv.style.display='block';
-    progressBar.style.width='0%';
-    progressBar.textContent='0%';
+/**
+ * الدالة الجديدة لرفع الصورة إلى imghippo بنفس منطق الكود المرسل
+ */
+function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
+  return new Promise((resolve) => {
+    if (!file) {
+      return resolve("");
+    }
 
-    const xhr=new XMLHttpRequest();
-    xhr.open("POST","/api/upload-image",true);
-    xhr.setRequestHeader("Content-Type","application/json");
+    // إظهار شريط التقدم
+    if (progressBarContainer) {
+      progressBarContainer.style.display = "block";
+    }
+    if (progressBar) {
+      progressBar.style.width = "0%";
+      progressBar.textContent = "0%";
+    }
 
-    xhr.upload.onprogress=(e)=>{
-      if(e.lengthComputable){
-        let percent=Math.floor((e.loaded/e.total)*100);
-        progressBar.style.width=percent+"%";
-        progressBar.textContent=percent+"%";
-      }
-    };
-    xhr.onload=()=>{
-      if(xhr.status===200){
-        try{
-          const resp=JSON.parse(xhr.responseText);
-          if(resp.success && resp.url){
-            progressBar.style.width='100%';
-            progressBar.textContent='تم رفع الصورة';
-            resolve(resp.url);
-          }else{
-            progressBar.textContent='فشل الرفع';
-            resolve("");
-          }
-        }catch(e){
-          progressBar.textContent='فشل الرفع';
-          resolve("");
+    let formData = new FormData();
+    formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c"); // مفتاح API
+    formData.append("file", file);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://api.imghippo.com/v1/upload", true);
+    xhr.setRequestHeader("Accept", "application/json");
+
+    xhr.upload.onprogress = function(event) {
+      if (event.lengthComputable) {
+        const percentComplete = Math.floor((event.loaded / event.total) * 100);
+        if (progressBar) {
+          progressBar.style.width = percentComplete + "%";
+          progressBar.setAttribute("aria-valuenow", percentComplete);
+          progressBar.textContent = percentComplete + "%";
         }
-      }else{
-        progressBar.textContent='فشل الرفع';
-        resolve("");
       }
     };
-    xhr.onerror=()=>{
-      progressBar.textContent='فشل الرفع';
-      resolve("");
+
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (response.success && response.data && response.data.url) {
+            if (progressBar) {
+              progressBar.style.width = "100%";
+              progressBar.textContent = "تم رفع الصورة";
+            }
+            return resolve(response.data.url);
+          } else {
+            console.error("فشل رفع الصورة:", response);
+            if (progressBar) {
+              progressBar.textContent = "فشل الرفع";
+            }
+            return resolve("");
+          }
+        } catch (error) {
+          console.error("خطأ في تحليل الاستجابة:", error);
+          if (progressBar) {
+            progressBar.textContent = "فشل الرفع";
+          }
+          return resolve("");
+        }
+      } else {
+        console.error("فشل الرفع. حالة الطلب:", xhr.status);
+        if (progressBar) {
+          progressBar.textContent = "فشل الرفع";
+        }
+        return resolve("");
+      }
     };
 
-    const reader=new FileReader();
-    reader.onload=()=>{
-      const base64=reader.result.split(",")[1];
-      xhr.send(JSON.stringify({ name:file.name, base64 }));
+    xhr.onerror = function() {
+      console.error("حدث خطأ أثناء الاتصال.");
+      if (progressBar) {
+        progressBar.textContent = "فشل الرفع";
+      }
+      return resolve("");
     };
-    reader.readAsDataURL(file);
+
+    xhr.send(formData);
   });
 }
 
-// حذف بالاعتماد على الكلام الغامق
+// حذف الأسئلة بكلام غامق
 async function deleteByPrefix(){
   if(!currentSubtopicPath){
     alert('No subtopic loaded');
@@ -575,6 +608,16 @@ async function deleteByPrefix(){
   }catch(err){
     alert("Error: "+err);
   }
+}
+
+/** تنسيق التوقيت (24-->12) */
+function formatTo12Hour(timeVal) {
+  if (!timeVal) return "";
+  let [hh, mm] = timeVal.split(":");
+  hh = parseInt(hh, 10);
+  let period = (hh >= 12) ? "م" : "ص";
+  let newH = (hh % 12) || 12;
+  return newH + ":" + mm + " " + period;
 }
 </script>
 </body>
