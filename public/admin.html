@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Converter + Subtopic Manager + 3 additions</title>
+  <title>Quiz Converter + Subtopic Manager (Arrow Center + Save Topics below Add Topic)</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5;
@@ -53,16 +53,20 @@
       border:1px solid #ccc; padding:8px; border-radius:4px; margin-bottom:5px;
     }
 
-    /* الزر العائم الدائري */
+    /* الزر العائم */
     #floatScrollBtn {
       position: fixed;
       width: 50px; height: 50px;
       bottom: 30px; right: 30px;
       background: #4a90e2; color: #fff;
       border: none; border-radius: 50%;
-      text-align:center; font-size:24px; line-height:50px;
       cursor: pointer;
       z-index:999;
+      /* لجعل السهم في الوسط تمامًا */
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      font-size:24px;
     }
     #floatScrollBtn:hover {
       opacity:0.8;
@@ -76,14 +80,18 @@
     <!-- Manage Topics -->
     <div class="section">
       <h2>Manage Topics (data/topics.json)</h2>
+      <!-- فقط زر تحميل هنا -->
       <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
-      <button class="btn-blue" onclick="saveTopics()">Save topics.json</button>
+
       <div id="topicsList"></div>
 
       <h3 style="margin-top:15px; font-size:18px;">Add New Topic</h3>
       <input type="text" id="newTopicName" placeholder="Topic Name...">
       <input type="text" id="newTopicDesc" placeholder="Topic Description...">
       <button class="btn-blue" onclick="addTopic()">Add Topic</button>
+
+      <!-- زر Save topics تحت زر Add Topic -->
+      <button class="btn-blue" onclick="saveTopics()">Save topics.json</button>
     </div>
 
     <!-- Subtopic Manager -->
@@ -111,7 +119,6 @@
 
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="convertAndAppend()">Convert & Append</button>
-        <!-- زر Save Questions على نفس السطر -->
         <button class="btn-green" onclick="saveSubtopic()">Save Questions</button>
       </div>
 
@@ -121,7 +128,7 @@
     </div>
   </div>
 
-  <!-- زر عائم للتنقل السريع بين أعلى/أسفل الصفحة -->
+  <!-- الزر العائم -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
 
 <script>
@@ -132,15 +139,12 @@ let currentSubtopicPath=null;
 let currentSubtopicSha=null;
 let currentQuestions=[];
 
-// إضافة 1) الرسالة عند الحفظ
+// عند النجاح في حفظ, عرض رسالة
 function showSaveMessage() {
-  // بدلاً من alert (قد يكون user لا يريد alerts؟ لكنه ذكر إظهار رسالة)
-  // ننفذ سطر بسيط:
-  // يمكنك مثلاً إنشاء عنصر يظهر لفترة. أو نستعمل نافذة بسيطة:
-  alert("Operation completed."); 
+  alert("Operation completed.");
 }
 
-// ==== Manage Topics ====
+// Manage Topics
 async function loadTopics(){
   try {
     const r=await fetch('/api/topics');
@@ -161,8 +165,7 @@ async function saveTopics(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
-    // عند النجاح نظهر الرسالة
-    showSaveMessage();
+    showSaveMessage(); 
   }catch(err){}
 }
 function renderTopics(){
@@ -255,6 +258,7 @@ function renderTopics(){
     list.appendChild(div);
   });
 }
+
 function addTopic(){
   const nm=document.getElementById('newTopicName').value.trim();
   const ds=document.getElementById('newTopicDesc').value.trim();
@@ -270,7 +274,7 @@ function addTopic(){
   fillSubtopics();
 }
 
-// ==== Subtopic ====
+// Subtopic
 function fillSubtopics(){
   const sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -285,7 +289,6 @@ function fillSubtopics(){
     }
   });
 }
-
 async function loadSubtopic(){
   const sel=document.getElementById('subtopicSelect');
   if(!sel.value) return;
@@ -296,24 +299,22 @@ async function loadSubtopic(){
     if(!j.success)return;
     currentSubtopicSha=j.sha;
     currentQuestions=j.content;
-    renderSubtopicQuestions(); // مع الترقيم التلقائي
+    // ترقيم تلقائي
+    renderSubtopicQuestions();
   }catch(err){}
 }
-
-// 2) إضافة ترقيم تصاعدي عند عرض الأسئلة
 function renderSubtopicQuestions(){
   const box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
   for(let i=0; i<currentQuestions.length; i++){
     const q = currentQuestions[i];
-    const div=document.createElement('div');
+    let div=document.createElement('div');
     div.classList.add('q-item');
-    // الترقيم يبدأ من 1
-    let numbering = (i+1)+". "; 
-    // عرض محتوى السؤال كاملاً
+    // الترقيم (i+1)
+    let numbering = (i+1)+". ";
     div.innerHTML = numbering + (q.question ? q.question : 'No question text');
-    // زر حذف فردي
-    const del=document.createElement('button');
+    // زر حذف
+    let del=document.createElement('button');
     del.textContent='Delete';
     del.classList.add('btn-red');
     del.style.marginLeft='5px';
@@ -337,12 +338,11 @@ async function saveSubtopic(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
-    // إظهار رسالة النجاح
-    showSaveMessage();
+    showSaveMessage(); 
   } catch(err){}
 }
 
-// ==== Add new questions with images (same code) ====
+// إضافة الصور وغيرها
 function addImageField(){
   const container=document.getElementById('imageContainer');
   const row=document.createElement('div');
@@ -383,9 +383,8 @@ async function convertAndAppend(){
   if(isNaN(startNumber) || startNumber<1) startNumber=1;
 
   let text=document.getElementById('questionsText').value.trim();
-  if(!text) return;
+  if(!text)return;
 
-  // جرّب parse JSON
   let arr=null;
   try {
     if(text.startsWith('let quizData =')){
@@ -401,19 +400,17 @@ async function convertAndAppend(){
     }
   } catch(e){}
 
-  // تنسيق نص
   let lines=text.split('\n');
   let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
   let out=[];
   for(let i=0;i<lines.length;i++){
     let ln=lines[i].trim();
-    // تجاهل الرقم من النص، استخدم startNumber
     let qM=ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
       if(questionText!==null){
         out.push({
           question:questionText,
-          options, answer:ansIdx, answerText:ansText, explanation,
+          options, answer:ansIdx, answerText, explanation,
           userAnswer:null
         });
       }
@@ -441,7 +438,7 @@ async function convertAndAppend(){
   if(questionText!==null){
     out.push({
       question:questionText,
-      options, answer:ansIdx, answerText:ansText, explanation,
+      options, answer:ansIdx, answerText, explanation,
       userAnswer:null
     });
   }
@@ -478,8 +475,6 @@ async function handleImagesAndBind(questionsArr){
     }
   }
 }
-
-// الدالة نفسها
 function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
   return new Promise((resolve) => {
     if (!file) {
@@ -537,14 +532,14 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
   });
 }
 
-// حذف بالاعتماد على الكلام الغامق
+// حذف بالكلام الغامق
 async function deleteByPrefix(){
   if(!currentSubtopicPath)return;
   const p=document.getElementById('deletePrefix').value.trim();
   if(!p)return;
   if(!currentSubtopicSha && currentQuestions.length===0)return;
   try{
-    const body={ path: currentSubtopicPath, sha: currentSubtopicSha, prefix:p };
+    const body={ path:currentSubtopicPath, sha: currentSubtopicSha, prefix:p };
     await fetch('/api/delete-questions-by-prefix',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -554,26 +549,19 @@ async function deleteByPrefix(){
   }catch(err){}
 }
 
-/** 3) زر عائم للتنقل أعلى/أسفل الصفحة */
-let scrollState = false; // false=goDown, true=goUp
+// زر عائم
+let scrollState=false;
 function toggleScroll(){
+  const btn=document.getElementById('floatScrollBtn');
   if(!scrollState){
-    // اذهب للأسفل
     window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
-    document.getElementById('floatScrollBtn').textContent='↑';
+    btn.textContent='↑';
     scrollState=true;
   } else {
-    // اذهب للأعلى
     window.scrollTo({ top: 0, behavior:'smooth' });
-    document.getElementById('floatScrollBtn').textContent='↓';
+    btn.textContent='↓';
     scrollState=false;
   }
-}
-
-/** الرسالة عند حفظ (تمت إضافتها) */
-function showSaveMessage(){
-  // أضف أي طريقة لعرض "Operation completed."
-  alert("Operation completed.");
 }
 </script>
 </body>
