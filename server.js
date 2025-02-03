@@ -1,20 +1,21 @@
 // server.js
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // node-fetch v2
 const FormData = require('form-data');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// =========== Env Variables (Secrets) ===========
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;   // مفتاح الوصول لـ GitHub
+// =========== متغيرات البيئة (Secrets) ==========
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;   // مفاتيح GitHub
 const REPO_OWNER = process.env.REPO_OWNER;       // اسم المستخدم/المنظمة
 const REPO_NAME = process.env.REPO_NAME;         // اسم المستودع
-const IMAGE_API_KEY = process.env.IMAGE_API_KEY; // مفتاح رفع الصور (imghippo)
+const IMAGE_API_KEY = process.env.IMAGE_API_KEY; // مفتاح imghippo (للصور)
 
-// ======= GitHub Helper Functions =======
+// =========== دوال مساعدة للتعامل مع GitHub ==========
 async function getGitHubFile(path) {
+  // مثلاً path = "data/topics.json"
   const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
   const res = await fetch(url, {
     method: 'GET',
@@ -26,15 +27,16 @@ async function getGitHubFile(path) {
   if (!res.ok) {
     throw new Error(`getGitHubFile failed: ${res.status} - ${res.statusText}`);
   }
-  return await res.json(); // { content, sha, ... }
+  return await res.json(); // { content, sha, ...}
 }
 
 async function updateGitHubFile(path, newContent, sha, commitMessage) {
+  // path = "data/topics.json" أو "data/cns_anatomy.json" مثلاً
   const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
   const body = {
     message: commitMessage,
     content: Buffer.from(newContent, 'utf-8').toString('base64'),
-    sha: sha
+    sha
   };
   const res = await fetch(url, {
     method: 'PUT',
@@ -47,10 +49,10 @@ async function updateGitHubFile(path, newContent, sha, commitMessage) {
   if (!res.ok) {
     throw new Error(`updateGitHubFile failed: ${res.status} - ${res.statusText}`);
   }
-  return await res.json();
+  return await res.json(); // معلومات الـcommit
 }
 
-// ======= Image upload helper (imghippo) =======
+// =========== رفع صورة عبر imghippo ==========
 async function uploadToImgHippo(fileBuffer, fileName) {
   if (!IMAGE_API_KEY) {
     throw new Error("No IMAGE_API_KEY found in environment.");
@@ -61,7 +63,9 @@ async function uploadToImgHippo(fileBuffer, fileName) {
 
   const res = await fetch("https://api.imghippo.com/v1/upload", {
     method: 'POST',
-    headers: { Accept: 'application/json' },
+    headers: {
+      Accept: 'application/json'
+    },
     body: form
   });
   if (!res.ok) {
@@ -75,12 +79,12 @@ async function uploadToImgHippo(fileBuffer, fileName) {
   }
 }
 
-// ================== Routes ==================
+// ================== المسارات ==================
 
-// 1) test server
+// فحص السيرفر وقراءة المتغيرات
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'Server is up. Secrets loaded?',
+    message: 'Server is up. Checking secrets...',
     GITHUB_TOKEN: GITHUB_TOKEN ? "Loaded" : "Missing",
     REPO_OWNER,
     REPO_NAME,
@@ -88,12 +92,11 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// 2) Load topics.json automatically and return content
+// 1) جلب (Load) ملف المواضيع: "data/topics.json"
 app.get('/api/topics', async (req, res) => {
-  // نفتح data/topics.json
   try {
-    const filePath = 'data/topics.json'; // مسار ثابت
-    const info = await getGitHubFile(filePath);
+    const filePath = 'data/topics.json'; // المسار داخل المستودع
+    const info = await getGitHubFile(filePath);  // { content, sha, ...}
     const decoded = Buffer.from(info.content, 'base64').toString('utf-8');
     const topics = JSON.parse(decoded);
     res.json({ success: true, topics, sha: info.sha });
@@ -102,9 +105,9 @@ app.get('/api/topics', async (req, res) => {
   }
 });
 
-// 3) Save topics.json automatically
+// 2) حفظ (Save) ملف المواضيع: "data/topics.json"
 app.post('/api/topics', async (req, res) => {
-  // body: { topics: [...], sha: "..." }
+  // body => { topics: [...], sha: "..." }
   try {
     const { topics, sha } = req.body;
     if (!Array.isArray(topics) || !sha) {
@@ -112,17 +115,17 @@ app.post('/api/topics', async (req, res) => {
     }
     const filePath = 'data/topics.json';
     const newContent = JSON.stringify(topics, null, 2);
-    const commitMsg = `Update topics.json from admin panel - ${new Date().toISOString()}`;
+    const commitMsg = `Update topics.json via admin panel at ${new Date().toISOString()}`;
     const updateInfo = await updateGitHubFile(filePath, newContent, sha, commitMsg);
     res.json({ success: true, commit: updateInfo.commit });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 4) Load any file from GitHub (like questions file)
+// 3) جلب أي ملف (مثل "data/cns_anatomy.json")
 app.get('/api/get-file', async (req, res) => {
-  const path = req.query.path;
+  const path = req.query.path;  // مثلاً ?path=data/cns_anatomy.json
   if (!path) {
     return res.status(400).json({ success: false, error: 'No ?path param' });
   }
@@ -133,17 +136,17 @@ app.get('/api/get-file', async (req, res) => {
     try {
       parsed = JSON.parse(decoded);
     } catch(e) {
-      parsed = decoded;
+      parsed = decoded; // ربما نص
     }
     res.json({ success: true, content: parsed, sha: info.sha });
-  } catch (err) {
+  } catch(err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 5) Update any file (like questions file)
+// 4) تحديث أي ملف (مثل "data/cns_anatomy.json")
 app.post('/api/update-file', async (req, res) => {
-  // body: { path, content, sha }
+  // body => { path, content, sha }
   const { path, content, sha } = req.body;
   if (!path || !sha) {
     return res.status(400).json({ success: false, error: 'Missing path or sha' });
@@ -155,29 +158,29 @@ app.post('/api/update-file', async (req, res) => {
     } else {
       finalStr = String(content);
     }
-    const commitMsg = `Update file ${path} from admin panel - ${new Date().toISOString()}`;
+    const commitMsg = `Update file ${path} from admin panel at ${new Date().toISOString()}`;
     const updateResp = await updateGitHubFile(path, finalStr, sha, commitMsg);
     res.json({ success: true, commit: updateResp.commit });
-  } catch (err) {
+  } catch(err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 6) Upload image to imghippo
+// 5) رفع صورة واحدة
 app.post('/api/upload-image', async (req, res) => {
-  // body: { name, base64 }
+  // body => { name, base64 }
   const { name, base64 } = req.body;
   if (!base64) {
     return res.status(400).json({ success: false, error: 'No base64 in body' });
   }
   try {
     const buffer = Buffer.from(base64, 'base64');
-    const imageUrl = await uploadToImgHippo(buffer, name || 'uploaded.jpg');
-    res.json({ success: true, url: imageUrl });
+    const url = await uploadToImgHippo(buffer, name || 'uploaded.jpg');
+    res.json({ success: true, url });
   } catch(err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ================== Export for Vercel ==================
+// تصدير التطبيق لكي يستخدمه Vercel
 module.exports = app;
