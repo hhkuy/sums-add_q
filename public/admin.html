@@ -2,25 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Manager with Custom Modals & Save Topics next to Add Topic</title>
+  <title>All Native Popups Replaced with Custom Modals</title>
   <style>
     body {
-      margin: 0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333; position:relative;
+      margin:0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333;
     }
     .container {
-      max-width:1200px; margin:0 auto; background:#fff; padding:20px;
-      border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      max-width:1200px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
       position:relative;
     }
-    h1 {
-      text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px;
-    }
+    h1 { text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px; }
     .section {
       background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px;
     }
-    .section h2 {
-      color:#4a90e2; margin-top:0; margin-bottom:10px; font-size:22px;
-    }
+    .section h2 { color:#4a90e2; margin:0 0 10px; font-size:22px; }
     button {
       padding:12px 24px; border:none; border-radius:4px; cursor:pointer;
       margin-right:5px; margin-top:5px; font-size:16px;
@@ -37,11 +32,9 @@
     #topicsList, #subtopicQuestions {
       background:#fff; border:1px solid #ccc; border-radius:4px; padding:10px; min-height:60px; margin-top:10px;
     }
-
     .q-item {
       border:1px solid #ccc; padding:8px; border-radius:4px; margin-bottom:5px;
     }
-
     .image-field-row {
       display:flex; align-items:center; gap:10px; margin-bottom:8px;
     }
@@ -53,69 +46,63 @@
       transition:width 0.3s; font-size:14px;
     }
 
-    /* زر عائم للتنقل */
+    /* زر عائم */
     #floatScrollBtn {
-      position: fixed;
-      width: 50px; height: 50px;
-      bottom: 30px; right: 30px;
-      background: #4a90e2; color: #fff;
-      border: none; border-radius: 50%;
-      cursor: pointer; z-index:999;
-      display:flex; align-items:center; justify-content:center;
-      font-size:24px;
+      position: fixed; width:50px; height:50px; bottom:30px; right:30px;
+      background:#4a90e2; color:#fff; border:none; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; font-size:24px;
+      cursor:pointer; z-index:999;
     }
-    #floatScrollBtn:hover {
-      opacity:0.8;
-    }
+    #floatScrollBtn:hover { opacity:0.8; }
 
-    /* مودالات مخصصة للرسائل */
+    /* المودالات لجميع النوافذ */
     .modal-overlay {
-      position:fixed; top:0; left:0; right:0; bottom:0;
-      background: rgba(0,0,0,0.5);
-      display:none; 
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.5);
+      display:none;
       justify-content:center; align-items:center;
       z-index:9999;
     }
     .modal-box {
       background:#fff; border-radius:8px; padding:20px;
-      max-width:500px; width:90%;
+      max-width:400px; width:90%;
+      position:relative;
       text-align:center;
     }
+    .modal-box h3 {
+      margin-bottom:20px; font-size:1.1rem; color:#333;
+    }
     .modal-buttons {
-      margin-top:15px; display:flex; justify-content:center; gap:10px;
+      display:flex; justify-content:center; gap:10px; margin-top:10px;
     }
     .btn-modal {
       padding:8px 16px; border:none; border-radius:4px; cursor:pointer; font-size:0.9em;
     }
     .btn-modal-primary { background:#007bff; color:#fff; }
     .btn-modal-danger { background:#dc3545; color:#fff; }
-    .btn-modal-close { background:#6c757d; color:#fff; }
+    .btn-modal-cancel { background:#6c757d; color:#fff; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Quiz Manager + Custom Modals</h1>
+    <h1>All Popups in Custom Modals</h1>
 
     <!-- Manage Topics -->
     <div class="section">
-      <h2>Manage Topics (data/topics.json)</h2>
-      <div style="margin-bottom:10px;">
-        <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
-      </div>
+      <h2>Manage Topics</h2>
+      <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
+      <button class="btn-green" onclick="saveTopics()">Save topics.json</button>
       <div id="topicsList"></div>
       <div style="margin-top:10px;">
         <input type="text" id="newTopicName" placeholder="Topic Name...">
         <input type="text" id="newTopicDesc" placeholder="Topic Description...">
         <button class="btn-blue" onclick="addTopic()">Add Topic</button>
-        <!-- زر Save topics.json بجوار Add Topic ولونه أخضر -->
-        <button class="btn-green" onclick="saveTopics()">Save topics.json</button>
       </div>
     </div>
 
     <!-- Subtopic Manager -->
     <div class="section">
       <h2>Subtopic Questions Manager</h2>
-      <p>Select a subtopic after loading topics, then load or save its questions.</p>
       <select id="subtopicSelect"></select>
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="loadSubtopic()">Load Questions</button>
@@ -125,20 +112,19 @@
       <h3 style="margin-top:20px; font-size:18px;">Add New Questions</h3>
       <label>Prefix (optional):</label>
       <input type="text" id="prefixInput" placeholder="e.g. Dr. Ali -">
-      <label>Start Question Number:</label>
+      <label>Start Q#:</label>
       <input type="number" id="startQNumber" value="1" min="1" style="width:120px;">
-      <label>Questions Text (larger box):</label>
-      <textarea id="questionsText" rows="8" style="font-size:16px;"></textarea>
+      <label>Questions Text:</label>
+      <textarea id="questionsText" rows="6"></textarea>
 
-      <button class="btn-orange" style="margin-top:5px;" onclick="addImageField()">Add Image Field</button>
+      <button class="btn-orange" onclick="addImageField()">Add Image Field</button>
       <div id="imageContainer" style="margin-top:10px;"></div>
-
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="convertAndAppend()">Convert & Append</button>
         <button class="btn-green" onclick="saveSubtopic()">Save Questions</button>
       </div>
 
-      <h3 style="margin-top:20px; font-size:18px;">Delete Questions by Bold Prefix</h3>
+      <h3 style="margin-top:20px; font-size:18px;">Delete by Bold Prefix</h3>
       <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
       <button class="btn-red" onclick="deleteByPrefix()">Delete</button>
     </div>
@@ -147,20 +133,20 @@
   <!-- زر عائم للscroll -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
 
-  <!-- مودال alert -->
+  <!-- Custom modal for alert -->
   <div class="modal-overlay" id="alertOverlay">
-    <div class="modal-box" id="alertBox">
-      <h3 id="alertMessage">رسالة تنبيه</h3>
+    <div class="modal-box">
+      <h3 id="alertMsg">رسالة التنبيه</h3>
       <div class="modal-buttons">
         <button class="btn-modal btn-modal-primary" id="alertOkBtn">OK</button>
       </div>
     </div>
   </div>
 
-  <!-- مودال confirm -->
+  <!-- Custom modal for confirm -->
   <div class="modal-overlay" id="confirmOverlay">
     <div class="modal-box">
-      <h3 id="confirmMessage">هل انت متأكد؟</h3>
+      <h3 id="confirmMsg">هل أنت متأكد؟</h3>
       <div class="modal-buttons">
         <button class="btn-modal btn-modal-primary" id="confirmYesBtn">Yes</button>
         <button class="btn-modal btn-modal-danger" id="confirmNoBtn">No</button>
@@ -168,21 +154,39 @@
     </div>
   </div>
 
+  <!-- Custom modal for prompt -->
+  <div class="modal-overlay" id="promptOverlay">
+    <div class="modal-box">
+      <h3 id="promptMsg">أدخل النص:</h3>
+      <input type="text" id="promptInput" style="width:90%; margin-bottom:10px;">
+      <div class="modal-buttons">
+        <button class="btn-modal btn-modal-primary" id="promptOkBtn">OK</button>
+        <button class="btn-modal btn-modal-cancel" id="promptCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
 <script>
-/** 1) Override alert/confirm with custom modals */
+/** Override alert/confirm/prompt to show modals. Busy loop approach for blocking. */
 (function(){
   const alertOverlay=document.getElementById('alertOverlay');
-  const alertMessage=document.getElementById('alertMessage');
+  const alertMsg=document.getElementById('alertMsg');
   const alertOkBtn=document.getElementById('alertOkBtn');
 
   const confirmOverlay=document.getElementById('confirmOverlay');
-  const confirmMessage=document.getElementById('confirmMessage');
+  const confirmMsg=document.getElementById('confirmMsg');
   const confirmYesBtn=document.getElementById('confirmYesBtn');
   const confirmNoBtn=document.getElementById('confirmNoBtn');
 
-  function customAlert(msg){
+  const promptOverlay=document.getElementById('promptOverlay');
+  const promptMsg=document.getElementById('promptMsg');
+  const promptInput=document.getElementById('promptInput');
+  const promptOkBtn=document.getElementById('promptOkBtn');
+  const promptCancelBtn=document.getElementById('promptCancelBtn');
+
+  function customAlert(message) {
     return new Promise(resolve=>{
-      alertMessage.textContent=msg;
+      alertMsg.textContent=message;
       alertOverlay.style.display='flex';
       alertOkBtn.onclick=()=>{
         alertOverlay.style.display='none';
@@ -190,9 +194,9 @@
       };
     });
   }
-  function customConfirm(msg){
+  function customConfirm(message){
     return new Promise(resolve=>{
-      confirmMessage.textContent=msg;
+      confirmMsg.textContent=message;
       confirmOverlay.style.display='flex';
       confirmYesBtn.onclick=()=>{
         confirmOverlay.style.display='none';
@@ -204,37 +208,74 @@
       };
     });
   }
+  function customPrompt(message, defaultVal){
+    return new Promise(resolve=>{
+      promptMsg.textContent=message;
+      promptInput.value=defaultVal||"";
+      promptOverlay.style.display='flex';
 
-  // نستبدل 
+      promptOkBtn.onclick=()=>{
+        let val=promptInput.value;
+        promptOverlay.style.display='none';
+        resolve(val);
+      };
+      promptCancelBtn.onclick=()=>{
+        promptOverlay.style.display='none';
+        resolve(null);
+      };
+    });
+  }
+
   let nativeAlert=window.alert;
   let nativeConfirm=window.confirm;
-  
-  window.alert=function(msg){
-    // نجعلها async
-    customAlert(msg); 
-  };
-  
-  window.confirm=function(msg){
-    // نحاكي confirm متزامن, مع busy loop
-    let wasConfirmed=false;
-    let done=false;
+  let nativePrompt=window.prompt;
 
-    customConfirm(msg).then(res=>{
-      wasConfirmed=res; 
+  window.alert=function(msg){
+    let done=false;
+    customAlert(msg).then(()=>{
       done=true;
     });
-    // busy loop
     const start=Date.now();
     while(!done){
-      if(Date.now()-start>300000){ // 5 دقائق
-        break;
-      }
+      if(Date.now()-start>600000) break; // 10 minutes
     }
-    return wasConfirmed;
+  };
+  window.confirm=function(msg){
+    let done=false; 
+    let result=false;
+    customConfirm(msg).then(r=>{
+      result=r; 
+      done=true;
+    });
+    const start=Date.now();
+    while(!done){
+      if(Date.now()-start>600000) break;
+    }
+    return result;
+  };
+  window.prompt=function(msg, defaultVal){
+    let done=false;
+    let finalVal=null;
+    customPrompt(msg, defaultVal).then(r=>{
+      finalVal=r;
+      done=true;
+    });
+    const start=Date.now();
+    while(!done){
+      if(Date.now()-start>600000) break;
+    }
+    return finalVal; // string or null
   };
 })();
 
-/** 2) زر عائم للscroll */
+// بقية الكود كما هو:
+let cachedTopics=[];
+let topicsSha=null;
+let currentSubtopicPath=null;
+let currentSubtopicSha=null;
+let currentQuestions=[];
+
+// زر عائم
 let scrollState=false;
 function toggleScroll(){
   const btn=document.getElementById('floatScrollBtn');
@@ -249,21 +290,14 @@ function toggleScroll(){
   }
 }
 
-// بقية الكود كما هو (Load Topics, Save Topics, subtopic, etc.)
-let cachedTopics=[];
-let topicsSha=null;
-let currentSubtopicPath=null;
-let currentSubtopicSha=null;
-let currentQuestions=[];
-
-// Display a "Operation completed" after saving
-function showSaveMessage() {
+// Helper
+function showSaveMessage(){
   alert("Operation completed.");
 }
 
-// Manage Topics
+// 1) Load Topics
 async function loadTopics(){
-  try {
+  try{
     let r=await fetch('/api/topics');
     let j=await r.json();
     if(!j.success)return;
@@ -271,27 +305,27 @@ async function loadTopics(){
     topicsSha=j.sha;
     renderTopics();
     fillSubtopics();
-  }catch(err){}
+  }catch(e){}
 }
 async function saveTopics(){
   if(!topicsSha)return;
   try{
-    let body={ topics:cachedTopics, sha:topicsSha };
+    let body={topics:cachedTopics, sha:topicsSha};
     let r=await fetch('/api/topics',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
     let j=await r.json();
-    if(!j.success){alert("Saving topics failed: "+j.error); return;}
+    if(!j.success){ alert("Saving topics failed: "+j.error); return;}
     showSaveMessage();
-  }catch(err){}
+  }catch(e){}
 }
 function renderTopics(){
-  const list=document.getElementById('topicsList');
+  let list=document.getElementById('topicsList');
   list.innerHTML='';
   cachedTopics.forEach((t,idx)=>{
-    const d=document.createElement('div');
+    let d=document.createElement('div');
     d.style.border='1px solid #ccc';
     d.style.padding='8px';
     d.style.borderRadius='4px';
@@ -304,7 +338,7 @@ function renderTopics(){
     delBtn.textContent='Delete';
     delBtn.classList.add('btn-red');
     delBtn.onclick=()=>{
-      if(confirm('Delete this topic?')){
+      if(confirm("Delete this topic?")){
         cachedTopics.splice(idx,1);
         renderTopics();
         fillSubtopics();
@@ -316,9 +350,9 @@ function renderTopics(){
     edBtn.textContent='Edit';
     edBtn.classList.add('btn-orange');
     edBtn.onclick=()=>{
-      let newName=prompt('Topic name:', t.topicName);
+      let newName=prompt("Topic name:", t.topicName);
       if(newName) t.topicName=newName;
-      let newDesc=prompt('Topic desc:', t.description||'');
+      let newDesc=prompt("Topic desc:", t.description||'');
       if(newDesc!==null) t.description=newDesc;
       renderTopics();
       fillSubtopics();
@@ -331,12 +365,11 @@ function renderTopics(){
         stDiv.style.marginLeft='15px';
         stDiv.style.marginTop='5px';
         stDiv.textContent=`${st.name} => ${st.file}`;
-        
         let sdel=document.createElement('button');
         sdel.textContent='X';
         sdel.classList.add('btn-red');
         sdel.onclick=()=>{
-          if(confirm('Delete subtopic?')){
+          if(confirm("Delete subtopic?")){
             t.subTopics.splice(stidx,1);
             renderTopics();
             fillSubtopics();
@@ -348,7 +381,7 @@ function renderTopics(){
         sedit.textContent='Edit';
         sedit.classList.add('btn-orange');
         sedit.onclick=()=>{
-          let rename=prompt('Subtopic name:', st.name);
+          let rename=prompt("Subtopic name:", st.name);
           if(rename){
             st.name=rename;
             renderTopics();
@@ -365,7 +398,7 @@ function renderTopics(){
     addSt.textContent='Add Subtopic';
     addSt.classList.add('btn-blue');
     addSt.onclick=()=>{
-      let sbName=prompt('Subtopic name?');
+      let sbName=prompt("Subtopic name?");
       if(!sbName)return;
       let fileName=(t.topicName.replace(/\s+/g,'_')+"_"+sbName.replace(/\s+/g,'_')).toLowerCase()+'.json';
       let path='data/'+fileName;
@@ -390,7 +423,7 @@ function addTopic(){
   fillSubtopics();
 }
 
-// subtopic
+// 2) Subtopic
 function fillSubtopics(){
   let sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -416,29 +449,29 @@ async function loadSubtopic(){
     currentSubtopicSha=j.sha;
     currentQuestions=j.content;
     renderSubtopicQuestions();
-  }catch(err){}
+  }catch(e){}
 }
 function renderSubtopicQuestions(){
   let box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
-  for(let i=0; i<currentQuestions.length; i++){
+  for(let i=0; i<currentQuestions.length;i++){
     let q=currentQuestions[i];
     let d=document.createElement('div');
     d.classList.add('q-item');
     let numbering=(i+1)+". ";
     d.innerHTML=numbering+(q.question||'No question text');
 
-    let del=document.createElement('button');
-    del.textContent='Delete';
-    del.classList.add('btn-red');
-    del.style.marginLeft='5px';
-    del.onclick=()=>{
-      if(confirm('Delete this question?')){
+    let delBtn=document.createElement('button');
+    delBtn.textContent='Delete';
+    delBtn.classList.add('btn-red');
+    delBtn.style.marginLeft='5px';
+    delBtn.onclick=()=>{
+      if(confirm("Delete this question?")){
         currentQuestions.splice(i,1);
         renderSubtopicQuestions();
       }
     };
-    d.appendChild(del);
+    d.appendChild(delBtn);
 
     box.appendChild(d);
   }
@@ -455,19 +488,19 @@ async function saveSubtopic(){
     let j=await r.json();
     if(!j.success)return;
     showSaveMessage();
-  }catch(err){}
+  }catch(e){}
 }
 
-// الصور
+// 3) Add new questions + images
 function addImageField(){
   let c=document.getElementById('imageContainer');
   let row=document.createElement('div');
   row.classList.add('image-field-row');
 
-  let qNum=document.createElement('input');
-  qNum.type='number';
-  qNum.placeholder='Q#';
-  qNum.min=1;
+  let qn=document.createElement('input');
+  qn.type='number';
+  qn.placeholder='Q#';
+  qn.min=1;
 
   let fileIn=document.createElement('input');
   fileIn.type='file';
@@ -485,7 +518,7 @@ function addImageField(){
   pbar.textContent='0%';
   prog.appendChild(pbar);
 
-  row.appendChild(qNum);
+  row.appendChild(qn);
   row.appendChild(fileIn);
   row.appendChild(delBtn);
   row.appendChild(prog);
@@ -496,7 +529,6 @@ async function convertAndAppend(){
   let prefix=document.getElementById('prefixInput').value.trim();
   let startNumber=parseInt(document.getElementById('startQNumber').value,10);
   if(isNaN(startNumber)||startNumber<1) startNumber=1;
-
   let text=document.getElementById('questionsText').value.trim();
   if(!text)return;
 
@@ -518,14 +550,14 @@ async function convertAndAppend(){
   let lines=text.split('\n');
   let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
   let out=[];
-  for(let i=0;i<lines.length;i++){
+  for(let i=0; i<lines.length; i++){
     let ln=lines[i].trim();
     let qM=ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
       if(questionText!==null){
-        out.push({question:questionText, options, answer:ansIdx, answerText:ansText, explanation, userAnswer:null});
+        out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
       }
-      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix? prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
+      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix?prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
       startNumber++;
       options=[]; ansIdx=-1; ansText=null; explanation=null;
     } else {
@@ -547,19 +579,19 @@ async function convertAndAppend(){
     }
   }
   if(questionText!==null){
-    out.push({question:questionText, options, answer:ansIdx, answerText:ansText, explanation, userAnswer:null});
+    out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
   }
   await handleImagesAndBind(out);
   currentQuestions=currentQuestions.concat(out);
   renderSubtopicQuestions();
 }
 async function handleImagesAndBind(questionsArr){
-  let container=document.getElementById('imageContainer');
-  let rows=container.querySelectorAll('.image-field-row');
+  let c=document.getElementById('imageContainer');
+  let rows=c.querySelectorAll('.image-field-row');
   for(const row of rows){
     let inputs=row.querySelectorAll('input');
-    let qn=parseInt(inputs[0].value,10);
-    if(!qn)continue;
+    let qnum=parseInt(inputs[0].value,10);
+    if(!qnum)continue;
     let fileIn=inputs[1];
     if(fileIn.files&&fileIn.files.length>0){
       let file=fileIn.files[0];
@@ -567,12 +599,12 @@ async function handleImagesAndBind(questionsArr){
       let pbar=prog.querySelector('.progress-bar');
       let url=await uploadImage(file, prog, pbar);
       if(url){
-        for(let q of questionsArr){
-          let match=q.question.match(/Question\s+(\d+)/);
+        for(let obj of questionsArr){
+          let match=obj.question.match(/Question\s+(\d+)/);
           if(match){
             let num=parseInt(match[1],10);
-            if(num===qn){
-              q.question+=`<br><img src='${url}' alt='Image for Question ${qn}' style='max-width:100%; height:auto;'>`;
+            if(num===qnum){
+              obj.question+=`<br><img src='${url}' alt='Image for Question ${qnum}' style='max-width:100%; height:auto;'>`;
               break;
             }
           }
@@ -605,7 +637,7 @@ function uploadImage(file, progressBarContainer, progressBar){
             progressBar.style.width="100%";
             progressBar.textContent="تم رفع الصورة";
             return resolve(resp.url);
-          } else {
+          }else{
             progressBar.textContent="فشل الرفع";
             resolve("");
           }
@@ -613,7 +645,7 @@ function uploadImage(file, progressBarContainer, progressBar){
           progressBar.textContent="فشل الرفع";
           resolve("");
         }
-      } else {
+      }else{
         progressBar.textContent="فشل الرفع";
         resolve("");
       }
@@ -646,6 +678,16 @@ async function deleteByPrefix(){
     });
     loadSubtopic();
   }catch(e){}
+}
+
+/** تنسيق الوقت 24->12 */
+function formatTo12Hour(tVal){
+  if(!tVal)return "";
+  let [hh,mm]=tVal.split(":");
+  hh=parseInt(hh,10);
+  let period=(hh>=12)?"م":"ص";
+  let newH=(hh%12)||12;
+  return newH+":"+mm+" "+period;
 }
 </script>
 </body>
