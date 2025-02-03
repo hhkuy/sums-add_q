@@ -1,7 +1,7 @@
 {
-  "name": "my-complete-converter",
+  "name": "quiz-manager-merged",
   "version": "1.0.0",
-  "description": "Quiz converter + subtopic manager integrated + secrets in vercel",
+  "description": "Quiz converter + topics/subtopics + image upload, refined, no logs, bigger UI",
   "scripts": {
     "start": "node server.js"
   },
