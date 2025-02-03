@@ -1,4 +1,4 @@
-// server.js
+// server.js (نفسه بلا تغيير بالمنطق)
 const express = require('express');
 const fetch = require('node-fetch');
 const FormData = require('form-data');
@@ -77,7 +77,7 @@ async function uploadToImgHippo(fileBuffer, fileName) {
 
 app.get('/api/test',(req,res)=>{
   res.json({
-    message:"Server up with custom modals and ordering feature",
+    message:"Server up, custom modals, no freeze",
     GITHUB_TOKEN:!!GITHUB_TOKEN,
     REPO_OWNER,
     REPO_NAME,
