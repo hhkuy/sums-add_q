@@ -1,622 +1,847 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Full Auto Quiz Converter</title>
-    <style>
-        /* نفس تصميمك الأصلي مع تعديلات طفيفة */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 30px 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 25px;
-            color: #4a90e2;
-        }
-        .instructions {
-            background-color: #eef6fc;
-            padding: 20px;
-            border-left: 6px solid #4a90e2;
-            margin-bottom: 25px;
-            border-radius: 5px;
-        }
-        .instructions pre {
-            background-color: #f9f9f9;
-            padding: 15px;
-            overflow: auto;
-            border-radius: 5px;
-            font-size: 15px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        textarea, input[type="text"], input[type="number"], input[type="file"] {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-            resize: vertical;
-            transition: border-color 0.3s;
-        }
-        textarea {
-            height: 200px;
-        }
-        textarea:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="file"]:focus {
-            border-color: #4a90e2;
-            outline: none;
-        }
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 25px;
-            flex-wrap: wrap;
-        }
-        button {
-            padding: 14px 30px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            margin-bottom: 10px;
-            flex: 1 1 30%;
-            margin-right: 10px;
-        }
-        button:last-child {
-            margin-right: 0;
-        }
-        button:hover {
-            transform: translateY(-3px);
-        }
-        #convertButton {
-            background-color: #4a90e2;
-            color: #fff;
-        }
-        #copyButton {
-            background-color: #28a745;
-            color: #fff;
-        }
-        #clearButton {
-            background-color: #dc3545;
-            color: #fff;
-        }
-        #outputSection {
-            margin-top: 35px;
-        }
-        pre {
-            background-color: #f4f4f4;
-            padding: 25px;
-            border-radius: 6px;
-            overflow: auto;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 16px;
-        }
-        .image-fields-container {
-            margin-top: 20px;
-        }
-        .image-field-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            gap: 10px;
-        }
-        .image-field-row input[type="number"] {
-            width: 60px;
-        }
-        .image-field-row input[type="file"] {
-            flex: 1;
-        }
-        .image-field-row button {
-            width: auto;
-            flex: 0 0 auto;
-            background-color: #ff9800;
-            color: #fff;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .progress {
-            width: 100%;
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            height: 20px;
-            margin-top: 5px;
-        }
-        .progress-bar {
-            background-color: #4a90e2;
-            height: 100%;
-            width: 0%;
-            text-align: center;
-            color: #fff;
-            line-height: 20px;
-            transition: width 0.3s;
-        }
-        @media (max-width: 700px) {
-            .button-group {
-                flex-direction: column;
-            }
-            .button-group button {
-                flex: 1 1 100%;
-                margin-right: 0;
-            }
-        }
-
-        /* قسم إدارة الـtopics.json */
-        #topicsSection {
-            margin-top: 40px;
-            background: #eef6fc;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        .topic-item {
-            margin: 8px 0;
-            background: #f9f9f9;
-            border-radius: 4px;
-            padding: 8px;
-        }
-        .subtopic-list {
-            margin-left: 20px;
-        }
-        .subtopic-list li {
-            margin: 4px 0;
-        }
-        .btn-del {
-            background-color: #dc3545;
-            color: #fff;
-            margin-left: 5px;
-        }
-        .btn-edit {
-            background-color: #ffc107;
-            color: #000;
-            margin-left: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Complete Quiz Converter & Manager</title>
+  <style>
+    /* نفس أسلوب التصميم الأصلي */
+    * {
+      box-sizing: border-box;
+      margin:0;
+      padding:0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      padding:20px;
+      color:#333;
+    }
+    .container {
+      max-width: 1200px;
+      margin:0 auto;
+      background:#fff;
+      padding:30px 40px;
+      border-radius:10px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align:center;
+      margin-bottom:25px;
+      color:#4a90e2;
+    }
+    .instructions {
+      background-color:#eef6fc;
+      padding:20px;
+      border-left:6px solid #4a90e2;
+      margin-bottom:25px;
+      border-radius:5px;
+    }
+    .instructions pre {
+      background:#f9f9f9;
+      padding:15px;
+      border-radius:5px;
+      font-size:15px;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+    }
+    .session-container {
+      background:#f9f9f9;
+      border:1px solid #ccc;
+      margin-bottom:20px;
+      border-radius:5px;
+      padding:15px;
+    }
+    .session-container h2 {
+      color:#4a90e2;
+      margin-top:0;
+    }
+    .button-group {
+      display:flex; 
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+    button {
+      padding:10px 20px;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+    }
+    button:hover {
+      opacity:0.9;
+    }
+    .btn-blue {
+      background:#4a90e2;
+      color:#fff;
+    }
+    .btn-green {
+      background:#28a745;
+      color:#fff;
+    }
+    .btn-red {
+      background:#dc3545;
+      color:#fff;
+    }
+    .btn-orange {
+      background:#ff9800;
+      color:#fff;
+    }
+    #topicsResult,
+    #subtopicQuestionsResult {
+      margin-top:10px; 
+      background:#f9f9f9;
+      padding:10px;
+      border-radius:5px;
+      white-space:pre-wrap;
+    }
+    .topics-list {
+      margin-top:15px;
+    }
+    .topic-item, .subtopic-item {
+      background:#fff;
+      border:1px solid #ccc;
+      padding:10px;
+      margin-bottom:10px;
+      border-radius:4px;
+    }
+    .topic-item button, .subtopic-item button {
+      margin-left:5px;
+    }
+    .image-field-row {
+      display:flex; 
+      align-items:center; 
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .progress {
+      width:100%;
+      background:#e0e0e0;
+      border-radius:5px;
+      overflow:hidden;
+      height:20px;
+      display:none;
+    }
+    .progress-bar {
+      background:#4a90e2;
+      height:100%;
+      width:0%;
+      line-height:20px;
+      text-align:center;
+      color:#fff;
+      transition:width 0.3s;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Full Auto Quiz Converter</h1>
-        <div class="instructions">
-            <p>Please enter your questions in this format:</p>
-            <pre>
-1. Question text ...
+  <div class="container">
+    <h1>Complete Quiz Converter & Manager</h1>
+    <div class="instructions">
+      <p>Use this panel to manage Topics, Subtopics, and their Questions inside <strong>data/</strong> on GitHub, plus convert new questions (with images) into quizData format and add them.</p>
+      <pre>
+Example question format:
+1. Dr. Ali - This is question text ...
 A. Option ...
-B. Option ...
-C. Option ... ***
+B. Another ...
+C. Something ... ***
 Explanation : any word
-*** means correct answer
-            </pre>
-        </div>
-
-        <!-- quiz converter inputs -->
-        <label for="prefixInput">Enter Prefix (optional):</label>
-        <input type="text" id="prefixInput" placeholder="e.g. Dr. Smith -">
-
-        <label for="inputText">Enter Your Questions Here:</label>
-        <textarea id="inputText" placeholder="Paste your questions here..."></textarea>
-
-        <label>Add Images (optional):</label>
-        <div class="image-fields-container" id="imageFieldsContainer"></div>
-        <button type="button" onclick="addImageField()" style="background-color:#17a2b8; color:#fff; width:auto; margin-top:10px;">Add Image Field</button>
-
-        <div class="button-group">
-            <button id="convertButton" onclick="convertToQuizData()">Convert to quizData</button>
-            <button id="copyButton" onclick="copyToClipboard()" disabled>Copy to Clipboard</button>
-            <button id="clearButton" onclick="clearAll()">Clear All</button>
-        </div>
-
-        <!-- output code -->
-        <div id="outputSection">
-            <h2>Generated Code:</h2>
-            <pre id="outputCode">// Your converted quizData will appear here...</pre>
-        </div>
-
-        <!-- ادارة topics.json -->
-        <div id="topicsSection">
-            <h2>Manage topics.json (Auto in data/)</h2>
-            <button onclick="loadTopics()">Load topics.json</button>
-            <button onclick="saveTopics()">Save topics.json</button>
-            <div id="topicsResult" style="white-space:pre-wrap; background:#f9f9f9; padding:10px; margin-top:10px; border-radius:4px;"></div>
-            <div id="topicsContainer"></div>
-
-            <h3>Add New Topic</h3>
-            <input type="text" id="newTopicName" placeholder="Topic Name...">
-            <input type="text" id="newTopicDesc" placeholder="Topic Description...">
-            <button onclick="addTopic()">Add Topic</button>
-        </div>
+*** = correct answer
+      </pre>
     </div>
 
-    <script>
-        /* نفس الكود المذكور في الأجوبة السابقة */
-        // ... [كل ما في الاجابات السابقة (uploadImageToServer, collectImageData, convertToQuizData, copyToClipboard, clearAll)]
+    <!-- زر لإنشاء جلسة تحويل أسئلة جديدة -->
+    <button class="btn-blue" onclick="addConversionSession()">Add New Conversion Session</button>
+    <div id="sessionsContainer"></div>
 
-        function addImageField() {
-            const container = document.getElementById('imageFieldsContainer');
-            const row = document.createElement('div');
-            row.classList.add('image-field-row');
+    <!-- قسم إدارة المواضيع (topics.json) -->
+    <div style="margin-top:30px; padding:15px; background:#eef6fc; border-radius:5px;">
+      <h2>Manage topics.json</h2>
+      <div class="button-group">
+        <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
+        <button class="btn-blue" onclick="saveTopics()">Save topics.json</button>
+      </div>
+      <div id="topicsResult"></div>
+      <div id="topicsList" class="topics-list"></div>
 
-            const questionNumberInput = document.createElement('input');
-            questionNumberInput.type = 'number';
-            questionNumberInput.placeholder = 'Q#';
-            questionNumberInput.min = 1;
+      <h3>Add New Topic</h3>
+      <input type="text" id="newTopicName" placeholder="Topic Name...">
+      <input type="text" id="newTopicDesc" placeholder="Topic Description...">
+      <button class="btn-blue" onclick="addTopic()">Add Topic</button>
+    </div>
 
-            const imageFileInput = document.createElement('input');
-            imageFileInput.type = 'file';
-            imageFileInput.accept = 'image/*';
+    <!-- قسم إدارة أسئلة Subtopic -->
+    <div style="margin-top:30px; padding:15px; background:#f9f9f9; border:1px solid #ccc; border-radius:5px;">
+      <h2>Subtopic Questions Manager</h2>
+      <p>Select a subtopic (auto-detected from topics.json) to load or manipulate its questions file:</p>
+      <select id="subtopicSelect" style="width:100%; max-width:400px; padding:8px; margin-bottom:10px;"></select>
+      <div class="button-group">
+        <button class="btn-blue" onclick="loadSubtopicQuestions()">Load Questions</button>
+        <button class="btn-blue" onclick="saveSubtopicQuestions()">Save Questions</button>
+      </div>
+      <div id="subtopicQuestionsResult"></div>
+      <div id="subtopicQuestionsList" style="margin-top:15px;"></div>
 
-            const removeButton = document.createElement('button');
-            removeButton.type = 'button';
-            removeButton.textContent = 'Remove';
-            removeButton.onclick = () => {
-                container.removeChild(row);
-            };
+      <h3>Add New Questions (Converted) to this Subtopic</h3>
+      <textarea id="subtopicNewQuestions" rows="4" style="width:100%;" placeholder="Paste 'quizData' array or 'Dr. Ali...' text to convert."></textarea>
+      <div class="button-group">
+        <button class="btn-blue" onclick="convertAndAddToSubtopic()">Convert & Add</button>
+      </div>
 
-            const progressContainer = document.createElement('div');
-            progressContainer.classList.add('progress');
-            progressContainer.style.display = 'none';
-            const progressBar = document.createElement('div');
-            progressBar.classList.add('progress-bar');
-            progressBar.style.width = '0%';
-            progressBar.textContent = '0%';
-            progressContainer.appendChild(progressBar);
+      <h3>Delete Questions by Bold Prefix</h3>
+      <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
+      <button class="btn-red" onclick="deleteQuestionsByPrefix()">Delete by Prefix</button>
+    </div>
+  </div>
 
-            row.appendChild(questionNumberInput);
-            row.appendChild(imageFileInput);
-            row.appendChild(removeButton);
-            row.appendChild(progressContainer);
-            container.appendChild(row);
+<script>
+// ================= GLOBALS =================
+let cachedTopics = [];
+let topicsSha = null;
+
+// sessions
+let sessionCount = 0;
+
+// subtopic questions in memory
+let currentSubtopicFilePath = null;
+let currentSubtopicSha = null;
+let currentSubtopicQuestions = [];
+
+// ============= 1) Conversion Sessions =============
+function addConversionSession() {
+  sessionCount++;
+  const container = document.getElementById('sessionsContainer');
+
+  // إنشاء عنصر جلسة
+  const sessionDiv = document.createElement('div');
+  sessionDiv.classList.add('session-container');
+  sessionDiv.id = 'session' + sessionCount;
+
+  sessionDiv.innerHTML = `
+    <h2>Conversion Session #${sessionCount}</h2>
+    <label>Prefix (optional):</label>
+    <input type="text" id="prefixInput${sessionCount}" style="width:100%; padding:8px; margin-bottom:5px;" placeholder="e.g. Dr. Ali -">
+    <label>Questions Text:</label>
+    <textarea id="questionsInput${sessionCount}" rows="6" style="width:100%;"></textarea>
+    <div style="margin-top:10px;">Add Images (optional):</div>
+    <div id="imageFieldsContainer${sessionCount}" style="margin-bottom:10px;"></div>
+    <button class="btn-blue" onclick="addImageField('${sessionCount}')">Add Image Field</button>
+    <div class="button-group">
+      <button class="btn-blue" onclick="convertToQuizData('${sessionCount}')">Convert to quizData</button>
+      <button class="btn-green" id="copyBtn${sessionCount}" onclick="copyCode('${sessionCount}')" disabled>Copy Code</button>
+      <button class="btn-red" onclick="clearSession('${sessionCount}')">Clear Session</button>
+    </div>
+    <h3>Result:</h3>
+    <pre id="outputCode${sessionCount}">// Code will appear here...</pre>
+  `;
+  container.appendChild(sessionDiv);
+}
+
+// إضافة حقل صورة لسيشن محدد
+function addImageField(sessionId) {
+  const container = document.getElementById(`imageFieldsContainer${sessionId}`);
+  const row = document.createElement('div');
+  row.classList.add('image-field-row');
+
+  // سؤال رقم
+  const qNumInput = document.createElement('input');
+  qNumInput.type = 'number';
+  qNumInput.placeholder = 'Q#';
+  qNumInput.min = 1;
+
+  // حقل ملف
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+
+  // زر حذف
+  const removeBtn = document.createElement('button');
+  removeBtn.textContent='Remove';
+  removeBtn.classList.add('btn-orange');
+  removeBtn.onclick = () => container.removeChild(row);
+
+  // progress
+  const progressContainer = document.createElement('div');
+  progressContainer.classList.add('progress');
+  const progressBar = document.createElement('div');
+  progressBar.classList.add('progress-bar');
+  progressBar.textContent='0%';
+  progressContainer.appendChild(progressBar);
+
+  row.appendChild(qNumInput);
+  row.appendChild(fileInput);
+  row.appendChild(removeBtn);
+  row.appendChild(progressContainer);
+  container.appendChild(row);
+}
+
+async function convertToQuizData(sessionId) {
+  const prefix = document.getElementById(`prefixInput${sessionId}`).value.trim();
+  const lines = document.getElementById(`questionsInput${sessionId}`).value.split('\n');
+  let questionText=null, options=[], correctAnswerIndex=null, answerText=null, explanation=null;
+  let output=[];
+
+  // parse lines
+  for(let i=0; i<lines.length; i++){
+    let line = lines[i].trim();
+    let qMatch = line.match(/^(\d+)\.\s+(.*)/);
+    if(qMatch){
+      if(questionText!==null){
+        output.push({
+          question: questionText,
+          options,
+          answer: correctAnswerIndex,
+          answerText,
+          explanation,
+          userAnswer:null
+        });
+      }
+      let qNum=parseInt(qMatch[1],10);
+      questionText= `<span style='color: darkred; font-weight: bold;'>${prefix? prefix+' ':''}Question ${qNum}</span> ${qMatch[2]}`;
+      options=[];
+      correctAnswerIndex=null;
+      answerText=null;
+      explanation=null;
+    } else {
+      let opt=line.match(/^([A-F])\.\s+(.*)/i);
+      if(opt){
+        let txt=opt[2].trim();
+        if(txt.endsWith('***')){
+          txt=txt.slice(0,-3).trim();
+          correctAnswerIndex=options.length;
+          answerText=txt;
         }
-
-        function uploadImageToServer(file, progressBarContainer, progressBar) {
-            return new Promise((resolve) => {
-                if (!file) return resolve("");
-
-                if (progressBarContainer) progressBarContainer.style.display="block";
-                if (progressBar) {
-                    progressBar.style.width="0%";
-                    progressBar.textContent="0%";
-                }
-
-                const xhr = new XMLHttpRequest();
-                xhr.open("POST", "/api/upload-image", true);
-                xhr.setRequestHeader("Content-Type","application/json");
-
-                xhr.upload.onprogress = function(e){
-                    if (e.lengthComputable) {
-                        let percent = Math.floor((e.loaded/e.total)*100);
-                        if (progressBar) {
-                            progressBar.style.width=percent+"%";
-                            progressBar.textContent=percent+"%";
-                        }
-                    }
-                };
-
-                xhr.onload = function(){
-                    if (xhr.status===200){
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            if (response.success && response.url) {
-                                if (progressBar) {
-                                    progressBar.style.width="100%";
-                                    progressBar.textContent="تم رفع الصورة";
-                                }
-                                return resolve(response.url);
-                            } else {
-                                if(progressBar) progressBar.textContent="فشل الرفع";
-                                return resolve("");
-                            }
-                        }catch(err){
-                            if(progressBar) progressBar.textContent="فشل الرفع";
-                            return resolve("");
-                        }
-                    }else{
-                        if(progressBar) progressBar.textContent="فشل الرفع";
-                        resolve("");
-                    }
-                };
-
-                xhr.onerror=()=>{
-                    if(progressBar) progressBar.textContent="فشل الرفع";
-                    resolve("");
-                };
-
-                // قراءة الملف Base64
-                const reader=new FileReader();
-                reader.onload=()=>{
-                    const base64data=reader.result.split(",")[1];
-                    xhr.send(JSON.stringify({
-                        name:file.name,
-                        base64:base64data
-                    }));
-                };
-                reader.readAsDataURL(file);
-            });
+        options.push(txt);
+      } else {
+        let exp=line.match(/^Explanation\s*:\s*(.*)/i);
+        if(exp){
+          explanation=exp[1];
         }
+      }
+    }
+  }
+  if(questionText!==null){
+    output.push({
+      question: questionText,
+      options,
+      answer: correctAnswerIndex,
+      answerText,
+      explanation,
+      userAnswer:null
+    });
+  }
 
-        async function collectImageData() {
-            const rows = document.querySelectorAll('.image-field-row');
-            const data={};
-            for(const row of rows){
-                const inputs = row.querySelectorAll('input');
-                const qNum = parseInt(inputs[0].value,10);
-                if(!qNum) continue;
-                const fileInput = inputs[1];
-                if(fileInput.files && fileInput.files.length>0){
-                    const file = fileInput.files[0];
-                    const progressContainer = row.querySelector('.progress');
-                    const progressBar= progressContainer.querySelector('.progress-bar');
-                    const url = await uploadImageToServer(file,progressContainer,progressBar);
-                    if(url){
-                        if(!data[qNum]) data[qNum]=[];
-                        data[qNum].push(url);
-                    }
-                }
-            }
-            return data;
+  // رفع الصور
+  const imageData = await collectSessionImages(sessionId);
+  output.forEach(obj=>{
+    const m=obj.question.match(/Question\s+(\d+)/);
+    if(m){
+      const qn=parseInt(m[1],10);
+      if(imageData[qn]){
+        imageData[qn].forEach(url=>{
+          obj.question+=`<br><img src='${url}' style='max-width:100%; height:auto;'>`;
+        });
+      }
+    }
+  });
+  const code= 'let quizData = ' + JSON.stringify(output,null,4)+';';
+  document.getElementById(`outputCode${sessionId}`).textContent=code;
+  document.getElementById(`copyBtn${sessionId}`).disabled=false;
+}
+
+async function collectSessionImages(sessionId) {
+  const container = document.getElementById(`imageFieldsContainer${sessionId}`);
+  const rows = container.querySelectorAll('.image-field-row');
+  const data ={};
+  for(const row of rows){
+    const inputs=row.querySelectorAll('input');
+    const qNum=parseInt(inputs[0].value,10);
+    if(!qNum)continue;
+    const fileInput=inputs[1];
+    if(fileInput.files && fileInput.files.length>0){
+      const file=fileInput.files[0];
+      const progressDiv=row.querySelector('.progress');
+      const progressBar=progressDiv.querySelector('.progress-bar');
+      const url=await uploadFileToServer(file,progressDiv,progressBar);
+      if(url){
+        if(!data[qNum]) data[qNum]=[];
+        data[qNum].push(url);
+      }
+    }
+  }
+  return data;
+}
+
+function uploadFileToServer(file, progressDiv, progressBar){
+  return new Promise((resolve)=>{
+    if(!file)return resolve("");
+    progressDiv.style.display='block';
+    progressBar.style.width='0%';
+    progressBar.textContent='0%';
+
+    const xhr=new XMLHttpRequest();
+    xhr.open("POST","/api/upload-image",true);
+    xhr.setRequestHeader("Content-Type","application/json");
+
+    xhr.upload.onprogress=(e)=>{
+      if(e.lengthComputable){
+        let percent=Math.floor((e.loaded/e.total)*100);
+        progressBar.style.width=percent+"%";
+        progressBar.textContent=percent+"%";
+      }
+    };
+    xhr.onload=()=>{
+      if(xhr.status===200){
+        try{
+          const resp=JSON.parse(xhr.responseText);
+          if(resp.success && resp.url){
+            progressBar.style.width='100%';
+            progressBar.textContent='تم رفع الصورة';
+            resolve(resp.url);
+          }else{
+            progressBar.textContent='فشل الرفع';
+            resolve("");
+          }
+        }catch(e){
+          progressBar.textContent='فشل الرفع';
+          resolve("");
         }
+      }else{
+        progressBar.textContent='فشل الرفع';
+        resolve("");
+      }
+    };
+    xhr.onerror=()=>{
+      progressBar.textContent='فشل الرفع';
+      resolve("");
+    };
 
-        async function convertToQuizData(){
-            const input=document.getElementById('inputText').value;
-            const prefix=document.getElementById('prefixInput').value.trim();
-            const lines=input.split('\n');
-            let questionText=null, options=[], correctAnswerIndex=null, answerText=null, explanation=null;
-            let output=[];
-            for(let i=0; i<lines.length; i++){
-                let line=lines[i].trim();
-                let qMatch=line.match(/^(\d+)\.\s+(.*)/);
-                if(qMatch){
-                    if(questionText!==null){
-                        output.push({
-                            question:questionText,
-                            options,
-                            answer:correctAnswerIndex,
-                            answerText,
-                            explanation,
-                            userAnswer:null
-                        });
-                    }
-                    let qNum=parseInt(qMatch[1],10);
-                    questionText= `<span style='color: darkred; font-weight: bold;'>${prefix? prefix+' ':''}Question ${qNum}</span> ${qMatch[2]}`;
-                    options=[];
-                    correctAnswerIndex=null;
-                    answerText=null;
-                    explanation=null;
-                } else {
-                    let opt=line.match(/^([A-F])\.\s+(.*)/i);
-                    if(opt){
-                        let txt=opt[2].trim();
-                        if(txt.endsWith('***')){
-                            txt=txt.slice(0,-3).trim();
-                            correctAnswerIndex=options.length;
-                            answerText=txt;
-                        }
-                        options.push(txt);
-                    } else {
-                        let exp=line.match(/^Explanation\s*:\s*(.*)/i);
-                        if(exp){
-                            explanation=exp[1];
-                        }
-                    }
-                }
-            }
-            if(questionText!==null){
-                output.push({
-                    question:questionText,
-                    options,
-                    answer:correctAnswerIndex,
-                    answerText,
-                    explanation,
-                    userAnswer:null
-                });
-            }
-            const imageMap=await collectImageData();
-            output.forEach(obj=>{
-                const qm=obj.question.match(/Question\s+(\d+)/);
-                if(qm){
-                    const qn=parseInt(qm[1],10);
-                    if(imageMap[qn]){
-                        imageMap[qn].forEach(url=>{
-                            obj.question+=`<br><img src='${url}' style='max-width: 100%; height:auto;'>`;
-                        });
-                    }
-                }
-            });
-            const code='let quizData = '+JSON.stringify(output,null,4)+';';
-            document.getElementById('outputCode').textContent=code;
-            document.getElementById('copyButton').disabled=(code.trim()==='');
+    // تحويل الملف ل base64
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const base64data=reader.result.split(",")[1];
+      xhr.send(JSON.stringify({
+        name:file.name,
+        base64:base64data
+      }));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function copyCode(sessionId){
+  const text=document.getElementById(`outputCode${sessionId}`).textContent;
+  navigator.clipboard.writeText(text).then(()=>alert('Copied!'));
+}
+
+function clearSession(sessionId){
+  if(confirm('Clear this session?')){
+    const sess=document.getElementById('session'+sessionId);
+    if(sess) sess.remove();
+  }
+}
+
+// ============= 2) Manage topics.json =============
+async function loadTopics(){
+  const resDiv=document.getElementById('topicsResult');
+  resDiv.textContent='Loading topics.json...';
+  try{
+    const res=await fetch('/api/topics');
+    const json=await res.json();
+    if(!json.success){
+      resDiv.textContent='Error: '+json.error;
+      return;
+    }
+    cachedTopics=json.topics;
+    topicsSha=json.sha;
+    resDiv.textContent='Loaded topics.json (sha='+json.sha+').';
+    renderTopics();
+    fillSubtopicSelect(); 
+  }catch(err){
+    resDiv.textContent='Error: '+err;
+  }
+}
+
+function renderTopics(){
+  const list=document.getElementById('topicsList');
+  list.innerHTML='';
+  cachedTopics.forEach((t,idx)=>{
+    const div=document.createElement('div');
+    div.classList.add('topic-item');
+    div.innerHTML=`
+      <strong>${t.topicName}</strong> (subTopics: ${t.subTopics?t.subTopics.length:0})<br>
+      ${t.description||''}
+    `;
+    // delete btn
+    const delBtn=document.createElement('button');
+    delBtn.textContent='Delete';
+    delBtn.style.background='#dc3545'; 
+    delBtn.style.color='#fff';
+    delBtn.onclick=()=>{
+      if(confirm('Delete this topic?')){
+        cachedTopics.splice(idx,1);
+        renderTopics();
+        fillSubtopicSelect();
+      }
+    };
+    div.appendChild(delBtn);
+
+    // edit btn
+    const editBtn=document.createElement('button');
+    editBtn.textContent='Edit';
+    editBtn.style.background='#ffc107';
+    editBtn.style.color='#000';
+    editBtn.onclick=()=>{
+      const nn=prompt('Topic name:', t.topicName);
+      if(nn) t.topicName=nn;
+      const nd=prompt('Topic desc:', t.description||'');
+      if(nd!==null) t.description=nd;
+      renderTopics();
+      fillSubtopicSelect();
+    };
+    div.appendChild(editBtn);
+
+    // show subtopics
+    if(t.subTopics && t.subTopics.length>0){
+      t.subTopics.forEach((st, stidx)=>{
+        const stDiv=document.createElement('div');
+        stDiv.classList.add('subtopic-item');
+        stDiv.style.marginLeft='20px';
+        stDiv.style.marginBottom='5px';
+        stDiv.innerHTML=`
+          <strong>${st.name}</strong> 
+          <br><small>${st.file? st.file:''}</small>
+        `;
+        // delete subtopic
+        const stDel=document.createElement('button');
+        stDel.textContent='Delete';
+        stDel.style.background='#dc3545';
+        stDel.style.color='#fff';
+        stDel.onclick=()=>{
+          if(confirm('Delete subtopic?')){
+            t.subTopics.splice(stidx,1);
+            renderTopics();
+            fillSubtopicSelect();
+          }
+        };
+        stDiv.appendChild(stDel);
+        // edit subtopic
+        const stEdit=document.createElement('button');
+        stEdit.textContent='Edit';
+        stEdit.style.background='#ffc107';
+        stEdit.style.color='#000';
+        stEdit.onclick=()=>{
+          const nn=prompt('Subtopic name:', st.name);
+          if(nn){
+            st.name=nn;
+            // لا نغير st.file!
+            renderTopics();
+            fillSubtopicSelect();
+          }
+        };
+        stDiv.appendChild(stEdit);
+
+        div.appendChild(stDiv);
+      });
+    }
+
+    // add subtopic
+    const addSt=document.createElement('button');
+    addSt.textContent='Add Subtopic';
+    addSt.style.background='#17a2b8';
+    addSt.style.color='#fff';
+    addSt.style.marginLeft='20px';
+    addSt.onclick=()=>{
+      const sbName=prompt('Subtopic name?');
+      if(!sbName)return;
+      // ننشئ اسم ملف تلقائي (مثلا "data/MyTopicName_subName.json")
+      // أو نستخدم اسم الموضوع + subtopic
+      // sanitize
+      const fileName=(t.topicName.replace(/\s+/g,'_')+'_'+sbName.replace(/\s+/g,'_')).toLowerCase()+'.json';
+      const path='data/'+fileName;
+      if(!t.subTopics) t.subTopics=[];
+      t.subTopics.push({name:sbName, file:path});
+      renderTopics();
+      fillSubtopicSelect();
+    };
+    div.appendChild(addSt);
+
+    list.appendChild(div);
+  });
+}
+
+async function saveTopics(){
+  const resDiv=document.getElementById('topicsResult');
+  if(!topicsSha){
+    resDiv.textContent='No loaded topics.json.';
+    return;
+  }
+  try{
+    const body={topics:cachedTopics, sha:topicsSha};
+    const res=await fetch('/api/topics',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const json=await res.json();
+    if(!json.success){
+      resDiv.textContent='Error: '+json.error;
+      return;
+    }
+    resDiv.textContent='Saved topics.json. commit='+JSON.stringify(json.commit);
+  }catch(err){
+    resDiv.textContent='Error: '+err;
+  }
+}
+
+function addTopic(){
+  const name=document.getElementById('newTopicName').value.trim();
+  const desc=document.getElementById('newTopicDesc').value.trim();
+  if(!name){
+    alert('Enter topic name first.');
+    return;
+  }
+  cachedTopics.push({
+    topicName:name,
+    description:desc,
+    subTopics:[]
+  });
+  document.getElementById('newTopicName').value='';
+  document.getElementById('newTopicDesc').value='';
+  renderTopics();
+  fillSubtopicSelect();
+}
+
+// ============= 3) Manage Subtopic Questions =============
+function fillSubtopicSelect(){
+  const sel=document.getElementById('subtopicSelect');
+  sel.innerHTML='';
+  cachedTopics.forEach(t=>{
+    if(t.subTopics){
+      t.subTopics.forEach(st=>{
+        const opt=document.createElement('option');
+        opt.value=st.file;
+        opt.textContent=`[${t.topicName}] - ${st.name}`;
+        sel.appendChild(opt);
+      });
+    }
+  });
+}
+
+async function loadSubtopicQuestions(){
+  const sel=document.getElementById('subtopicSelect');
+  if(!sel.value){
+    alert('No subtopic selected!');
+    return;
+  }
+  const path=sel.value; // data/...
+  const resDiv=document.getElementById('subtopicQuestionsResult');
+  resDiv.textContent='Loading subtopic file: '+path;
+  try{
+    const r=await fetch('/api/get-subtopic-file?path='+encodeURIComponent(path));
+    const j=await r.json();
+    if(!j.success){
+      resDiv.textContent='Error: '+j.error;
+      return;
+    }
+    currentSubtopicFilePath=path;
+    currentSubtopicSha=j.sha;
+    currentSubtopicQuestions=(Array.isArray(j.content)) ? j.content : [];
+    resDiv.textContent=`Loaded subtopic file (sha=${j.sha||'none'}). Questions count: ${currentSubtopicQuestions.length}`;
+    renderSubtopicQuestions();
+  }catch(err){
+    resDiv.textContent='Error: '+err;
+  }
+}
+
+function renderSubtopicQuestions(){
+  const list=document.getElementById('subtopicQuestionsList');
+  list.innerHTML='';
+  if(!Array.isArray(currentSubtopicQuestions)) return;
+  currentSubtopicQuestions.forEach((q,idx)=>{
+    const div=document.createElement('div');
+    div.style.border='1px solid #ccc';
+    div.style.padding='8px';
+    div.style.borderRadius='4px';
+    div.style.marginBottom='5px';
+
+    // نعرض جزء من السؤال
+    let shortQ=q.question? q.question.substring(0,80):'No question?';
+    div.textContent=`[${idx}] => ${shortQ}... `;
+
+    // حذف فردي
+    const dBtn=document.createElement('button');
+    dBtn.textContent='Delete';
+    dBtn.classList.add('btn-red');
+    dBtn.style.marginLeft='10px';
+    dBtn.onclick=()=>{
+      if(confirm('Delete this question?')){
+        currentSubtopicQuestions.splice(idx,1);
+        renderSubtopicQuestions();
+      }
+    };
+    div.appendChild(dBtn);
+
+    list.appendChild(div);
+  });
+}
+
+async function saveSubtopicQuestions(){
+  if(!currentSubtopicFilePath){
+    alert('No subtopic loaded');
+    return;
+  }
+  const resDiv=document.getElementById('subtopicQuestionsResult');
+  resDiv.textContent='Saving subtopic file: '+currentSubtopicFilePath;
+  try{
+    const body={
+      path: currentSubtopicFilePath,
+      content: currentSubtopicQuestions,
+      sha: currentSubtopicSha
+    };
+    const r=await fetch('/api/update-subtopic-file',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const j=await r.json();
+    if(!j.success){
+      resDiv.textContent='Error: '+j.error;
+      return;
+    }
+    resDiv.textContent='Saved subtopic file. commit='+JSON.stringify(j.commit);
+  }catch(err){
+    resDiv.textContent='Error: '+err;
+  }
+}
+
+// تحويل النص الذي أدخله المستخدم (أو QuizData) وإضافته
+async function convertAndAddToSubtopic(){
+  if(!currentSubtopicFilePath){
+    alert('No subtopic loaded');
+    return;
+  }
+  let text=document.getElementById('subtopicNewQuestions').value.trim();
+  if(!text){
+    alert('No input');
+    return;
+  }
+  const resDiv=document.getElementById('subtopicQuestionsResult');
+
+  // نحاول JSON.parse
+  let possibleQs=null;
+  try{
+    if(text.startsWith('let quizData =')){
+      // قصها
+      text=text.replace('let quizData =','').trim();
+      if(text.endsWith(';')) text=text.slice(0,-1);
+    }
+    possibleQs=JSON.parse(text);
+  }catch(e){
+    // إذن هو تنسيق مثل (1. ... A. ... ) => نستعمل نفس دالة التحويل
+  }
+  if(Array.isArray(possibleQs)){
+    // نعتبره quizData جاهز
+    currentSubtopicQuestions=currentSubtopicQuestions.concat(possibleQs);
+    resDiv.textContent=`Added ${possibleQs.length} questions to subtopic (array parse). Don't forget "Save Questions"`;
+    renderSubtopicQuestions();
+  } else {
+    // استخدم كود تحويل
+    // ننشئ سيشن وهمي (أو نستدعي دالة مصغرة)
+    const lines=text.split('\n');
+    let qText=null, opts=[], corrIndex=null, ansText=null, explan=null;
+    let out=[];
+    for(let i=0; i<lines.length; i++){
+      let ln=lines[i].trim();
+      let qM=ln.match(/^(\d+)\.\s+(.*)/);
+      if(qM){
+        if(qText!==null){
+          out.push({
+            question:qText,
+            options:opts,
+            answer:corrIndex,
+            answerText:ansText,
+            explanation:explan,
+            userAnswer:null
+          });
         }
-
-        function copyToClipboard(){
-            const code=document.getElementById('outputCode').textContent;
-            if(!code)return;
-            navigator.clipboard.writeText(code).then(()=>alert('Copied!'));
+        let qn=parseInt(qM[1],10);
+        qText=`<span style='color: darkred; font-weight: bold;'>Question ${qn}</span> ${qM[2]}`;
+        opts=[];
+        corrIndex=null;
+        ansText=null;
+        explan=null;
+      } else {
+        let oM=ln.match(/^([A-F])\.\s+(.*)/i);
+        if(oM){
+          let t=oM[2].trim();
+          if(t.endsWith('***')){
+            t=t.slice(0,-3).trim();
+            corrIndex=opts.length;
+            ansText=t;
+          }
+          opts.push(t);
+        } else {
+          let ex=ln.match(/^Explanation\s*:\s*(.*)/i);
+          if(ex){
+            explan=ex[1];
+          }
         }
+      }
+    }
+    if(qText!==null){
+      out.push({
+        question:qText,
+        options:opts,
+        answer:corrIndex,
+        answerText:ansText,
+        explanation:explan,
+        userAnswer:null
+      });
+    }
+    // نضيفها
+    currentSubtopicQuestions=currentSubtopicQuestions.concat(out);
+    resDiv.textContent=`Converted and added ${out.length} questions. Don't forget "Save Questions"`;
+    renderSubtopicQuestions();
+  }
+}
 
-        function clearAll(){
-            if(confirm('Clear all?')){
-                document.getElementById('prefixInput').value='';
-                document.getElementById('inputText').value='';
-                document.getElementById('outputCode').textContent='// Your converted quizData will appear here...';
-                document.getElementById('copyButton').disabled=true;
-                document.getElementById('imageFieldsContainer').innerHTML='';
-            }
-        }
+// حذف أسئلة عبر bold prefix
+async function deleteQuestionsByPrefix(){
+  if(!currentSubtopicFilePath){
+    alert('No subtopic loaded');
+    return;
+  }
+  const prefix=document.getElementById('deletePrefix').value.trim();
+  if(!prefix){
+    alert('No prefix entered');
+    return;
+  }
+  const resDiv=document.getElementById('subtopicQuestionsResult');
+  if(!currentSubtopicSha && currentSubtopicQuestions.length===0){
+    // الملف جديد فارغ => لا شيء لنحذف
+    resDiv.textContent='No existing questions to delete.';
+    return;
+  }
+  // نطلب /api/delete-questions-by-prefix
+  try{
+    const body={ path: currentSubtopicFilePath, sha: currentSubtopicSha, prefix };
+    const r=await fetch('/api/delete-questions-by-prefix',{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
+    });
+    const j=await r.json();
+    if(!j.success){
+      resDiv.textContent='Error: '+j.error;
+      return;
+    }
+    resDiv.textContent=`Deleted ${j.deletedCount} questions that included "${prefix}". commit=`+JSON.stringify(j.commit);
+    // إعادة التحميل
+    loadSubtopicQuestions();
+  }catch(err){
+    resDiv.textContent='Error: '+err;
+  }
+}
 
-        // ---- إدارة topics.json تلقائيًا ----
-        let cachedTopics=[];
-        let topicsSha=null;
-
-        async function loadTopics(){
-            const resDiv=document.getElementById('topicsResult');
-            resDiv.textContent='Loading topics.json...';
-            try {
-                const res=await fetch('/api/topics');
-                const json=await res.json();
-                if(!json.success){
-                    resDiv.textContent='Error: '+json.error;
-                    return;
-                }
-                cachedTopics=json.topics;
-                topicsSha=json.sha;
-                resDiv.textContent='Loaded topics.json (sha='+json.sha+').';
-                renderTopicsUI();
-            } catch(err){
-                resDiv.textContent='Error: '+err;
-            }
-        }
-        function renderTopicsUI(){
-            const container=document.getElementById('topicsContainer');
-            container.innerHTML='';
-            if(!Array.isArray(cachedTopics))return;
-            cachedTopics.forEach((t,idx)=>{
-                const div=document.createElement('div');
-                div.classList.add('topic-item');
-                div.innerHTML=`
-                    <strong>${t.topicName}</strong> (subTopics: ${t.subTopics ? t.subTopics.length : 0})<br>
-                    ${t.description||''}
-                `;
-                // delete button
-                const delBtn=document.createElement('button');
-                delBtn.textContent='Delete';
-                delBtn.classList.add('btn-del');
-                delBtn.onclick=()=>{
-                    if(confirm('Delete this topic?')){
-                        cachedTopics.splice(idx,1);
-                        renderTopicsUI();
-                    }
-                };
-                div.appendChild(delBtn);
-                // edit button
-                const editBtn=document.createElement('button');
-                editBtn.textContent='Edit';
-                editBtn.classList.add('btn-edit');
-                editBtn.onclick=()=>{
-                    const newName=prompt('Topic name:', t.topicName);
-                    if(newName) t.topicName=newName;
-                    const newDesc=prompt('Topic description:', t.description||'');
-                    if(newDesc!==null) t.description=newDesc;
-                    renderTopicsUI();
-                };
-                div.appendChild(editBtn);
-
-                // subtopics
-                if(t.subTopics && t.subTopics.length>0){
-                    const ul=document.createElement('ul');
-                    ul.classList.add('subtopic-list');
-                    t.subTopics.forEach((st, stidx)=>{
-                        const li=document.createElement('li');
-                        li.textContent=`${st.name} -> ${st.file}`;
-                        // delete
-                        const sdel=document.createElement('button');
-                        sdel.textContent='X';
-                        sdel.classList.add('btn-del');
-                        sdel.style.marginLeft='10px';
-                        sdel.onclick=()=>{
-                            if(confirm('Delete subtopic?')){
-                                t.subTopics.splice(stidx,1);
-                                renderTopicsUI();
-                            }
-                        };
-                        li.appendChild(sdel);
-                        // edit
-                        const sedit=document.createElement('button');
-                        sedit.textContent='Edit';
-                        sedit.classList.add('btn-edit');
-                        sedit.onclick=()=>{
-                            const nn=prompt('Subtopic name:', st.name);
-                            if(nn) st.name=nn;
-                            const nf=prompt('Subtopic file:', st.file);
-                            if(nf) st.file=nf;
-                            renderTopicsUI();
-                        };
-                        li.appendChild(sedit);
-
-                        ul.appendChild(li);
-                    });
-                    div.appendChild(ul);
-                }
-                // add subtopic
-                const addSt=document.createElement('button');
-                addSt.textContent='Add Subtopic';
-                addSt.style.marginTop='5px';
-                addSt.onclick=()=>{
-                    const nm=prompt('Subtopic name?');
-                    if(!nm)return;
-                    const fl=prompt('Subtopic file path? (like data/cns_anatomy.json)');
-                    if(!fl)return;
-                    if(!t.subTopics) t.subTopics=[];
-                    t.subTopics.push({name:nm, file:fl});
-                    renderTopicsUI();
-                };
-                div.appendChild(addSt);
-
-                container.appendChild(div);
-            });
-        }
-        async function saveTopics(){
-            const resDiv=document.getElementById('topicsResult');
-            if(!topicsSha){
-                resDiv.textContent='No loaded topics.json to save.';
-                return;
-            }
-            try {
-                const body={ topics: cachedTopics, sha: topicsSha };
-                const res=await fetch('/api/topics',{
-                    method:'POST',
-                    headers:{ 'Content-Type':'application/json' },
-                    body: JSON.stringify(body)
-                });
-                const json=await res.json();
-                if(!json.success){
-                    resDiv.textContent='Error: '+json.error;
-                    return;
-                }
-                resDiv.textContent='Saved topics.json. commit='+JSON.stringify(json.commit);
-            } catch(err){
-                resDiv.textContent='Error: '+err;
-            }
-        }
-        function addTopic(){
-            const name=document.getElementById('newTopicName').value.trim();
-            const desc=document.getElementById('newTopicDesc').value.trim();
-            if(!name){
-                alert('Enter topic name');
-                return;
-            }
-            cachedTopics.push({
-                topicName:name,
-                description:desc,
-                subTopics:[]
-            });
-            document.getElementById('newTopicName').value='';
-            document.getElementById('newTopicDesc').value='';
-            renderTopicsUI();
-        }
-    </script>
+</script>
 </body>
 </html>
