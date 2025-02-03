@@ -1,7 +1,7 @@
 {
   "name": "my-complete-converter",
   "version": "1.0.0",
-  "description": "Quiz converter + full topics/subtopics management + multiple sessions + secrets in vercel",
+  "description": "Quiz converter + full topics/subtopics management + multiple sessions + secrets in vercel, refined UI",
   "scripts": {
     "start": "node server.js"
   },
