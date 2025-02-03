@@ -1,171 +1,572 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Panel on Vercel</title>
-  <style>
-    body { font-family: sans-serif; background: #f2f2f2; margin:0; padding:20px; }
-    .container { max-width: 800px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; }
-    button { margin:5px; padding:8px 16px; background:#4a90e2; color:#fff; border:none; border-radius:4px; cursor:pointer; }
-    button:hover { background:#3f7fd1; }
-    .results { background:#fafafa; margin-top:10px; padding:10px; border-radius:4px; white-space:pre-wrap; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Quiz Data Converter + GitHub Control</title>
+    <style>
+        /* نفس ستايلات الكود الأصلي */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #4a90e2;
+        }
+        .instructions {
+            background-color: #eef6fc;
+            padding: 20px;
+            border-left: 6px solid #4a90e2;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+        .instructions pre {
+            background-color: #f9f9f9;
+            padding: 15px;
+            overflow: auto;
+            border-radius: 5px;
+            font-size: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        textarea, input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        textarea {
+            height: 200px;
+        }
+        textarea:focus, input[type="text"]:focus, input[type="number"]:focus, input[type="file"]:focus {
+            border-color: #4a90e2;
+            outline: none;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 14px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-bottom: 10px;
+            flex: 1 1 30%;
+            margin-right: 10px;
+        }
+        button:last-child {
+            margin-right: 0;
+        }
+        button:hover {
+            transform: translateY(-3px);
+        }
+        #convertButton {
+            background-color: #4a90e2;
+            color: #fff;
+        }
+        #copyButton {
+            background-color: #28a745;
+            color: #fff;
+        }
+        #clearButton {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        #outputSection {
+            margin-top: 35px;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 25px;
+            border-radius: 6px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+        }
+        .image-fields-container {
+            margin-top: 20px;
+        }
+        .image-field-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .image-field-row input[type="number"] {
+            width: 60px;
+        }
+        .image-field-row input[type="file"] {
+            flex: 1;
+        }
+        .image-field-row button {
+            width: auto;
+            flex: 0 0 auto;
+            background-color: #ff9800;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .progress {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 20px;
+            margin-top: 5px;
+        }
+        .progress-bar {
+            background-color: #4a90e2;
+            height: 100%;
+            width: 0%;
+            text-align: center;
+            color: #fff;
+            line-height: 20px;
+            transition: width 0.3s;
+        }
+        @media (max-width: 700px) {
+            .button-group {
+                flex-direction: column;
+            }
+            .button-group button {
+                flex: 1 1 100%;
+                margin-right: 0;
+            }
+        }
+
+        /* Custom for GitHub load/save */
+        #gitHubTools {
+            margin-top: 30px;
+            background: #eef6fc;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        #gitHubTools label {
+            margin-top: 5px;
+        }
+        #gitHubTools input[type="text"] {
+            width: 80%;
+            margin-bottom: 5px;
+        }
+        .gh-button {
+            background-color: #6f42c1;
+            color: #fff;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        .gh-button:hover {
+            background-color: #59379c;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <h1>Admin Panel (Vercel + Secrets Keys)</h1>
+    <div class="container">
+        <h1>Quiz Data Converter + GitHub Control</h1>
+        <div class="instructions">
+            <p>Please enter your questions in the following format for each question:</p>
+            <pre>
+1. In the membrane of the pre-synaptic neuron...
+A. ...
+B. ...
+C. ...
+D. ... ***
+Explanation : any word
+...
+*** : means correct answer
+            </pre>
+        </div>
 
-  <button onclick="testServer()">Test Server</button>
-  <div id="testResult" class="results"></div>
+        <label for="prefixInput">Enter Prefix (optional):</label>
+        <input type="text" id="prefixInput" placeholder="e.g., Dr. Smith -">
 
-  <hr>
-  <h2>Load a GitHub File</h2>
-  <input type="text" id="filePath" placeholder="data/topics.json">
-  <button onclick="loadFile()">Load File</button>
-  <div id="fileContent" class="results"></div>
+        <label for="inputText">Enter Your Questions Here:</label>
+        <textarea id="inputText" placeholder="Paste your questions here..."></textarea>
 
-  <hr>
-  <h2>Update the same File</h2>
-  <textarea id="updateContent" rows="6" style="width:100%;" placeholder='{"example":"edit me"}'></textarea>
-  <input type="text" id="shaInput" placeholder="SHA from loaded file">
-  <button onclick="updateFile()">Update File</button>
-  <div id="updateResult" class="results"></div>
+        <label>Add Images (optional):</label>
+        <div class="image-fields-container" id="imageFieldsContainer"></div>
+        <button type="button" onclick="addImageField()" style="background-color:#17a2b8; color:#fff; width:auto; margin-top:10px;">Add Image Field</button>
 
-  <hr>
-  <h2>Upload Image (optional)</h2>
-  <input type="file" id="imageFile">
-  <button onclick="uploadImage()">Upload Image</button>
-  <div id="uploadResult" class="results"></div>
+        <div class="button-group">
+            <button id="convertButton" onclick="convertToQuizData()">Convert to quizData</button>
+            <button id="copyButton" onclick="copyToClipboard()" disabled>Copy to Clipboard</button>
+            <button id="clearButton" onclick="clearAll()">Clear All</button>
+        </div>
 
-</div>
+        <div id="outputSection">
+            <h2>Generated Code:</h2>
+            <pre id="outputCode">// Your converted quizData will appear here...</pre>
+        </div>
 
-<script>
-async function testServer() {
-  document.getElementById('testResult').textContent = 'Testing...';
-  try {
-    const res = await fetch('/api/test');
-    const json = await res.json();
-    document.getElementById('testResult').textContent = JSON.stringify(json, null, 2);
-  } catch (err) {
-    document.getElementById('testResult').textContent = err;
-  }
-}
+        <!-- إضافة قسم لاستخدام GitHub API -->
+        <div id="gitHubTools">
+            <h2>Load/Save from GitHub</h2>
+            <label>File Path (e.g.: data/cns_anatomy.json):</label>
+            <input type="text" id="ghFilePath" placeholder="data/topics.json">
+            <br>
+            <button class="gh-button" onclick="loadFromGitHub()">Load from GitHub</button>
+            <button class="gh-button" onclick="saveToGitHub()">Save This Code to GitHub</button>
+            <div id="ghResult" style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+            <input type="text" id="loadedSha" placeholder="Loaded file sha" style="width:50%; margin-top:5px;">
+        </div>
+    </div>
 
-let loadedData = null;
-let loadedSha = null;
+    <script>
+        // ======= EXACT QUIZ CONVERTER CODE (without changes) =======
+        function addImageField() {
+            const container = document.getElementById('imageFieldsContainer');
+            const row = document.createElement('div');
+            row.classList.add('image-field-row');
 
-async function loadFile() {
-  const path = document.getElementById('filePath').value.trim();
-  if (!path) {
-    alert('Enter a file path');
-    return;
-  }
-  document.getElementById('fileContent').textContent = 'Loading...';
-  try {
-    const res = await fetch('/api/get-file?path=' + encodeURIComponent(path));
-    const json = await res.json();
-    if (!json.success) {
-      document.getElementById('fileContent').textContent = 'Error: ' + json.error;
-      return;
-    }
-    loadedData = json.content;
-    loadedSha = json.sha;
-    document.getElementById('fileContent').textContent = JSON.stringify(loadedData, null, 2);
-    document.getElementById('shaInput').value = loadedSha;
-  } catch (err) {
-    document.getElementById('fileContent').textContent = 'Error: ' + err;
-  }
-}
+            const questionNumberInput = document.createElement('input');
+            questionNumberInput.type = 'number';
+            questionNumberInput.placeholder = 'Q#';
+            questionNumberInput.min = 1;
 
-async function updateFile() {
-  const path = document.getElementById('filePath').value.trim();
-  const shaVal = document.getElementById('shaInput').value.trim();
-  const newContent = document.getElementById('updateContent').value.trim();
-  document.getElementById('updateResult').textContent = 'Updating...';
+            const imageFileInput = document.createElement('input');
+            imageFileInput.type = 'file';
+            imageFileInput.accept = 'image/*';
 
-  if (!path || !shaVal) {
-    alert('Need file path and sha');
-    return;
-  }
-  try {
-    // نحاول تحويل newContent إلى كائن إن كان JSON
-    let parsed;
-    try {
-      parsed = JSON.parse(newContent);
-    } catch(e) {
-      // لو ما كان JSON، نُبقيه نصًا
-      parsed = newContent;
-    }
-    const body = {
-      path,
-      sha: shaVal,
-      content: parsed
-    };
-    const res = await fetch('/api/update-file', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const json = await res.json();
-    if (!json.success) {
-      document.getElementById('updateResult').textContent = 'Error: ' + json.error;
-      return;
-    }
-    document.getElementById('updateResult').textContent = 'File updated! commit=' + JSON.stringify(json.commit);
-  } catch (err) {
-    document.getElementById('updateResult').textContent = 'Error: ' + err;
-  }
-}
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.textContent = 'Remove';
+            removeButton.onclick = () => {
+                container.removeChild(row);
+            };
 
-async function uploadImage() {
-  const fileInput = document.getElementById('imageFile');
-  const resultDiv = document.getElementById('uploadResult');
-  if (!fileInput.files[0]) {
-    alert('Select an image first');
-    return;
-  }
-  resultDiv.textContent = 'Uploading...';
+            const progressContainer = document.createElement('div');
+            progressContainer.classList.add('progress');
+            progressContainer.style.display = 'none';
+            const progressBar = document.createElement('div');
+            progressBar.classList.add('progress-bar');
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            progressContainer.appendChild(progressBar);
 
-  // تحويل الملف إلى base64
-  const file = fileInput.files[0];
-  const base64 = await toBase64(file);
+            row.appendChild(questionNumberInput);
+            row.appendChild(imageFileInput);
+            row.appendChild(removeButton);
+            row.appendChild(progressContainer);
+            container.appendChild(row);
+        }
 
-  // إرسالها لـ /api/upload-image
-  try {
-    const res = await fetch('/api/upload-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ base64 })
-    });
-    const json = await res.json();
-    if (!json.success) {
-      resultDiv.textContent = 'Error: ' + json.error;
-      return;
-    }
-    resultDiv.textContent = 'Image uploaded! URL=' + json.url;
-  } catch(err) {
-    resultDiv.textContent = 'Error: ' + err;
-  }
-}
+        function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
+            return new Promise((resolve) => {
+                if (!file) return resolve("");
 
-function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const res = reader.result;
-      // res = "data:image/xxx;base64,abcd..."
-      // ممكن تقص substring لو أردت
-      const splitted = res.split(','); 
-      if (splitted.length === 2) {
-        resolve(splitted[1]); // إرجاع الجزء Base64 فقط
-      } else {
-        resolve(res); 
-      }
-    };
-    reader.onerror = err => reject(err);
-    reader.readAsDataURL(file);
-  });
-}
-</script>
+                if (progressBarContainer) {
+                    progressBarContainer.style.display = "block";
+                }
+                if (progressBar) {
+                    progressBar.style.width = "0%";
+                    progressBar.textContent = "0%";
+                }
+
+                let formData = new FormData();
+                // سنرسل اسم الملف للـserver.js بدلًا من الاتصال المباشر بالـ API
+                // (سنعتمد على /api/upload-image)
+                // ولكن لو أحببت الإبقاء كما هو لتجربة direct upload:
+                // formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c");
+                // formData.append("file", file);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "/api/upload-image", true);
+                xhr.setRequestHeader("Content-Type", "application/json"); // سنرسل JSON
+
+                xhr.upload.onprogress = function(event) {
+                    if (event.lengthComputable) {
+                        const percent = Math.floor((event.loaded / event.total)*100);
+                        if (progressBar) {
+                            progressBar.style.width = percent + "%";
+                            progressBar.textContent = percent + "%";
+                        }
+                    }
+                };
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.success && response.url) {
+                                if (progressBar) {
+                                    progressBar.style.width = "100%";
+                                    progressBar.textContent = "تم رفع الصورة";
+                                }
+                                return resolve(response.url);
+                            } else {
+                                if (progressBar) {
+                                    progressBar.textContent = "فشل الرفع";
+                                }
+                                console.error(response.error);
+                                return resolve("");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            if (progressBar) progressBar.textContent = "فشل الرفع";
+                            return resolve("");
+                        }
+                    } else {
+                        console.error("xhr status:", xhr.status);
+                        if (progressBar) progressBar.textContent = "فشل الرفع";
+                        return resolve("");
+                    }
+                };
+
+                xhr.onerror = function() {
+                    if (progressBar) progressBar.textContent = "فشل الرفع";
+                    return resolve("");
+                };
+
+                // قراءة الملف كـ base64
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64data = reader.result.split(",")[1]; // اقتطاع "data:image/...;base64,"
+                    const bodyObj = { name: file.name, base64: base64data };
+                    xhr.send(JSON.stringify(bodyObj));
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function collectImageData() {
+            const imageRows = document.querySelectorAll('.image-field-row');
+            const data = {};
+            for (const row of imageRows) {
+                const inputs = row.querySelectorAll('input');
+                const qNum = parseInt(inputs[0].value, 10);
+                if (!qNum) continue;
+                const fileInput = inputs[1];
+                if (fileInput.files && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const progressContainer = row.querySelector('.progress');
+                    const progressBar = progressContainer.querySelector('.progress-bar');
+                    const imageURL = await uploadImageToImgHippo(file, progressContainer, progressBar);
+                    if (imageURL) {
+                        if (!data[qNum]) data[qNum] = [];
+                        data[qNum].push(imageURL);
+                    }
+                }
+            }
+            return data;
+        }
+
+        async function convertToQuizData() {
+            const input = document.getElementById('inputText').value;
+            const prefix = document.getElementById('prefixInput').value.trim();
+            const output = [];
+            const lines = input.split('\n');
+            let questionText = null;
+            let options = [];
+            let correctAnswerIndex = null;
+            let answerText = null;
+            let explanation = null;
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                let questionMatch = line.match(/^(\d+)\.\s+(.*)/);
+                if (questionMatch) {
+                    if (questionText !== null) {
+                        output.push({
+                            question: questionText,
+                            options,
+                            answer: correctAnswerIndex,
+                            answerText,
+                            explanation,
+                            userAnswer: null
+                        });
+                    }
+                    let questionNumber = parseInt(questionMatch[1], 10);
+                    questionText = `<span style='color: darkred; font-weight: bold;'>${prefix !== '' ? prefix + ' ' : ''}Question ${questionNumber}</span> ${questionMatch[2]}`;
+                    options = [];
+                    correctAnswerIndex = null;
+                    answerText = null;
+                    explanation = null;
+                } else {
+                    let optionMatch = line.match(/^([A-F])\.\s+(.*)/i);
+                    if (optionMatch) {
+                        let optionText = optionMatch[2].trim();
+                        if (optionText.endsWith('***')) {
+                            optionText = optionText.slice(0, -3).trim();
+                            correctAnswerIndex = options.length;
+                            answerText = optionText;
+                        }
+                        options.push(optionText);
+                    } else {
+                        let explanationMatch = line.match(/^Explanation\s*:\s*(.*)/i);
+                        if (explanationMatch) {
+                            explanation = explanationMatch[1];
+                        }
+                    }
+                }
+            }
+            if (questionText !== null) {
+                output.push({
+                    question: questionText,
+                    options,
+                    answer: correctAnswerIndex,
+                    answerText,
+                    explanation,
+                    userAnswer: null
+                });
+            }
+
+            const imageData = await collectImageData();
+            output.forEach(obj => {
+                const qNumMatch = obj.question.match(/Question\s+(\d+)/);
+                if (qNumMatch) {
+                    const qNum = parseInt(qNumMatch[1], 10);
+                    if (imageData[qNum]) {
+                        imageData[qNum].forEach(url => {
+                            obj.question += `<br><img src='${url}' alt='Image for Question ${qNum}' style='max-width: 100%; height: auto;'>`;
+                        });
+                    }
+                }
+            });
+
+            const formattedOutput = 'let quizData = ' + JSON.stringify(output, null, 4) + ';';
+            document.getElementById('outputCode').textContent = formattedOutput;
+            document.getElementById('copyButton').disabled = formattedOutput.trim() === '';
+        }
+
+        function copyToClipboard() {
+            const outputCode = document.getElementById('outputCode').textContent;
+            if (!outputCode) {
+                alert('No code to copy.');
+                return;
+            }
+            navigator.clipboard.writeText(outputCode).then(() => {
+                alert('Code copied!');
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure to clear all?')) {
+                document.getElementById('prefixInput').value = '';
+                document.getElementById('inputText').value = '';
+                document.getElementById('outputCode').textContent = '// Your converted quizData will appear here...';
+                document.getElementById('copyButton').disabled = true;
+                document.getElementById('imageFieldsContainer').innerHTML = '';
+            }
+        }
+
+        // ====== GitHub Load/Save ======
+
+        async function loadFromGitHub() {
+            const path = document.getElementById('ghFilePath').value.trim();
+            const ghResult = document.getElementById('ghResult');
+            if (!path) {
+                alert('Please specify a file path');
+                return;
+            }
+            ghResult.textContent = 'Loading...';
+            try {
+                const res = await fetch('/api/get-file?path=' + encodeURIComponent(path));
+                const json = await res.json();
+                if (!json.success) {
+                    ghResult.textContent = 'Error: ' + json.error;
+                    return;
+                }
+                // إذا الملف هو كائن => سنعرضه
+                // ونضعه في textarea أو outputCode
+                if (typeof json.content === 'object') {
+                    document.getElementById('outputCode').textContent = JSON.stringify(json.content, null, 4);
+                    document.getElementById('copyButton').disabled = false;
+                } else if (typeof json.content === 'string') {
+                    document.getElementById('outputCode').textContent = json.content;
+                    document.getElementById('copyButton').disabled = false;
+                }
+                document.getElementById('loadedSha').value = json.sha;
+                ghResult.textContent = 'File loaded successfully. SHA=' + json.sha;
+            } catch(err) {
+                ghResult.textContent = 'Error: ' + err;
+            }
+        }
+
+        async function saveToGitHub() {
+            const path = document.getElementById('ghFilePath').value.trim();
+            const ghResult = document.getElementById('ghResult');
+            const shaVal = document.getElementById('loadedSha').value.trim();
+            if (!path || !shaVal) {
+                alert('Need file path and loadedSha first');
+                return;
+            }
+            const contentStr = document.getElementById('outputCode').textContent; 
+            if (!contentStr || contentStr.includes('// Your converted quizData')) {
+                if (!confirm('Output is empty or default. Are you sure?')) {
+                    return;
+                }
+            }
+            ghResult.textContent = 'Saving to GitHub...';
+            let parsed;
+            try {
+                // حاول تحويله كـ JSON
+                if (contentStr.trim().startsWith('{') || contentStr.trim().startsWith('[')) {
+                    parsed = JSON.parse(contentStr);
+                } else {
+                    // ربما js code (like let quizData = [...];)
+                    // يمكننا قص let quizData = ...;
+                    let raw = contentStr.trim();
+                    if (raw.startsWith('let quizData =')) {
+                        raw = raw.replace('let quizData =', '').trim();
+                        if (raw.endsWith(';')) raw = raw.slice(0, -1);
+                    }
+                    parsed = JSON.parse(raw);
+                }
+            } catch (e) {
+                // إذا فشل parse => سنتعامل معه نصًا عاديًا
+                parsed = contentStr;
+            }
+            try {
+                const body = { path, content: parsed, sha: shaVal };
+                const res = await fetch('/api/update-file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const json = await res.json();
+                if (!json.success) {
+                    ghResult.textContent = 'Error: ' + json.error;
+                    return;
+                }
+                ghResult.textContent = 'File updated! commit=' + JSON.stringify(json.commit);
+            } catch(err) {
+                ghResult.textContent = 'Error: ' + err;
+            }
+        }
+    </script>
 </body>
 </html>
