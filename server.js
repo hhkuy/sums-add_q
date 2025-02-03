@@ -1,19 +1,19 @@
 // server.js
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch'); // node-fetch v2
 const FormData = require('form-data');
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// أسرار من Vercel
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;    
-const REPO_OWNER = process.env.REPO_OWNER;        
-const REPO_NAME = process.env.REPO_NAME;          
-const IMAGE_API_KEY = process.env.IMAGE_API_KEY;  
+// =========== Env Vars ==========
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const REPO_OWNER = process.env.REPO_OWNER;
+const REPO_NAME = process.env.REPO_NAME;
+const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
 
-// --- GitHub Helpers ---
+// =========== Helpers to get/update GitHub file ==========
 async function getGitHubFile(path) {
   const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
   const res = await fetch(url, {
@@ -25,7 +25,7 @@ async function getGitHubFile(path) {
   if (!res.ok) {
     throw new Error(`getGitHubFile failed: ${res.status} - ${res.statusText}`);
   }
-  return await res.json(); // { content, sha, ... }
+  return await res.json(); // { content, sha, ...}
 }
 
 async function updateGitHubFile(path, newContent, sha, commitMessage) {
@@ -49,10 +49,10 @@ async function updateGitHubFile(path, newContent, sha, commitMessage) {
   return await res.json();
 }
 
-// --- Image Upload Helper (ImgHippo) ---
+// =========== Image Upload (imghippo) ==========
 async function uploadToImgHippo(fileBuffer, fileName) {
   if (!IMAGE_API_KEY) {
-    throw new Error("No IMAGE_API_KEY found in environment.");
+    throw new Error("No IMAGE_API_KEY found in environment");
   }
   const form = new FormData();
   form.append("api_key", IMAGE_API_KEY);
@@ -74,12 +74,12 @@ async function uploadToImgHippo(fileBuffer, fileName) {
   }
 }
 
-// --- Routes ---
+// =========== Routes ===========
 
-// فحص بسيط
+// test route
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'Server up. Checking env vars...',
+    message: 'Server up. Checking env variables..',
     GITHUB_TOKEN: !!GITHUB_TOKEN,
     REPO_OWNER,
     REPO_NAME,
@@ -102,12 +102,11 @@ app.get('/api/topics', async (req, res) => {
 
 // 2) Save topics.json
 app.post('/api/topics', async (req, res) => {
-  // body => { topics: [...], sha: "..." }
+  const { topics, sha } = req.body;
+  if (!Array.isArray(topics) || !sha) {
+    return res.status(400).json({ success: false, error: 'Invalid body for topics' });
+  }
   try {
-    const { topics, sha } = req.body;
-    if (!Array.isArray(topics) || !sha) {
-      return res.status(400).json({ success: false, error: 'Invalid body for topics' });
-    }
     const filePath = 'data/topics.json';
     const newContent = JSON.stringify(topics, null, 2);
     const commitMsg = `Update topics.json via admin panel - ${new Date().toISOString()}`;
@@ -118,11 +117,11 @@ app.post('/api/topics', async (req, res) => {
   }
 });
 
-// 3) Get Subtopic File => e.g. data/whatever.json
+// 3) get subtopic file => e.g. data/xxx.json
 app.get('/api/get-subtopic-file', async (req, res) => {
   const path = req.query.path;
   if (!path) {
-    return res.status(400).json({ success: false, error: 'No path' });
+    return res.status(400).json({ success: false, error: 'No path param' });
   }
   try {
     const info = await getGitHubFile(path);
@@ -135,7 +134,6 @@ app.get('/api/get-subtopic-file', async (req, res) => {
     }
     res.json({ success: true, content: parsed, sha: info.sha });
   } catch(err) {
-    // لو الملف غير موجود 404 => يمكننا إرجاع content=[]
     if (err.message.includes('404')) {
       return res.json({ success: true, content: [], sha: null });
     }
@@ -143,26 +141,24 @@ app.get('/api/get-subtopic-file', async (req, res) => {
   }
 });
 
-// 4) Update Subtopic File => e.g. data/whatever.json
+// 4) update subtopic file => e.g. data/xxx.json
 app.post('/api/update-subtopic-file', async (req, res) => {
-  // body => { path, content, sha }
   const { path, content, sha } = req.body;
   if (!path || !content) {
     return res.status(400).json({ success: false, error: 'Missing path or content' });
   }
   try {
-    let finalStr = JSON.stringify(content, null, 2);
+    const finalStr = JSON.stringify(content, null, 2);
     const commitMsg = `Update subtopic file ${path} at ${new Date().toISOString()}`;
-    const result = await updateGitHubFile(path, finalStr, sha||'', commitMsg);
-    res.json({ success: true, commit: result.commit });
+    const updateInfo = await updateGitHubFile(path, finalStr, sha||'', commitMsg);
+    res.json({ success: true, commit: updateInfo.commit });
   } catch(err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 5) Delete questions by bold prefix
+// 5) delete questions by prefix
 app.post('/api/delete-questions-by-prefix', async (req, res) => {
-  // body => { path, sha, prefix }
   const { path, sha, prefix } = req.body;
   if (!path || !sha || !prefix) {
     return res.status(400).json({ success: false, error: 'Missing path or sha or prefix' });
@@ -170,30 +166,29 @@ app.post('/api/delete-questions-by-prefix', async (req, res) => {
   try {
     const info = await getGitHubFile(path);
     const decoded = Buffer.from(info.content, 'base64').toString('utf-8');
-    let questions = JSON.parse(decoded);
-    if (!Array.isArray(questions)) {
-      return res.status(400).json({ success: false, error: 'File is not array of questions' });
+    let arr = JSON.parse(decoded);
+    if (!Array.isArray(arr)) {
+      return res.status(400).json({ success: false, error: 'File not an array' });
     }
-    // filter
-    let newArr = questions.filter(q => !q.question.includes(prefix));
+    const newArr = arr.filter(q => !q.question.includes(prefix));
     const commitMsg = `Delete questions by bold prefix: ${prefix}`;
     const finalStr = JSON.stringify(newArr, null, 2);
-    const updateInfo = await updateGitHubFile(path, finalStr, sha, commitMsg);
-    res.json({ 
-      success: true, 
-      commit: updateInfo.commit, 
-      deletedCount: questions.length - newArr.length 
+    const updateResult = await updateGitHubFile(path, finalStr, sha, commitMsg);
+    res.json({
+      success: true,
+      commit: updateResult.commit,
+      deletedCount: arr.length - newArr.length
     });
   } catch(err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 6) Upload Image
+// 6) upload image
 app.post('/api/upload-image', async (req, res) => {
   const { name, base64 } = req.body;
   if (!base64) {
-    return res.status(400).json({ success: false, error: 'No base64 in body' });
+    return res.status(400).json({ success: false, error: 'No base64' });
   }
   try {
     const buffer = Buffer.from(base64, 'base64');
