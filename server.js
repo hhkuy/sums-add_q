@@ -54,7 +54,8 @@ async function uploadToImgHippo(fileBuffer, fileName) {
   if (!IMAGE_API_KEY) {
     throw new Error("No IMAGE_API_KEY found in environment");
   }
-  const form = new FormData();
+  const Form = require('form-data');
+  const form = new Form();
   form.append("api_key", IMAGE_API_KEY);
   form.append("file", fileBuffer, fileName);
 
@@ -79,7 +80,7 @@ async function uploadToImgHippo(fileBuffer, fileName) {
 // اختبار
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'Server up, no back-to-topics, no alerts, etc.',
+    message: 'Server up with same code + 3 additions',
     GITHUB_TOKEN: !!GITHUB_TOKEN,
     REPO_OWNER,
     REPO_NAME,
