@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Converter + Subtopic Manager (No Logs, Updated Upload)</title>
+  <title>Quiz Converter + Subtopic Manager (No Alerts, No back-to-topics, Custom Q# Start)</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5;
@@ -13,8 +13,7 @@
       border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
     h1 {
-      text-align:center; color:#4a90e2; margin-bottom:20px;
-      font-size:28px;
+      text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px;
     }
     .section {
       background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px;
@@ -31,11 +30,6 @@
     .btn-red { background:#dc3545; color:#fff; }
     .btn-orange { background:#ff9800; color:#fff; }
     .btn-green { background:#28a745; color:#fff; }
-    /* زر الرجوع للمواضيع بلون رمادي فاتح */
-    #back-to-topics {
-      background:#d3d3d3; 
-      color:#000;
-    }
 
     input[type="text"], input[type="number"], textarea, select {
       width:100%; padding:12px; margin-bottom:8px;
@@ -57,6 +51,8 @@
     .q-item {
       border:1px solid #ccc; padding:8px; border-radius:4px; margin-bottom:5px;
     }
+
+    /* لإخفاء أي تنبيهات (alerts) أزلناها منطقياً */
   </style>
 </head>
 <body>
@@ -83,15 +79,16 @@
       <select id="subtopicSelect"></select>
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="loadSubtopic()">Load Questions</button>
-        <button class="btn-blue" onclick="saveSubtopic()">Save Questions</button>
-        <!-- زر الرجوع للمواضيع بلون رمادي فاتح -->
-        <button id="back-to-topics" onclick="alert('Back to topics clicked!')">Back to Topics</button>
       </div>
       <div id="subtopicQuestions"></div>
 
-      <h3 style="margin-top:20px; font-size:18px;">Add New Questions (Convert & Append)</h3>
+      <h3 style="margin-top:20px; font-size:18px;">Add New Questions</h3>
       <label>Prefix (optional):</label>
       <input type="text" id="prefixInput" placeholder="e.g. Dr. Ali -">
+
+      <!-- خانة لتحديد رقم السؤال الابتدائي -->
+      <label>Start Question Number:</label>
+      <input type="number" id="startQNumber" value="1" min="1" style="width:120px;">
 
       <label>Questions Text (larger box):</label>
       <textarea id="questionsText" rows="8" style="font-size:16px;"></textarea>
@@ -99,7 +96,11 @@
       <button class="btn-orange" style="margin-top:5px;" onclick="addImageField()">Add Image Field</button>
       <div id="imageContainer" style="margin-top:10px;"></div>
 
-      <button class="btn-blue" style="margin-top:10px;" onclick="convertAndAppend()">Convert & Append</button>
+      <!-- زر Convert & Append + Save Questions على نفس السطر -->
+      <div style="margin-top:10px;">
+        <button class="btn-blue" onclick="convertAndAppend()">Convert & Append</button>
+        <button class="btn-green" onclick="saveSubtopic()">Save Questions</button>
+      </div>
 
       <h3 style="margin-top:20px; font-size:18px;">Delete Questions by Bold Prefix</h3>
       <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
@@ -111,27 +112,24 @@
 let cachedTopics=[];
 let topicsSha=null;
 
-// subtopic
 let currentSubtopicPath=null;
 let currentSubtopicSha=null;
 let currentQuestions=[];
 
-// ============ Manage Topics ============
+// ==== Manage Topics ====
 async function loadTopics(){
   try {
     const r=await fetch('/api/topics');
     const j=await r.json();
-    if(!j.success){ alert('Error: '+ j.error); return; }
+    if(!j.success) return; // لا نعرض أي alert
     cachedTopics=j.topics;
     topicsSha=j.sha;
-    alert(`Loaded topics.json (sha=${j.sha}). Found ${cachedTopics.length} topics.`);
     renderTopics();
     fillSubtopics();
   } catch(err){
-    alert('Error: '+err);
+    // لا alert
   }
 }
-
 function renderTopics(){
   const list=document.getElementById('topicsList');
   list.innerHTML='';
@@ -224,29 +222,21 @@ function renderTopics(){
 }
 
 async function saveTopics(){
-  if(!topicsSha){
-    alert('No topics loaded');
-    return;
-  }
+  if(!topicsSha) return;
   try{
     const body={ topics:cachedTopics, sha:topicsSha };
-    const r=await fetch('/api/topics',{
+    await fetch('/api/topics',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
-    const j=await r.json();
-    if(!j.success){ alert('Error: '+j.error); return;}
-    alert('Saved topics.json. commit='+JSON.stringify(j.commit));
-  }catch(err){
-    alert('Error: '+err);
-  }
+  }catch(err){}
 }
 
 function addTopic(){
   const nm=document.getElementById('newTopicName').value.trim();
   const ds=document.getElementById('newTopicDesc').value.trim();
-  if(!nm){ alert('Enter topic name'); return; }
+  if(!nm) return;
   cachedTopics.push({
     topicName:nm,
     description:ds,
@@ -258,7 +248,7 @@ function addTopic(){
   fillSubtopics();
 }
 
-// ============ Subtopic Manager ============
+// ==== Subtopic ====
 function fillSubtopics(){
   const sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -273,36 +263,28 @@ function fillSubtopics(){
     }
   });
 }
-
 async function loadSubtopic(){
   const sel=document.getElementById('subtopicSelect');
-  if(!sel.value){
-    alert('No subtopic selected');
-    return;
-  }
+  if(!sel.value) return;
   currentSubtopicPath=sel.value;
   try{
     const r=await fetch('/api/get-subtopic-file?path='+encodeURIComponent(currentSubtopicPath));
     const j=await r.json();
-    if(!j.success){ alert('Error: '+ j.error); return;}
+    if(!j.success)return;
     currentSubtopicSha=j.sha;
     currentQuestions=j.content;
-    alert(`Loaded subtopic file: ${currentSubtopicPath} (sha=${j.sha}), found ${currentQuestions.length} questions.`);
     renderSubtopicQuestions();
-  }catch(err){
-    alert('Error: '+err);
-  }
+  }catch(err){}
 }
-
 function renderSubtopicQuestions(){
   const box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
   currentQuestions.forEach((q, idx)=>{
     const div=document.createElement('div');
     div.classList.add('q-item');
-    let shortQ=q.question? q.question.substring(0,60) : "No question text";
-    div.textContent=`[${idx}] => ${shortQ}... `;
-    // delete
+    // عرض كامل محتوى السؤال (HTML)
+    div.innerHTML = q.question ? q.question : 'No question text';
+    // زر حذف فردي
     const del=document.createElement('button');
     del.textContent='Delete';
     del.classList.add('btn-red');
@@ -317,32 +299,19 @@ function renderSubtopicQuestions(){
     box.appendChild(div);
   });
 }
-
 async function saveSubtopic(){
-  if(!currentSubtopicPath){
-    alert('No subtopic selected');
-    return;
-  }
+  if(!currentSubtopicPath) return;
   try{
-    const body={
-      path:currentSubtopicPath,
-      content:currentQuestions,
-      sha: currentSubtopicSha
-    };
-    const r=await fetch('/api/update-subtopic-file',{
+    const body={ path:currentSubtopicPath, content:currentQuestions, sha: currentSubtopicSha };
+    await fetch('/api/update-subtopic-file',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
-    const j=await r.json();
-    if(!j.success){ alert('Error: '+j.error); return; }
-    alert('Saved subtopic file. commit='+JSON.stringify(j.commit));
-  } catch(err){
-    alert('Error: '+err);
-  }
+  } catch(err){}
 }
 
-// إضافة حقل صورة
+// ==== Add new questions, custom numbering ====
 function addImageField(){
   const container=document.getElementById('imageContainer');
   const row=document.createElement('div');
@@ -375,21 +344,16 @@ function addImageField(){
   row.appendChild(prog);
   container.appendChild(row);
 }
-
-// تحويل النص + رفع الصور وإدراجها
 async function convertAndAppend(){
-  if(!currentSubtopicPath){
-    alert('No subtopic selected to append questions');
-    return;
-  }
+  if(!currentSubtopicPath) return;
   let prefix=document.getElementById('prefixInput').value.trim();
-  let text=document.getElementById('questionsText').value.trim();
-  if(!text){
-    alert('No questions text');
-    return;
-  }
+  let startNumber = parseInt(document.getElementById('startQNumber').value,10);
+  if(isNaN(startNumber) || startNumber<1) startNumber=1;
 
-  // 1) جرّب parse JSON
+  let text=document.getElementById('questionsText').value.trim();
+  if(!text) return;
+
+  // حاول parse JSON
   let arr=null;
   try {
     if(text.startsWith('let quizData =')){
@@ -401,40 +365,42 @@ async function convertAndAppend(){
       // ادمج الصور
       await handleImagesAndBind(arr);
       currentQuestions=currentQuestions.concat(arr);
-      alert(`Appended ${arr.length} questions (JSON). Now total ${currentQuestions.length}`);
       renderSubtopicQuestions();
       return;
     }
-  }catch(e){
-    // نستمر للتنسيق النصي
+  } catch(e){
+    // تابع لصيغة نص
   }
 
-  // 2) تنسيق نصي
-  const lines=text.split('\n');
-  let questionText=null, options=[], answerIdx=-1, answerText=null, explanation=null;
+  // صيغة نص
+  let lines=text.split('\n');
+  let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
   let out=[];
   for(let i=0;i<lines.length;i++){
     let ln=lines[i].trim();
+    // نتجاهل الرقم في بداية السطر (^\d+\.\s+) ونستخدم startNumber بدلاً منه
     let qM=ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
+      // لو لدينا سؤال سابق
       if(questionText!==null){
         out.push({
           question:questionText,
-          options, answer:answerIdx, answerText, explanation,
+          options, answer:ansIdx, answerText:ansText, explanation,
           userAnswer:null
         });
       }
-      let qn=parseInt(qM[1],10);
-      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix? prefix+' ':''}Question ${qn}</span> ${qM[2]}`;
-      options=[]; answerIdx=-1; answerText=null; explanation=null;
+      // بناء السؤال بالرقم المخصص
+      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix? prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
+      startNumber++;
+      options=[]; ansIdx=-1; ansText=null; explanation=null;
     } else {
       let opt=ln.match(/^([A-F])\.\s+(.*)/i);
       if(opt){
         let txt=opt[2].trim();
         if(txt.endsWith('***')){
           txt=txt.slice(0,-3).trim();
-          answerIdx=options.length;
-          answerText=txt;
+          ansIdx=options.length;
+          ansText=txt;
         }
         options.push(txt);
       } else {
@@ -448,21 +414,16 @@ async function convertAndAppend(){
   if(questionText!==null){
     out.push({
       question:questionText,
-      options, answer:answerIdx, answerText, explanation,
+      options, answer:ansIdx, answerText:ansText, explanation,
       userAnswer:null
     });
   }
-
-  // رفع الصور ودمجها
+  // رفع الصور
   await handleImagesAndBind(out);
   currentQuestions=currentQuestions.concat(out);
-  alert(`Converted & appended ${out.length} questions. Now total: ${currentQuestions.length}`);
   renderSubtopicQuestions();
 }
 
-/**
- * رفع كل الصور وإضافة رابط الصورة في السؤال المناسب
- */
 async function handleImagesAndBind(questionsArr){
   const container=document.getElementById('imageContainer');
   const rows=container.querySelectorAll('.image-field-row');
@@ -475,10 +436,9 @@ async function handleImagesAndBind(questionsArr){
       let file=fileIn.files[0];
       const prog=row.querySelector('.progress');
       const pbar=prog.querySelector('.progress-bar');
-      let url=await uploadImageToImgHippo(file, prog, pbar); // ← الدالة الجديدة
-
+      let url=await uploadImageToImgHippo(file, prog, pbar);
       if(url){
-        // ندمجه في السؤال المطابق qNum
+        // ابحث عن السؤال المطابق qNum
         for(let q of questionsArr){
           let match=q.question.match(/Question\s+(\d+)/);
           if(match){
@@ -494,16 +454,13 @@ async function handleImagesAndBind(questionsArr){
   }
 }
 
-/**
- * الدالة الجديدة لرفع الصورة إلى imghippo بنفس منطق الكود المرسل
- */
+// الدالة الجديدة لاستدعاء imghippo بنفس الكود
 function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
   return new Promise((resolve) => {
     if (!file) {
       return resolve("");
     }
 
-    // إظهار شريط التقدم
     if (progressBarContainer) {
       progressBarContainer.style.display = "block";
     }
@@ -513,7 +470,7 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
     }
 
     let formData = new FormData();
-    formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c"); // مفتاح API
+    formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c"); 
     formData.append("file", file);
 
     let xhr = new XMLHttpRequest();
@@ -542,21 +499,18 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
             }
             return resolve(response.data.url);
           } else {
-            console.error("فشل رفع الصورة:", response);
             if (progressBar) {
               progressBar.textContent = "فشل الرفع";
             }
             return resolve("");
           }
         } catch (error) {
-          console.error("خطأ في تحليل الاستجابة:", error);
           if (progressBar) {
             progressBar.textContent = "فشل الرفع";
           }
           return resolve("");
         }
       } else {
-        console.error("فشل الرفع. حالة الطلب:", xhr.status);
         if (progressBar) {
           progressBar.textContent = "فشل الرفع";
         }
@@ -565,7 +519,6 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
     };
 
     xhr.onerror = function() {
-      console.error("حدث خطأ أثناء الاتصال.");
       if (progressBar) {
         progressBar.textContent = "فشل الرفع";
       }
@@ -576,49 +529,23 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
   });
 }
 
-// حذف الأسئلة بكلام غامق
+// حذف بالاعتماد على الكلام الغامق
 async function deleteByPrefix(){
-  if(!currentSubtopicPath){
-    alert('No subtopic loaded');
-    return;
-  }
+  if(!currentSubtopicPath) return;
   const p=document.getElementById('deletePrefix').value.trim();
-  if(!p){
-    alert('Enter prefix');
-    return;
-  }
-  if(!currentSubtopicSha && currentQuestions.length===0){
-    alert("No existing subtopic file or questions to delete from");
-    return;
-  }
+  if(!p) return;
+  if(!currentSubtopicSha && currentQuestions.length===0) return;
   try{
     const body={ path: currentSubtopicPath, sha: currentSubtopicSha, prefix:p };
-    const r=await fetch('/api/delete-questions-by-prefix',{
+    await fetch('/api/delete-questions-by-prefix',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
     });
-    const j=await r.json();
-    if(!j.success){
-      alert("Error: "+j.error);
-      return;
-    }
-    alert(`Deleted ${j.deletedCount} questions with prefix '${p}'. Reloading subtopic...`);
     loadSubtopic();
-  }catch(err){
-    alert("Error: "+err);
-  }
+  }catch(err){}
 }
 
-/** تنسيق التوقيت (24-->12) */
-function formatTo12Hour(timeVal) {
-  if (!timeVal) return "";
-  let [hh, mm] = timeVal.split(":");
-  hh = parseInt(hh, 10);
-  let period = (hh >= 12) ? "م" : "ص";
-  let newH = (hh % 12) || 12;
-  return newH + ":" + mm + " " + period;
-}
 </script>
 </body>
 </html>
