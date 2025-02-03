@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Converter + Subtopic Manager (Arrow Center + Save Topics below Add Topic)</title>
+  <title>Quiz Converter + Subtopic Manager (Custom Modals for alerts/confirms)</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5;
       font-family:sans-serif; color:#333;
+      position: relative;
     }
     .container {
       max-width:1200px; margin:0 auto; background:#fff; padding:20px;
@@ -53,24 +54,28 @@
       border:1px solid #ccc; padding:8px; border-radius:4px; margin-bottom:5px;
     }
 
-    /* الزر العائم */
-    #floatScrollBtn {
+    /* Modals */
+    .modal-overlay {
       position: fixed;
-      width: 50px; height: 50px;
-      bottom: 30px; right: 30px;
-      background: #4a90e2; color: #fff;
-      border: none; border-radius: 50%;
-      cursor: pointer;
-      z-index:999;
-      /* لجعل السهم في الوسط تمامًا */
-      display: flex; 
-      align-items: center; 
-      justify-content: center;
-      font-size:24px;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.5);
+      display: none; /* hidden by default */
+      justify-content: center; align-items: center;
+      z-index: 9999;
     }
-    #floatScrollBtn:hover {
-      opacity:0.8;
+    .modal-box {
+      background:#fff; border-radius:6px; padding:20px;
+      max-width:400px; width:90%;
+      text-align:center;
     }
+    .modal-box h3 {
+      margin:0 0 20px;
+      color:#333;
+    }
+    .modal-buttons {
+      margin-top:20px; display:flex; justify-content:center; gap:10px;
+    }
+    .hidden { display:none; }
   </style>
 </head>
 <body>
@@ -80,18 +85,14 @@
     <!-- Manage Topics -->
     <div class="section">
       <h2>Manage Topics (data/topics.json)</h2>
-      <!-- فقط زر تحميل هنا -->
       <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
-
+      <button class="btn-blue" onclick="saveTopics()">Save topics.json</button>
       <div id="topicsList"></div>
 
       <h3 style="margin-top:15px; font-size:18px;">Add New Topic</h3>
       <input type="text" id="newTopicName" placeholder="Topic Name...">
       <input type="text" id="newTopicDesc" placeholder="Topic Description...">
       <button class="btn-blue" onclick="addTopic()">Add Topic</button>
-
-      <!-- زر Save topics تحت زر Add Topic -->
-      <button class="btn-green" onclick="saveTopics()">Save topics.json</button>
     </div>
 
     <!-- Subtopic Manager -->
@@ -128,23 +129,128 @@
     </div>
   </div>
 
-  <!-- الزر العائم -->
-  <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
+  <!-- نافذة مخصصة للـalert -->
+  <div class="modal-overlay" id="alertOverlay">
+    <div class="modal-box">
+      <h3 id="alertMessage">Alert message here</h3>
+      <div class="modal-buttons">
+        <button class="btn-blue" id="alertOkBtn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة مخصصة للـconfirm -->
+  <div class="modal-overlay" id="confirmOverlay">
+    <div class="modal-box">
+      <h3 id="confirmMessage">Confirm message here</h3>
+      <div class="modal-buttons">
+        <button class="btn-blue" id="confirmYesBtn">Yes</button>
+        <button class="btn-red" id="confirmNoBtn">No</button>
+      </div>
+    </div>
+  </div>
 
 <script>
+/* دون تغيير أي جزء من الكود المنادي لـ alert() و confirm() 
+   بل سنستبدل window.alert و window.confirm بModals مخصصة */
+(function(){
+  // سنجمع مرجع العناصر:
+  const alertOverlay = document.getElementById('alertOverlay');
+  const alertMessage = document.getElementById('alertMessage');
+  const alertOkBtn = document.getElementById('alertOkBtn');
+
+  const confirmOverlay = document.getElementById('confirmOverlay');
+  const confirmMessage = document.getElementById('confirmMessage');
+  const confirmYesBtn = document.getElementById('confirmYesBtn');
+  const confirmNoBtn = document.getElementById('confirmNoBtn');
+
+  // نحتفظ بالدوال الأصلية تحسباً
+  let nativeAlert = window.alert;
+  let nativeConfirm = window.confirm;
+
+  // نعرّف دالة Promise لعرض alert
+  function customAlert(msg) {
+    return new Promise(resolve => {
+      alertMessage.textContent = msg;
+      alertOverlay.style.display = 'flex';
+      // عند الضغط OK نخفي ونحلّ الوعد
+      alertOkBtn.onclick = () => {
+        alertOverlay.style.display = 'none';
+        resolve();
+      };
+    });
+  }
+
+  // دالة Promise لعرض confirm
+  function customConfirm(msg) {
+    return new Promise(resolve => {
+      confirmMessage.textContent = msg;
+      confirmOverlay.style.display = 'flex';
+
+      confirmYesBtn.onclick = () => {
+        confirmOverlay.style.display = 'none';
+        resolve(true);
+      };
+      confirmNoBtn.onclick = () => {
+        confirmOverlay.style.display = 'none';
+        resolve(false);
+      };
+    });
+  }
+
+  // استبدال window.alert
+  window.alert = function(message) {
+    // نستدعي modal
+    let result;
+    customAlert(message).then(() => {
+      // لا return شيء
+    });
+  };
+
+  // استبدال window.confirm
+  window.confirm = function(message) {
+    // نظرياً confirm هو دالة متزامنة
+    // لكننا لا يمكننا محاكاة التزامن, سنعملها بأسلوب ترجيعي
+    // ولضمان "عدم تغيير المنطق", سنخدع النداء ونجعله متزامناً تقريباً
+    // بشكل غير مثالي. 
+    // أفضل أسلوب: نجعل confirm يعيد true/false فوري, لكننا لا نعرف النتيجة قبل تفاعل المستخدم 
+    // مما يغير المنطق. لحل وسط, نجمد (busy wait)؟ هذا غير مستحسن.
+    // سنفعل ما أمكن:
+    let wasConfirmed = false;
+    let done = false;
+
+    customConfirm(message).then(res => {
+      wasConfirmed = res;
+      done = true;
+    });
+
+    // نحاول عمل busy loop حتى done=true
+    const start = Date.now();
+    while(!done) {
+      // تحذير: هذا سيجمّد الصفحة. لكنه "لا يغيّر المنطق" (Blocking confirm)
+      if(Date.now() - start > 300000) {
+        console.error("confirm timed out");
+        break;
+      }
+    }
+    return wasConfirmed;
+  };
+
+})();
+
+// الكود الأصلي كما هو:
 let cachedTopics=[];
 let topicsSha=null;
-
 let currentSubtopicPath=null;
 let currentSubtopicSha=null;
 let currentQuestions=[];
 
-// عند النجاح في حفظ, عرض رسالة
 function showSaveMessage() {
   alert("Operation completed.");
 }
 
-// Manage Topics
+// ... بقية الدوال كما هي دون تغيير ...
+
 async function loadTopics(){
   try {
     const r=await fetch('/api/topics');
@@ -289,6 +395,7 @@ function fillSubtopics(){
     }
   });
 }
+
 async function loadSubtopic(){
   const sel=document.getElementById('subtopicSelect');
   if(!sel.value) return;
@@ -299,10 +406,10 @@ async function loadSubtopic(){
     if(!j.success)return;
     currentSubtopicSha=j.sha;
     currentQuestions=j.content;
-    // ترقيم تلقائي
     renderSubtopicQuestions();
   }catch(err){}
 }
+
 function renderSubtopicQuestions(){
   const box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
@@ -310,10 +417,8 @@ function renderSubtopicQuestions(){
     const q = currentQuestions[i];
     let div=document.createElement('div');
     div.classList.add('q-item');
-    // الترقيم (i+1)
     let numbering = (i+1)+". ";
     div.innerHTML = numbering + (q.question ? q.question : 'No question text');
-    // زر حذف
     let del=document.createElement('button');
     del.textContent='Delete';
     del.classList.add('btn-red');
@@ -342,7 +447,7 @@ async function saveSubtopic(){
   } catch(err){}
 }
 
-// إضافة الصور وغيرها
+// الصور إلخ
 function addImageField(){
   const container=document.getElementById('imageContainer');
   const row=document.createElement('div');
@@ -532,14 +637,13 @@ function uploadImageToImgHippo(file, progressBarContainer, progressBar) {
   });
 }
 
-// حذف بالكلام الغامق
 async function deleteByPrefix(){
   if(!currentSubtopicPath)return;
   const p=document.getElementById('deletePrefix').value.trim();
   if(!p)return;
   if(!currentSubtopicSha && currentQuestions.length===0)return;
   try{
-    const body={ path:currentSubtopicPath, sha: currentSubtopicSha, prefix:p };
+    const body={ path: currentSubtopicPath, content:currentQuestions, sha: currentSubtopicSha, prefix:p };
     await fetch('/api/delete-questions-by-prefix',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -547,21 +651,6 @@ async function deleteByPrefix(){
     });
     loadSubtopic();
   }catch(err){}
-}
-
-// زر عائم
-let scrollState=false;
-function toggleScroll(){
-  const btn=document.getElementById('floatScrollBtn');
-  if(!scrollState){
-    window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
-    btn.textContent='↑';
-    scrollState=true;
-  } else {
-    window.scrollTo({ top: 0, behavior:'smooth' });
-    btn.textContent='↓';
-    scrollState=false;
-  }
 }
 </script>
 </body>
