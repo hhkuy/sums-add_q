@@ -7,13 +7,13 @@ const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// =========== Env Vars ==========
+// مفاتيح سرية من بيئة Vercel:
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.REPO_OWNER;
 const REPO_NAME = process.env.REPO_NAME;
 const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
 
-// =========== Helpers to get/update GitHub file ==========
+// ==== GitHub Helpers ====
 async function getGitHubFile(path) {
   const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
   const res = await fetch(url, {
@@ -49,7 +49,7 @@ async function updateGitHubFile(path, newContent, sha, commitMessage) {
   return await res.json();
 }
 
-// =========== Image Upload (imghippo) ==========
+// ==== رفع الصورة عبر imghippo ====
 async function uploadToImgHippo(fileBuffer, fileName) {
   if (!IMAGE_API_KEY) {
     throw new Error("No IMAGE_API_KEY found in environment");
@@ -74,12 +74,12 @@ async function uploadToImgHippo(fileBuffer, fileName) {
   }
 }
 
-// =========== Routes ===========
+// ==== Routes ====
 
-// test route
+// اختبار سريع
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'Server up. Checking env variables..',
+    message: 'Server up',
     GITHUB_TOKEN: !!GITHUB_TOKEN,
     REPO_OWNER,
     REPO_NAME,
@@ -109,7 +109,7 @@ app.post('/api/topics', async (req, res) => {
   try {
     const filePath = 'data/topics.json';
     const newContent = JSON.stringify(topics, null, 2);
-    const commitMsg = `Update topics.json via admin panel - ${new Date().toISOString()}`;
+    const commitMsg = `Update topics.json - ${new Date().toISOString()}`;
     const updateInfo = await updateGitHubFile(filePath, newContent, sha, commitMsg);
     res.json({ success: true, commit: updateInfo.commit });
   } catch(err) {
@@ -117,7 +117,7 @@ app.post('/api/topics', async (req, res) => {
   }
 });
 
-// 3) get subtopic file => e.g. data/xxx.json
+// 3) get subtopic file => e.g. data/Topic_sub.json
 app.get('/api/get-subtopic-file', async (req, res) => {
   const path = req.query.path;
   if (!path) {
@@ -126,22 +126,20 @@ app.get('/api/get-subtopic-file', async (req, res) => {
   try {
     const info = await getGitHubFile(path);
     const decoded = Buffer.from(info.content, 'base64').toString('utf-8');
-    let parsed;
-    try {
-      parsed = JSON.parse(decoded);
-    } catch(e) {
-      parsed = decoded;
-    }
-    res.json({ success: true, content: parsed, sha: info.sha });
+    let arr;
+    try { arr = JSON.parse(decoded); } catch(e) { arr=[]; }
+    if (!Array.isArray(arr)) arr=[];
+    res.json({ success: true, content: arr, sha: info.sha });
   } catch(err) {
     if (err.message.includes('404')) {
+      // لو الملف غير موجود => content=[]
       return res.json({ success: true, content: [], sha: null });
     }
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 4) update subtopic file => e.g. data/xxx.json
+// 4) update subtopic file
 app.post('/api/update-subtopic-file', async (req, res) => {
   const { path, content, sha } = req.body;
   if (!path || !content) {
@@ -150,8 +148,8 @@ app.post('/api/update-subtopic-file', async (req, res) => {
   try {
     const finalStr = JSON.stringify(content, null, 2);
     const commitMsg = `Update subtopic file ${path} at ${new Date().toISOString()}`;
-    const updateInfo = await updateGitHubFile(path, finalStr, sha||'', commitMsg);
-    res.json({ success: true, commit: updateInfo.commit });
+    const result = await updateGitHubFile(path, finalStr, sha||'', commitMsg);
+    res.json({ success: true, commit: result.commit });
   } catch(err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -167,9 +165,7 @@ app.post('/api/delete-questions-by-prefix', async (req, res) => {
     const info = await getGitHubFile(path);
     const decoded = Buffer.from(info.content, 'base64').toString('utf-8');
     let arr = JSON.parse(decoded);
-    if (!Array.isArray(arr)) {
-      return res.status(400).json({ success: false, error: 'File not an array' });
-    }
+    if (!Array.isArray(arr)) arr=[];
     const newArr = arr.filter(q => !q.question.includes(prefix));
     const commitMsg = `Delete questions by bold prefix: ${prefix}`;
     const finalStr = JSON.stringify(newArr, null, 2);
@@ -188,7 +184,7 @@ app.post('/api/delete-questions-by-prefix', async (req, res) => {
 app.post('/api/upload-image', async (req, res) => {
   const { name, base64 } = req.body;
   if (!base64) {
-    return res.status(400).json({ success: false, error: 'No base64' });
+    return res.status(400).json({ success: false, error: 'No base64 in request' });
   }
   try {
     const buffer = Buffer.from(base64, 'base64');
