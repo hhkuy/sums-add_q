@@ -1,7 +1,7 @@
 {
-  "name": "quiz-manager-reorder",
+  "name": "quiz-manager-allfeatures-fixupload",
   "version": "1.0.0",
-  "description": "All original code, plus reordering topics/subtopics and Save Topics next to Add Topic, no other changes.",
+  "description": "All original code + reorder + custom modals + fix image upload using the snippet approach",
   "scripts": {
     "start": "node server.js"
   },
