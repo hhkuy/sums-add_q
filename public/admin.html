@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel on Vercel</title>
+  <style>
+    body { font-family: sans-serif; background: #f2f2f2; margin:0; padding:20px; }
+    .container { max-width: 800px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; }
+    button { margin:5px; padding:8px 16px; background:#4a90e2; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    button:hover { background:#3f7fd1; }
+    .results { background:#fafafa; margin-top:10px; padding:10px; border-radius:4px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Admin Panel (Vercel + Secrets Keys)</h1>
+
+  <button onclick="testServer()">Test Server</button>
+  <div id="testResult" class="results"></div>
+
+  <hr>
+  <h2>Load a GitHub File</h2>
+  <input type="text" id="filePath" placeholder="data/topics.json">
+  <button onclick="loadFile()">Load File</button>
+  <div id="fileContent" class="results"></div>
+
+  <hr>
+  <h2>Update the same File</h2>
+  <textarea id="updateContent" rows="6" style="width:100%;" placeholder='{"example":"edit me"}'></textarea>
+  <input type="text" id="shaInput" placeholder="SHA from loaded file">
+  <button onclick="updateFile()">Update File</button>
+  <div id="updateResult" class="results"></div>
+
+  <hr>
+  <h2>Upload Image (optional)</h2>
+  <input type="file" id="imageFile">
+  <button onclick="uploadImage()">Upload Image</button>
+  <div id="uploadResult" class="results"></div>
+
+</div>
+
+<script>
+async function testServer() {
+  document.getElementById('testResult').textContent = 'Testing...';
+  try {
+    const res = await fetch('/api/test');
+    const json = await res.json();
+    document.getElementById('testResult').textContent = JSON.stringify(json, null, 2);
+  } catch (err) {
+    document.getElementById('testResult').textContent = err;
+  }
+}
+
+let loadedData = null;
+let loadedSha = null;
+
+async function loadFile() {
+  const path = document.getElementById('filePath').value.trim();
+  if (!path) {
+    alert('Enter a file path');
+    return;
+  }
+  document.getElementById('fileContent').textContent = 'Loading...';
+  try {
+    const res = await fetch('/api/get-file?path=' + encodeURIComponent(path));
+    const json = await res.json();
+    if (!json.success) {
+      document.getElementById('fileContent').textContent = 'Error: ' + json.error;
+      return;
+    }
+    loadedData = json.content;
+    loadedSha = json.sha;
+    document.getElementById('fileContent').textContent = JSON.stringify(loadedData, null, 2);
+    document.getElementById('shaInput').value = loadedSha;
+  } catch (err) {
+    document.getElementById('fileContent').textContent = 'Error: ' + err;
+  }
+}
+
+async function updateFile() {
+  const path = document.getElementById('filePath').value.trim();
+  const shaVal = document.getElementById('shaInput').value.trim();
+  const newContent = document.getElementById('updateContent').value.trim();
+  document.getElementById('updateResult').textContent = 'Updating...';
+
+  if (!path || !shaVal) {
+    alert('Need file path and sha');
+    return;
+  }
+  try {
+    // نحاول تحويل newContent إلى كائن إن كان JSON
+    let parsed;
+    try {
+      parsed = JSON.parse(newContent);
+    } catch(e) {
+      // لو ما كان JSON، نُبقيه نصًا
+      parsed = newContent;
+    }
+    const body = {
+      path,
+      sha: shaVal,
+      content: parsed
+    };
+    const res = await fetch('/api/update-file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const json = await res.json();
+    if (!json.success) {
+      document.getElementById('updateResult').textContent = 'Error: ' + json.error;
+      return;
+    }
+    document.getElementById('updateResult').textContent = 'File updated! commit=' + JSON.stringify(json.commit);
+  } catch (err) {
+    document.getElementById('updateResult').textContent = 'Error: ' + err;
+  }
+}
+
+async function uploadImage() {
+  const fileInput = document.getElementById('imageFile');
+  const resultDiv = document.getElementById('uploadResult');
+  if (!fileInput.files[0]) {
+    alert('Select an image first');
+    return;
+  }
+  resultDiv.textContent = 'Uploading...';
+
+  // تحويل الملف إلى base64
+  const file = fileInput.files[0];
+  const base64 = await toBase64(file);
+
+  // إرسالها لـ /api/upload-image
+  try {
+    const res = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64 })
+    });
+    const json = await res.json();
+    if (!json.success) {
+      resultDiv.textContent = 'Error: ' + json.error;
+      return;
+    }
+    resultDiv.textContent = 'Image uploaded! URL=' + json.url;
+  } catch(err) {
+    resultDiv.textContent = 'Error: ' + err;
+  }
+}
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const res = reader.result;
+      // res = "data:image/xxx;base64,abcd..."
+      // ممكن تقص substring لو أردت
+      const splitted = res.split(','); 
+      if (splitted.length === 2) {
+        resolve(splitted[1]); // إرجاع الجزء Base64 فقط
+      } else {
+        resolve(res); 
+      }
+    };
+    reader.onerror = err => reject(err);
+    reader.readAsDataURL(file);
+  });
+}
+</script>
+</body>
+</html>
