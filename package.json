@@ -1,7 +1,7 @@
 {
-  "name": "quiz-manager-custom-modals-ordering",
+  "name": "quiz-manager-custom-popups-no-freeze",
   "version": "1.0.0",
-  "description": "All features with custom modals for popups and reordering topics/subtopics, no logic changed",
+  "description": "Same code, custom modals with async approach (no busy loop) => no freeze on edit/x/delete",
   "scripts": {
     "start": "node server.js"
   },
