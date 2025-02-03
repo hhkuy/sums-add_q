@@ -1,7 +1,7 @@
 {
-  "name": "quiz-manager",
+  "name": "quiz-manager-custom-modals-ordering",
   "version": "1.0.0",
-  "description": "Same code with custom modals for all messages, plus Save Topics green next to Add Topic",
+  "description": "All features with custom modals for popups and reordering topics/subtopics, no logic changed",
   "scripts": {
     "start": "node server.js"
   },
