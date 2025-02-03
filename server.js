@@ -7,13 +7,13 @@ const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// مفاتيح سرية من بيئة Vercel:
+// مفاتيح من بيئة Vercel
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.REPO_OWNER;
 const REPO_NAME = process.env.REPO_NAME;
 const IMAGE_API_KEY = process.env.IMAGE_API_KEY;
 
-// ==== GitHub Helpers ====
+// ========== GitHub Helper ==========
 async function getGitHubFile(path) {
   const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
   const res = await fetch(url, {
@@ -49,7 +49,7 @@ async function updateGitHubFile(path, newContent, sha, commitMessage) {
   return await res.json();
 }
 
-// ==== رفع الصورة عبر imghippo ====
+// ========== رفع الصور (imghippo) ==========
 async function uploadToImgHippo(fileBuffer, fileName) {
   if (!IMAGE_API_KEY) {
     throw new Error("No IMAGE_API_KEY found in environment");
@@ -74,12 +74,12 @@ async function uploadToImgHippo(fileBuffer, fileName) {
   }
 }
 
-// ==== Routes ====
+// ========== Routes ==========
 
-// اختبار سريع
+// اختبار
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'Server up with new upload method',
+    message: 'Server up, no back-to-topics, no alerts, etc.',
     GITHUB_TOKEN: !!GITHUB_TOKEN,
     REPO_OWNER,
     REPO_NAME,
@@ -87,7 +87,7 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// 1) Load topics.json => data/topics.json
+// 1) Load topics.json
 app.get('/api/topics', async (req, res) => {
   try {
     const filePath = 'data/topics.json';
@@ -117,7 +117,7 @@ app.post('/api/topics', async (req, res) => {
   }
 });
 
-// 3) get subtopic file => e.g. data/Topic_sub.json
+// 3) get subtopic file
 app.get('/api/get-subtopic-file', async (req, res) => {
   const path = req.query.path;
   if (!path) {
@@ -132,7 +132,6 @@ app.get('/api/get-subtopic-file', async (req, res) => {
     res.json({ success: true, content: arr, sha: info.sha });
   } catch(err) {
     if (err.message.includes('404')) {
-      // لو الملف غير موجود => content=[]
       return res.json({ success: true, content: [], sha: null });
     }
     res.status(500).json({ success: false, error: err.message });
