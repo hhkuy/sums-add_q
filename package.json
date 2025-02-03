@@ -1,7 +1,7 @@
 {
   "name": "quiz-manager-merged",
   "version": "1.0.0",
-  "description": "Quiz converter + topics/subtopics + image upload, refined, no logs, bigger UI",
+  "description": "Quiz converter + subtopic manager + image upload with updated method, and back-to-topics button color changed",
   "scripts": {
     "start": "node server.js"
   },
