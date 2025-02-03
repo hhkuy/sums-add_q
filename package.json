@@ -1,7 +1,7 @@
 {
   "name": "quiz-manager-merged",
   "version": "1.0.0",
-  "description": "Quiz converter + subtopic manager with image upload. Requests: No alerts, no back-to-topics, custom question numbering, etc.",
+  "description": "Same code with 3 additions: success message on save, numbering on load, floating scroll button.",
   "scripts": {
     "start": "node server.js"
   },
