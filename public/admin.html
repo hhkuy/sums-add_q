@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>All Original Features + Reorder Topics/Subtopics + Save Topics next to Add Topic</title>
+  <title>All Original + Reorder + Custom Modals + Fix Image Upload</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333;
@@ -30,7 +30,6 @@
     .btn-red { background:#dc3545; color:#fff; }
     .btn-orange { background:#ff9800; color:#fff; }
 
-    /* لأسهم الترتيب */
     .arrow-btn {
       background:#6c757d; color:#fff; font-size:14px; 
       margin-left:3px; cursor:pointer; border:none; border-radius:4px;
@@ -57,7 +56,6 @@
       background:#4a90e2; height:100%; width:0%; color:#fff; text-align:center; line-height:24px; transition:width 0.3s; font-size:14px;
     }
 
-    /* الزر العائم */
     #floatScrollBtn {
       position: fixed; width:50px; height:50px; bottom:30px; right:30px;
       background:#4a90e2; color:#fff; border:none; border-radius:50%;
@@ -65,7 +63,6 @@
     }
     #floatScrollBtn:hover { opacity:0.8; }
 
-    /* المودالات (لا تغيير) */
     .modal-overlay {
       position:fixed; top:0; left:0; right:0; bottom:0;
       background:rgba(0,0,0,0.5);
@@ -91,16 +88,14 @@
 </head>
 <body>
   <div class="container">
-    <h1>All Original + Reorder Topics/Subtopics + Save Next to Add Topic</h1>
+    <h1>All Original + Reorder + Custom Modals + Fix Image Upload</h1>
 
     <!-- Manage Topics -->
     <div class="section">
       <h2>Manage Topics</h2>
-      <!-- زر تحميل فقط -->
       <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
 
       <div id="topicsList"></div>
-      <!-- اسفلها زر Add topic و زر Save Topics بجانب بعض -->
       <div style="margin-top:10px;">
         <input type="text" id="newTopicName" placeholder="Topic Name...">
         <input type="text" id="newTopicDesc" placeholder="Topic Description...">
@@ -125,6 +120,7 @@
       <input type="number" id="startQNumber" value="1" min="1" style="width:120px;">
       <label>Questions Text:</label>
       <textarea id="questionsText" rows="6"></textarea>
+
       <button class="btn-orange" onclick="addImageField()">Add Image Field</button>
       <div id="imageContainer" style="margin-top:10px;"></div>
 
@@ -139,10 +135,9 @@
     </div>
   </div>
 
-  <!-- زر عائم scroll -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
 
-  <!-- المودالات  alert/confirm/prompt  كما في النسخة السابقة دون تغيير -->
+  <!-- Custom modals for alert/confirm/prompt -->
   <div class="modal-overlay" id="alertOverlay">
     <div class="modal-box">
       <h3 id="alertMsg"></h3>
@@ -172,16 +167,16 @@
   </div>
 
 <script>
-/** نفس override previous code for alert/confirm/prompt (async approach) */
-
-// ... override code ...
+/** Same override for alert/confirm/prompt (asynchronous approach, no busy loop) */
 let alertOverlay=document.getElementById('alertOverlay');
 let alertMsg=document.getElementById('alertMsg');
 let alertOkBtn=document.getElementById('alertOkBtn');
+
 let confirmOverlay=document.getElementById('confirmOverlay');
 let confirmMsg=document.getElementById('confirmMsg');
 let confirmYesBtn=document.getElementById('confirmYesBtn');
 let confirmNoBtn=document.getElementById('confirmNoBtn');
+
 let promptOverlay=document.getElementById('promptOverlay');
 let promptMsg=document.getElementById('promptMsg');
 let promptInput=document.getElementById('promptInput');
@@ -212,10 +207,10 @@ function customConfirm(message){
     };
   });
 }
-function customPrompt(message, defaultVal){
+function customPrompt(message, defVal){
   return new Promise(resolve=>{
     promptMsg.textContent=message;
-    promptInput.value=defaultVal||'';
+    promptInput.value=defVal||'';
     promptOverlay.style.display='flex';
     promptOkBtn.onclick=()=>{
       let val=promptInput.value;
@@ -239,7 +234,7 @@ window.prompt=async function(msg, defVal){
   return customPrompt(msg, defVal);
 };
 
-// بقية الكود كما هو
+// float scroll
 let scrollState=false;
 function toggleScroll(){
   let btn=document.getElementById('floatScrollBtn');
@@ -254,7 +249,9 @@ function toggleScroll(){
   }
 }
 
-// Vars
+/** The same logic from older code, plus reordering, plus the new fix for image upload */
+
+// Original Vars
 let cachedTopics=[];
 let topicsSha=null;
 let currentSubtopicPath=null;
@@ -265,7 +262,7 @@ function showSaveMessage(){
   alert("Operation completed.");
 }
 
-// 1) Load/Save Topics
+// Load/Save Topics
 async function loadTopics(){
   try{
     let r=await fetch('/api/topics');
@@ -280,7 +277,7 @@ async function loadTopics(){
 async function saveTopics(){
   if(!topicsSha)return;
   try{
-    let body={ topics:cachedTopics, sha:topicsSha };
+    let body={topics:cachedTopics, sha:topicsSha};
     let r=await fetch('/api/topics',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -292,7 +289,7 @@ async function saveTopics(){
   }catch(e){}
 }
 
-// 2) render topics with reordering
+// Render Topics with reorder
 function renderTopics(){
   let list=document.getElementById('topicsList');
   list.innerHTML='';
@@ -306,7 +303,7 @@ function renderTopics(){
       <strong>${t.topicName}</strong> (sub:${t.subTopics?t.subTopics.length:0})
       <br>${t.description||''}
     `;
-    // أزرار تحريك Topic للأعلى/أسفل
+    // Reorder up
     let upBtn=document.createElement('button');
     upBtn.className='arrow-btn';
     upBtn.textContent='▲';
@@ -319,6 +316,7 @@ function renderTopics(){
     };
     d.appendChild(upBtn);
 
+    // Reorder down
     let downBtn=document.createElement('button');
     downBtn.className='arrow-btn';
     downBtn.textContent='▼';
@@ -331,11 +329,11 @@ function renderTopics(){
     };
     d.appendChild(downBtn);
 
-    // زر delete
+    // Delete
     let delBtn=document.createElement('button');
     delBtn.textContent='Delete';
     delBtn.classList.add('btn-red');
-    delBtn.onclick= async ()=>{
+    delBtn.onclick=async ()=>{
       let c=await confirm("Delete this topic?");
       if(c){
         cachedTopics.splice(idx,1);
@@ -345,7 +343,7 @@ function renderTopics(){
     };
     d.appendChild(delBtn);
 
-    // زر edit
+    // Edit
     let edBtn=document.createElement('button');
     edBtn.textContent='Edit';
     edBtn.classList.add('btn-orange');
@@ -359,7 +357,7 @@ function renderTopics(){
     };
     d.appendChild(edBtn);
 
-    // subTopics
+    // subtopics
     if(t.subTopics && t.subTopics.length>0){
       t.subTopics.forEach((st, stidx)=>{
         let stDiv=document.createElement('div');
@@ -367,7 +365,7 @@ function renderTopics(){
         stDiv.style.marginTop='5px';
         stDiv.innerHTML=`${st.name} => ${st.file}`;
 
-        // reorder subtopic
+        // reorder sub
         let subUp=document.createElement('button');
         subUp.className='arrow-btn';
         subUp.textContent='▲';
@@ -395,7 +393,7 @@ function renderTopics(){
         let sdel=document.createElement('button');
         sdel.textContent='X';
         sdel.classList.add('btn-red');
-        sdel.onclick= async ()=>{
+        sdel.onclick=async ()=>{
           let c=await confirm("Delete subtopic?");
           if(c){
             t.subTopics.splice(stidx,1);
@@ -408,7 +406,7 @@ function renderTopics(){
         let sedit=document.createElement('button');
         sedit.textContent='Edit';
         sedit.classList.add('btn-orange');
-        sedit.onclick= async ()=>{
+        sedit.onclick=async ()=>{
           let rename=await prompt("Subtopic name:", st.name);
           if(rename!==null && rename!==''){
             st.name=rename;
@@ -425,7 +423,7 @@ function renderTopics(){
     let addSt=document.createElement('button');
     addSt.textContent='Add Subtopic';
     addSt.classList.add('btn-blue');
-    addSt.onclick= async ()=>{
+    addSt.onclick=async ()=>{
       let sbName=await prompt("Subtopic name?");
       if(!sbName)return;
       let fileName=(t.topicName.replace(/\s+/g,'_')+"_"+sbName.replace(/\s+/g,'_')).toLowerCase()+'.json';
@@ -441,7 +439,6 @@ function renderTopics(){
   });
 }
 
-// addTopic
 function addTopic(){
   let nm=document.getElementById('newTopicName').value.trim();
   let ds=document.getElementById('newTopicDesc').value.trim();
@@ -453,7 +450,7 @@ function addTopic(){
   fillSubtopics();
 }
 
-// fill subtopics
+// fill subtopic
 function fillSubtopics(){
   let sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -497,7 +494,7 @@ function renderSubtopicQuestions(){
     del.textContent='Delete';
     del.classList.add('btn-red');
     del.style.marginLeft='5px';
-    del.onclick= async ()=>{
+    del.onclick=async ()=>{
       let c=await confirm("Delete this question?");
       if(c){
         currentQuestions.splice(i,1);
@@ -524,16 +521,16 @@ async function saveSubtopic(){
   }catch(e){}
 }
 
-// convert & append
+// Add new questions with images
 function addImageField(){
   let c=document.getElementById('imageContainer');
   let row=document.createElement('div');
   row.classList.add('image-field-row');
 
-  let qn=document.createElement('input');
-  qn.type='number';
-  qn.placeholder='Q#';
-  qn.min=1;
+  let qNum=document.createElement('input');
+  qNum.type='number';
+  qNum.placeholder='Q#';
+  qNum.min=1;
 
   let fileIn=document.createElement('input');
   fileIn.type='file';
@@ -551,13 +548,14 @@ function addImageField(){
   pbar.textContent='0%';
   prog.appendChild(pbar);
 
-  row.appendChild(qn);
+  row.appendChild(qNum);
   row.appendChild(fileIn);
   row.appendChild(delBtn);
   row.appendChild(prog);
   c.appendChild(row);
 }
 
+// Convert & Append
 async function convertAndAppend(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('prefixInput').value.trim();
@@ -619,81 +617,114 @@ async function convertAndAppend(){
   currentQuestions=currentQuestions.concat(out);
   renderSubtopicQuestions();
 }
+
+// استبدلنا هذه الدالة بمنطق الكود المقتبس (FormData + "Accept: application/json"):
 async function handleImagesAndBind(questionsArr){
-  let c=document.getElementById('imageContainer');
-  let rows=c.querySelectorAll('.image-field-row');
-  for(const row of rows){
+  // سنجمع رفع الصور من الحقول
+  let imageRows=document.querySelectorAll('.image-field-row');
+  // سنخزن { [qNumber]: [urls...] }
+  let dataMap={};
+  for(let row of imageRows){
     let inputs=row.querySelectorAll('input');
-    let qn=parseInt(inputs[0].value,10);
-    if(!qn)continue;
-    let fileIn=inputs[1];
-    if(fileIn.files&&fileIn.files.length>0){
-      let file=fileIn.files[0];
+    let qnum=parseInt(inputs[0].value,10);
+    if(!qnum) continue;
+    let fileInput=inputs[1];
+    if(fileInput.files&&fileInput.files.length>0){
+      let file=fileInput.files[0];
       let prog=row.querySelector('.progress');
       let pbar=prog.querySelector('.progress-bar');
-      let url=await uploadOneImage(file,prog,pbar);
+      let url=await uploadImageToImgHippo(file, prog, pbar);
       if(url){
-        for(let obj of questionsArr){
-          let match=obj.question.match(/Question\s+(\d+)/);
-          if(match){
-            let num=parseInt(match[1],10);
-            if(num===qn){
-              obj.question+=`<br><img src='${url}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
-              break;
-            }
-          }
-        }
+        if(!dataMap[qnum]) dataMap[qnum]=[];
+        dataMap[qnum].push(url);
       }
     }
   }
+  // إضافة الصور
+  questionsArr.forEach(obj=>{
+    let match=obj.question.match(/Question\s+(\d+)/);
+    if(match){
+      let qn=parseInt(match[1],10);
+      if(dataMap[qn]){
+        dataMap[qn].forEach(imgUrl=>{
+          obj.question+=`<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
+        });
+      }
+    }
+  });
 }
-function uploadOneImage(file,progressBarContainer,progressBar){
-  return new Promise(resolve=>{
-    if(!file)return resolve("");
-    progressBarContainer.style.display='block';
-    progressBar.style.width="0%";
-    progressBar.textContent="0%";
-    let xhr=new XMLHttpRequest();
-    xhr.open("POST","/api/upload-image",true);
-    xhr.setRequestHeader("Content-Type","application/json");
-    xhr.upload.onprogress=(e)=>{
-      if(e.lengthComputable){
-        let percent=Math.floor(e.loaded/e.total*100);
-        progressBar.style.width=percent+"%";
-        progressBar.textContent=percent+"%";
-      }
-    };
-    xhr.onload=()=>{
-      if(xhr.status===200){
-        try{
-          let resp=JSON.parse(xhr.responseText);
-          if(resp.success&&resp.url){
-            progressBar.style.width="100%";
-            progressBar.textContent="تم رفع الصورة";
-            resolve(resp.url);
-          } else {
-            progressBar.textContent="فشل الرفع";
-            resolve("");
-          }
-        }catch(e){
-          progressBar.textContent="فشل الرفع";
-          resolve("");
+
+/** الدالة الجديدة لرفع صورة بالصيغة المطلوبة */
+function uploadImageToImgHippo(file, progressContainer, progressBar) {
+  return new Promise((resolve) => {
+    if (!file) {
+      return resolve(""); 
+    }
+    if (progressContainer) {
+      progressContainer.style.display = "block";
+    }
+    if (progressBar) {
+      progressBar.style.width = "0%";
+      progressBar.textContent = "0%";
+    }
+
+    let formData = new FormData();
+    formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c"); 
+    formData.append("file", file);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://api.imghippo.com/v1/upload", true);
+    xhr.setRequestHeader("Accept", "application/json");
+
+    xhr.upload.onprogress = function(event) {
+      if (event.lengthComputable) {
+        const percentComplete = Math.floor((event.loaded / event.total) * 100);
+        if (progressBar) {
+          progressBar.style.width = percentComplete + "%";
+          progressBar.textContent = percentComplete + "%";
         }
-      }else{
-        progressBar.textContent="فشل الرفع";
-        resolve("");
       }
     };
-    xhr.onerror=()=>{
-      progressBar.textContent="فشل الرفع";
-      resolve("");
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (response.success && response.data && response.data.url) {
+            if (progressBar) {
+              progressBar.style.width = "100%";
+              progressBar.textContent = "تم رفع الصورة";
+            }
+            return resolve(response.data.url);
+          } else {
+            console.error("فشل رفع الصورة:", response);
+            if (progressBar) {
+              progressBar.textContent = "فشل الرفع";
+            }
+            return resolve("");
+          }
+        } catch (error) {
+          console.error("خطأ في تحليل الاستجابة:", error);
+          if (progressBar) {
+            progressBar.textContent = "فشل الرفع";
+          }
+          return resolve("");
+        }
+      } else {
+        console.error("فشل الرفع. حالة الطلب:", xhr.status);
+        if (progressBar) {
+          progressBar.textContent = "فشل الرفع";
+        }
+        return resolve("");
+      }
     };
-    let rdr=new FileReader();
-    rdr.onload=()=>{
-      let base64=rdr.result.split(",")[1];
-      xhr.send(JSON.stringify({name:file.name, base64}));
+    xhr.onerror = function() {
+      console.error("حدث خطأ أثناء الاتصال.");
+      if (progressBar) {
+        progressBar.textContent = "فشل الرفع";
+      }
+      return resolve("");
     };
-    rdr.readAsDataURL(file);
+    xhr.send(formData);
   });
 }
 
@@ -702,7 +733,7 @@ async function deleteByPrefix(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('deletePrefix').value.trim();
   if(!prefix)return;
-  if(!currentSubtopicSha&&currentQuestions.length===0)return;
+  if(!currentSubtopicSha && currentQuestions.length===0)return;
   try{
     let body={path:currentSubtopicPath, sha:currentSubtopicSha, prefix};
     await fetch('/api/delete-questions-by-prefix',{
@@ -714,7 +745,7 @@ async function deleteByPrefix(){
   }catch(e){}
 }
 
-// time format if needed
+// any time formatting if needed
 function formatTo12Hour(tVal){
   if(!tVal)return "";
   let [hh,mm]=tVal.split(":");
