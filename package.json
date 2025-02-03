@@ -1,7 +1,7 @@
 {
   "name": "my-complete-converter",
   "version": "1.0.0",
-  "description": "All-in-one: Quiz converter + topics management + image upload + GitHub integration (files in data/)",
+  "description": "Quiz converter + full topics/subtopics management + multiple sessions + secrets in vercel",
   "scripts": {
     "start": "node server.js"
   },
