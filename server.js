@@ -80,7 +80,7 @@ async function uploadToImgHippo(fileBuffer, fileName) {
 // اختبار
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'Server up with same code, minor style changes only',
+    message: 'Server up, same code, custom popups for everything!',
     GITHUB_TOKEN: !!GITHUB_TOKEN,
     REPO_OWNER,
     REPO_NAME,
