@@ -1,7 +1,7 @@
 {
-  "name": "quiz-manager-allfeatures-fixupload",
+  "name": "quiz-manager-delete-subtopic-file",
   "version": "1.0.0",
-  "description": "All original code + reorder + custom modals + fix image upload using the snippet approach",
+  "description": "All original code, with an added feature to delete subtopic file from repo when subtopic is removed.",
   "scripts": {
     "start": "node server.js"
   },
