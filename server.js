@@ -50,7 +50,7 @@ async function updateGitHubFile(path, newContent, sha, commitMessage) {
 
 // رفع الصور
 async function uploadToImgHippo(fileBuffer, fileName) {
-  if(!IMAGE_API_KEY){
+  if (!IMAGE_API_KEY) {
     throw new Error("No IMAGE_API_KEY found");
   }
   const form = new FormData();
@@ -58,15 +58,15 @@ async function uploadToImgHippo(fileBuffer, fileName) {
   form.append("file", fileBuffer, fileName);
 
   const res = await fetch("https://api.imghippo.com/v1/upload", {
-    method:"POST",
-    headers:{Accept:"application/json"},
-    body:form
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body: form
   });
-  if(!res.ok){
+  if (!res.ok) {
     throw new Error(`uploadToImgHippo failed: ${res.status} - ${res.statusText}`);
   }
-  const json=await res.json();
-  if(json.success && json.data && json.data.url){
+  const json = await res.json();
+  if (json.success && json.data && json.data.url) {
     return json.data.url;
   } else {
     throw new Error("ImgHippo upload error:"+ JSON.stringify(json));
@@ -75,7 +75,7 @@ async function uploadToImgHippo(fileBuffer, fileName) {
 
 // Routes
 app.get('/api/test',(req,res)=>{
-  res.json({message:"Server up, reordering topics/subtopics"});
+  res.json({message:"Server up, fix image upload, no other changes"});
 });
 
 // 1) load topics
@@ -98,7 +98,7 @@ app.post('/api/topics', async(req,res)=>{
   }
   try{
     const content=JSON.stringify(topics,null,2);
-    const up=await updateGitHubFile('data/topics.json',content,sha,'Save topics');
+    const up=await updateGitHubFile('data/topics.json', content, sha,'Save topics');
     res.json({success:true, commit:up.commit});
   }catch(e){
     res.status(500).json({success:false,error:e.message});
@@ -113,7 +113,7 @@ app.get('/api/get-subtopic-file', async(req,res)=>{
     const info=await getGitHubFile(path);
     const dec=Buffer.from(info.content,'base64').toString('utf-8');
     let arr; try{arr=JSON.parse(dec);}catch(e){arr=[];}
-    if(!Array.isArray(arr)) arr=[];
+    if(!Array.isArray(arr))arr=[];
     res.json({success:true, content:arr, sha:info.sha});
   }catch(e){
     if(e.message.includes('404')) return res.json({success:true, content:[], sha:null});
@@ -121,10 +121,10 @@ app.get('/api/get-subtopic-file', async(req,res)=>{
   }
 });
 
-// 4) update subtopic file
+// 4) update subtopic
 app.post('/api/update-subtopic-file', async(req,res)=>{
   const {path, content, sha}=req.body;
-  if(!path||!content) return res.status(400).json({success:false,error:'Missing path or content'});
+  if(!path||!content)return res.status(400).json({success:false,error:'Missing path or content'});
   try{
     const finalStr=JSON.stringify(content,null,2);
     const r=await updateGitHubFile(path, finalStr, sha||'','Update subtopic');
@@ -157,7 +157,7 @@ app.post('/api/upload-image', async(req,res)=>{
   if(!base64)return res.status(400).json({success:false,error:'No base64'});
   try{
     const buf=Buffer.from(base64,'base64');
-    const url=await uploadToImgHippo(buf,name||'uploaded.jpg');
+    const url=await uploadToImgHippo(buf, name||'uploaded.jpg');
     res.json({success:true,url});
   }catch(e){
     res.status(500).json({success:false,error:e.message});
