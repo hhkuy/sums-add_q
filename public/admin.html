@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>All Original + Reorder + Custom Modals + Fix Image Upload</title>
+  <title>No Changes + Delete subtopic file from repo</title>
   <style>
     body {
       margin:0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333;
     }
     .container {
-      max-width:1200px; margin:0 auto; background:#fff; padding:20px;
-      border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      max-width:1200px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
       position:relative;
     }
     h1 {
@@ -88,7 +87,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>All Original + Reorder + Custom Modals + Fix Image Upload</h1>
+    <h1>All Original + Delete Subtopic File from Repo</h1>
 
     <!-- Manage Topics -->
     <div class="section">
@@ -137,7 +136,7 @@
 
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
 
-  <!-- Custom modals for alert/confirm/prompt -->
+  <!-- Custom modals for alert/confirm/prompt (unchanged) -->
   <div class="modal-overlay" id="alertOverlay">
     <div class="modal-box">
       <h3 id="alertMsg"></h3>
@@ -167,7 +166,7 @@
   </div>
 
 <script>
-/** Same override for alert/confirm/prompt (asynchronous approach, no busy loop) */
+/** same overrides as before (non-blocking confirm/prompt with modals) */
 let alertOverlay=document.getElementById('alertOverlay');
 let alertMsg=document.getElementById('alertMsg');
 let alertOkBtn=document.getElementById('alertOkBtn');
@@ -249,9 +248,7 @@ function toggleScroll(){
   }
 }
 
-/** The same logic from older code, plus reordering, plus the new fix for image upload */
-
-// Original Vars
+// original Vars
 let cachedTopics=[];
 let topicsSha=null;
 let currentSubtopicPath=null;
@@ -262,7 +259,7 @@ function showSaveMessage(){
   alert("Operation completed.");
 }
 
-// Load/Save Topics
+// =============== load/save topics ================
 async function loadTopics(){
   try{
     let r=await fetch('/api/topics');
@@ -277,7 +274,7 @@ async function loadTopics(){
 async function saveTopics(){
   if(!topicsSha)return;
   try{
-    let body={topics:cachedTopics, sha:topicsSha};
+    let body={ topics:cachedTopics, sha:topicsSha };
     let r=await fetch('/api/topics',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -289,7 +286,7 @@ async function saveTopics(){
   }catch(e){}
 }
 
-// Render Topics with reorder
+// ================ render + reorder + delete subtopic file ================
 function renderTopics(){
   let list=document.getElementById('topicsList');
   list.innerHTML='';
@@ -303,7 +300,7 @@ function renderTopics(){
       <strong>${t.topicName}</strong> (sub:${t.subTopics?t.subTopics.length:0})
       <br>${t.description||''}
     `;
-    // Reorder up
+    // reorder up
     let upBtn=document.createElement('button');
     upBtn.className='arrow-btn';
     upBtn.textContent='▲';
@@ -316,7 +313,7 @@ function renderTopics(){
     };
     d.appendChild(upBtn);
 
-    // Reorder down
+    // reorder down
     let downBtn=document.createElement('button');
     downBtn.className='arrow-btn';
     downBtn.textContent='▼';
@@ -329,7 +326,7 @@ function renderTopics(){
     };
     d.appendChild(downBtn);
 
-    // Delete
+    // delete topic
     let delBtn=document.createElement('button');
     delBtn.textContent='Delete';
     delBtn.classList.add('btn-red');
@@ -343,7 +340,7 @@ function renderTopics(){
     };
     d.appendChild(delBtn);
 
-    // Edit
+    // edit topic
     let edBtn=document.createElement('button');
     edBtn.textContent='Edit';
     edBtn.classList.add('btn-orange');
@@ -390,15 +387,22 @@ function renderTopics(){
         };
         stDiv.appendChild(subDown);
 
+        // حذف subtopic + حذف ملفها
         let sdel=document.createElement('button');
         sdel.textContent='X';
         sdel.classList.add('btn-red');
         sdel.onclick=async ()=>{
           let c=await confirm("Delete subtopic?");
           if(c){
+            // 1) احذف subtopic من array
             t.subTopics.splice(stidx,1);
             renderTopics();
             fillSubtopics();
+            // 2) احذف ملفه من GitHub
+            if(st.file){
+              // Delete /api/delete-file?filePath=...
+              await deleteSubtopicFileFromRepo(st.file);
+            }
           }
         };
         stDiv.appendChild(sdel);
@@ -439,6 +443,24 @@ function renderTopics(){
   });
 }
 
+// دالة جديدة لحذف ملف subtopic من المستودع
+async function deleteSubtopicFileFromRepo(filePath){
+  try{
+    let resp=await fetch('/api/delete-file?filePath='+encodeURIComponent(filePath), {
+      method:'DELETE'
+    });
+    let j=await resp.json();
+    if(!resp.ok||!j.success){
+      console.warn("Failed to delete subtopic file", j.error||resp.statusText);
+    } else {
+      console.log("Subtopic file deleted from repo:", filePath);
+    }
+  }catch(e){
+    console.error("Error deleting subtopic file from repo:", e);
+  }
+}
+
+// addTopic
 function addTopic(){
   let nm=document.getElementById('newTopicName').value.trim();
   let ds=document.getElementById('newTopicDesc').value.trim();
@@ -450,7 +472,7 @@ function addTopic(){
   fillSubtopics();
 }
 
-// fill subtopic
+// fill subtopics
 function fillSubtopics(){
   let sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -509,7 +531,7 @@ function renderSubtopicQuestions(){
 async function saveSubtopic(){
   if(!currentSubtopicPath)return;
   try{
-    let body={path:currentSubtopicPath, content:currentQuestions, sha:currentSubtopicSha};
+    let body={ path:currentSubtopicPath, content:currentQuestions, sha: currentSubtopicSha };
     let r=await fetch('/api/update-subtopic-file',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -521,7 +543,7 @@ async function saveSubtopic(){
   }catch(e){}
 }
 
-// Add new questions with images
+// images
 function addImageField(){
   let c=document.getElementById('imageContainer');
   let row=document.createElement('div');
@@ -555,7 +577,6 @@ function addImageField(){
   c.appendChild(row);
 }
 
-// Convert & Append
 async function convertAndAppend(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('prefixInput').value.trim();
@@ -582,7 +603,7 @@ async function convertAndAppend(){
   let lines=text.split('\n');
   let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
   let out=[];
-  for(let i=0;i<lines.length;i++){
+  for(let i=0; i<lines.length;i++){
     let ln=lines[i].trim();
     let qM=ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
@@ -618,19 +639,17 @@ async function convertAndAppend(){
   renderSubtopicQuestions();
 }
 
-// استبدلنا هذه الدالة بمنطق الكود المقتبس (FormData + "Accept: application/json"):
 async function handleImagesAndBind(questionsArr){
-  // سنجمع رفع الصور من الحقول
-  let imageRows=document.querySelectorAll('.image-field-row');
-  // سنخزن { [qNumber]: [urls...] }
+  let c=document.getElementById('imageContainer');
+  let rows=c.querySelectorAll('.image-field-row');
   let dataMap={};
-  for(let row of imageRows){
+  for(let row of rows){
     let inputs=row.querySelectorAll('input');
     let qnum=parseInt(inputs[0].value,10);
     if(!qnum) continue;
-    let fileInput=inputs[1];
-    if(fileInput.files&&fileInput.files.length>0){
-      let file=fileInput.files[0];
+    let fileIn=inputs[1];
+    if(fileIn.files&&fileIn.files.length>0){
+      let file=fileIn.files[0];
       let prog=row.querySelector('.progress');
       let pbar=prog.querySelector('.progress-bar');
       let url=await uploadImageToImgHippo(file, prog, pbar);
@@ -640,7 +659,6 @@ async function handleImagesAndBind(questionsArr){
       }
     }
   }
-  // إضافة الصور
   questionsArr.forEach(obj=>{
     let match=obj.question.match(/Question\s+(\d+)/);
     if(match){
@@ -654,11 +672,10 @@ async function handleImagesAndBind(questionsArr){
   });
 }
 
-/** الدالة الجديدة لرفع صورة بالصيغة المطلوبة */
 function uploadImageToImgHippo(file, progressContainer, progressBar) {
   return new Promise((resolve) => {
     if (!file) {
-      return resolve(""); 
+      return resolve("");
     }
     if (progressContainer) {
       progressContainer.style.display = "block";
@@ -669,7 +686,7 @@ function uploadImageToImgHippo(file, progressContainer, progressBar) {
     }
 
     let formData = new FormData();
-    formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c"); 
+    formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c");
     formData.append("file", file);
 
     let xhr = new XMLHttpRequest();
@@ -678,57 +695,45 @@ function uploadImageToImgHippo(file, progressContainer, progressBar) {
 
     xhr.upload.onprogress = function(event) {
       if (event.lengthComputable) {
-        const percentComplete = Math.floor((event.loaded / event.total) * 100);
-        if (progressBar) {
-          progressBar.style.width = percentComplete + "%";
-          progressBar.textContent = percentComplete + "%";
-        }
+        let percent = Math.floor((event.loaded / event.total)*100);
+        progressBar.style.width=percent+"%";
+        progressBar.textContent=percent+"%";
       }
     };
-    xhr.onload = function() {
-      if (xhr.status === 200) {
-        try {
-          const response = JSON.parse(xhr.responseText);
-          if (response.success && response.data && response.data.url) {
-            if (progressBar) {
-              progressBar.style.width = "100%";
-              progressBar.textContent = "تم رفع الصورة";
-            }
+    xhr.onload=function(){
+      if(xhr.status===200){
+        try{
+          let response=JSON.parse(xhr.responseText);
+          if(response.success && response.data && response.data.url){
+            progressBar.style.width="100%";
+            progressBar.textContent="تم رفع الصورة";
             return resolve(response.data.url);
           } else {
             console.error("فشل رفع الصورة:", response);
-            if (progressBar) {
-              progressBar.textContent = "فشل الرفع";
-            }
+            progressBar.textContent="فشل الرفع";
             return resolve("");
           }
-        } catch (error) {
-          console.error("خطأ في تحليل الاستجابة:", error);
-          if (progressBar) {
-            progressBar.textContent = "فشل الرفع";
-          }
+        }catch(e){
+          console.error("خطأ في تحليل الاستجابة:", e);
+          progressBar.textContent="فشل الرفع";
           return resolve("");
         }
       } else {
         console.error("فشل الرفع. حالة الطلب:", xhr.status);
-        if (progressBar) {
-          progressBar.textContent = "فشل الرفع";
-        }
+        progressBar.textContent="فشل الرفع";
         return resolve("");
       }
     };
-    xhr.onerror = function() {
+    xhr.onerror=function(){
       console.error("حدث خطأ أثناء الاتصال.");
-      if (progressBar) {
-        progressBar.textContent = "فشل الرفع";
-      }
-      return resolve("");
+      progressBar.textContent="فشل الرفع";
+      resolve("");
     };
     xhr.send(formData);
   });
 }
 
-// delete by prefix
+// delete prefix
 async function deleteByPrefix(){
   if(!currentSubtopicPath)return;
   let prefix=document.getElementById('deletePrefix').value.trim();
@@ -745,7 +750,6 @@ async function deleteByPrefix(){
   }catch(e){}
 }
 
-// any time formatting if needed
 function formatTo12Hour(tVal){
   if(!tVal)return "";
   let [hh,mm]=tVal.split(":");
