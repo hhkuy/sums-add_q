@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz Converter + Subtopic Manager (Merged)</title>
+  <title>Quiz Converter + Subtopic Manager (No Logs)</title>
   <style>
     body {
-      margin:0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333;
+      margin:0; padding:20px; background:#f0f2f5;
+      font-family:sans-serif; color:#333;
     }
     .container {
       max-width:1200px; margin:0 auto; background:#fff; padding:20px;
@@ -18,34 +19,36 @@
       background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px;
     }
     .section h2 {
-      color:#4a90e2; margin-top:0;
+      color:#4a90e2; margin-top:0; margin-bottom:10px;
     }
     button {
-      padding:8px 16px; border:none; border-radius:4px; cursor:pointer; margin-right:5px; margin-top:5px;
+      padding:10px 20px; border:none; border-radius:4px; cursor:pointer;
+      margin-right:5px; margin-top:5px; font-size:16px;
     }
-    button:hover { opacity:0.9; }
+    button:hover {opacity:0.9;}
     .btn-blue { background:#4a90e2; color:#fff; }
     .btn-red { background:#dc3545; color:#fff; }
     .btn-orange { background:#ff9800; color:#fff; }
     .btn-green { background:#28a745; color:#fff; }
-    label { display:block; margin:10px 0 5px; font-weight:bold; }
-    input[type="text"], input[type="number"], textarea {
-      width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; margin-bottom:5px;
+    input[type="text"], input[type="number"], textarea, select {
+      width:100%; padding:12px; margin-bottom:8px;
+      border:1px solid #ccc; border-radius:4px; font-size:16px;
     }
     #topicsList, #subtopicQuestions {
-      background:#fff; border:1px solid #ccc; border-radius:4px; padding:10px; min-height:50px; margin-top:10px;
+      background:#fff; border:1px solid #ccc; border-radius:4px; padding:10px; min-height:60px; margin-top:10px;
     }
     .image-field-row {
       display:flex; align-items:center; gap:10px; margin-bottom:8px;
     }
     .progress {
-      width:100%; background:#e0e0e0; border-radius:5px; overflow:hidden; height:20px; display:none;
+      width:100%; background:#e0e0e0; border-radius:5px; overflow:hidden; height:24px; display:none;
     }
     .progress-bar {
-      background:#4a90e2; height:100%; width:0%; color:#fff; text-align:center; line-height:20px; transition:width 0.3s;
+      background:#4a90e2; height:100%; width:0%; color:#fff; text-align:center; line-height:24px;
+      transition:width 0.3s; font-size:14px;
     }
-    #logArea {
-      margin-top:15px; background:#eef6fc; border-radius:5px; min-height:40px; padding:10px; white-space:pre-wrap;
+    .q-item {
+      border:1px solid #ccc; padding:8px; border-radius:4px; margin-bottom:5px;
     }
   </style>
 </head>
@@ -53,86 +56,71 @@
   <div class="container">
     <h1>Quiz Converter + Subtopic Manager</h1>
 
-    <!-- 1) Manage Topics -->
+    <!-- Manage Topics -->
     <div class="section">
       <h2>Manage Topics (data/topics.json)</h2>
       <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
       <button class="btn-blue" onclick="saveTopics()">Save topics.json</button>
       <div id="topicsList"></div>
 
-      <label>Add New Topic:</label>
-      <input type="text" id="newTopicName" placeholder="Topic Name">
-      <input type="text" id="newTopicDesc" placeholder="Topic Description">
+      <h3 style="margin-top:15px;">Add New Topic</h3>
+      <input type="text" id="newTopicName" placeholder="Topic Name...">
+      <input type="text" id="newTopicDesc" placeholder="Topic Description...">
       <button class="btn-blue" onclick="addTopic()">Add Topic</button>
     </div>
 
-    <!-- 2) Subtopic Manager -->
+    <!-- Subtopic Manager -->
     <div class="section">
       <h2>Subtopic Questions Manager</h2>
-      <p>Select a subtopic (once topics are loaded) to load its questions, add new ones, or delete by prefix:</p>
-      <select id="subtopicSelect" style="width:100%; max-width:400px; padding:6px;"></select>
+      <p>Select a subtopic after loading topics, then load or save its questions.</p>
+      <select id="subtopicSelect"></select>
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="loadSubtopic()">Load Questions</button>
         <button class="btn-blue" onclick="saveSubtopic()">Save Questions</button>
       </div>
-      <div id="subtopicQuestions" style="margin-top:10px;"></div>
+      <div id="subtopicQuestions"></div>
 
-      <!-- Add new questions area (with images + prefix) -->
       <h3 style="margin-top:20px;">Add New Questions (Convert & Append)</h3>
       <label>Prefix (optional):</label>
       <input type="text" id="prefixInput" placeholder="e.g. Dr. Ali -">
 
-      <label>Questions Text:</label>
-      <textarea id="questionsText" rows="5" placeholder="1. ... A. ... ***\nExplanation : ..."></textarea>
+      <label>Questions Text (larger box):</label>
+      <textarea id="questionsText" rows="8" style="font-size:16px;"></textarea>
 
-      <div style="margin-top:5px;">
-        <button class="btn-orange" onclick="addImageField()">Add Image Field</button>
-      </div>
-      <div id="imageContainer" style="margin-top:5px;"></div>
+      <button class="btn-orange" style="margin-top:5px;" onclick="addImageField()">Add Image Field</button>
+      <div id="imageContainer" style="margin-top:10px;"></div>
 
-      <div style="margin-top:10px;">
-        <button class="btn-blue" onclick="convertAndAppend()">Convert & Append</button>
-      </div>
+      <button class="btn-blue" style="margin-top:10px;" onclick="convertAndAppend()">Convert & Append</button>
 
-      <h3 style="margin-top:20px;">Delete by Bold Prefix</h3>
+      <h3 style="margin-top:20px;">Delete Questions by Bold Prefix</h3>
       <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
       <button class="btn-red" onclick="deleteByPrefix()">Delete</button>
     </div>
 
-    <!-- Log area -->
-    <div style="margin-top:20px;">
-      <h2>Logs</h2>
-      <div id="logArea"></div>
-    </div>
   </div>
 
 <script>
-// ============ Globals for topics ============
 let cachedTopics=[];
 let topicsSha=null;
 
-// For current subtopic
+// subtopic data
 let currentSubtopicPath=null;
 let currentSubtopicSha=null;
-let currentSubtopicQuestions=[];
+let currentQuestions=[];
 
 // ============ 1) Manage Topics =============
 async function loadTopics(){
-  log("Loading topics.json...");
-  try{
+  try {
     const r=await fetch('/api/topics');
     const j=await r.json();
-    if(!j.success){
-      log("Error: "+j.error);
-      return;
-    }
+    if(!j.success){ alert('Error: '+ j.error); return; }
     cachedTopics=j.topics;
     topicsSha=j.sha;
-    log(`Loaded topics.json (sha=${j.sha}). Found ${cachedTopics.length} topics.`);
+    alert(`Loaded topics.json (sha=${j.sha}). Found ${cachedTopics.length} topics.`);
     renderTopics();
     fillSubtopics();
-  }catch(err){
-    log("Error: "+err);
+  } catch(err){
+    alert('Error: '+err);
   }
 }
 
@@ -140,32 +128,31 @@ function renderTopics(){
   const list=document.getElementById('topicsList');
   list.innerHTML='';
   cachedTopics.forEach((t,idx)=>{
-    const d=document.createElement('div');
-    d.style.border='1px solid #ccc';
-    d.style.padding='8px';
-    d.style.borderRadius='4px';
-    d.style.marginBottom='5px';
-    d.innerHTML=`
-      <strong>${t.topicName}</strong> (subTopics:${t.subTopics?t.subTopics.length:0})<br>
+    const div=document.createElement('div');
+    div.style.border='1px solid #ccc';
+    div.style.padding='8px';
+    div.style.borderRadius='4px';
+    div.style.marginBottom='8px';
+    div.innerHTML=`
+      <strong>${t.topicName}</strong> (sub:${t.subTopics?t.subTopics.length:0})<br>
       ${t.description||''}
     `;
-
-    const delBtn=document.createElement('button');
-    delBtn.textContent='Delete';
-    delBtn.classList.add('btn-red');
-    delBtn.onclick=()=>{
+    const del=document.createElement('button');
+    del.textContent='Delete';
+    del.classList.add('btn-red');
+    del.onclick=()=>{
       if(confirm('Delete this topic?')){
         cachedTopics.splice(idx,1);
         renderTopics();
         fillSubtopics();
       }
     };
-    d.appendChild(delBtn);
+    div.appendChild(del);
 
-    const editBtn=document.createElement('button');
-    editBtn.textContent='Edit';
-    editBtn.classList.add('btn-orange');
-    editBtn.onclick=()=>{
+    const ed=document.createElement('button');
+    ed.textContent='Edit';
+    ed.classList.add('btn-orange');
+    ed.onclick=()=>{
       const nn=prompt('Topic name:', t.topicName);
       if(nn) t.topicName=nn;
       const nd=prompt('Topic desc:', t.description||'');
@@ -173,31 +160,31 @@ function renderTopics(){
       renderTopics();
       fillSubtopics();
     };
-    d.appendChild(editBtn);
+    div.appendChild(ed);
 
     // subtopics
     if(t.subTopics && t.subTopics.length>0){
-      t.subTopics.forEach((st, stidx)=>{
+      t.subTopics.forEach((st,stidx)=>{
         const stDiv=document.createElement('div');
         stDiv.style.marginLeft='15px';
         stDiv.style.marginTop='5px';
-        stDiv.textContent=`${st.name} => ${st.file||''}  `;
-        const stDel=document.createElement('button');
-        stDel.textContent='X';
-        stDel.classList.add('btn-red');
-        stDel.onclick=()=>{
+        stDiv.textContent=`${st.name} => ${st.file||''} `;
+        const sdel=document.createElement('button');
+        sdel.textContent='X';
+        sdel.classList.add('btn-red');
+        sdel.onclick=()=>{
           if(confirm('Delete subtopic?')){
             t.subTopics.splice(stidx,1);
             renderTopics();
             fillSubtopics();
           }
         };
-        stDiv.appendChild(stDel);
+        stDiv.appendChild(sdel);
 
-        const stEdit=document.createElement('button');
-        stEdit.textContent='Edit';
-        stEdit.classList.add('btn-orange');
-        stEdit.onclick=()=>{
+        const sedit=document.createElement('button');
+        sedit.textContent='Edit';
+        sedit.classList.add('btn-orange');
+        sedit.onclick=()=>{
           const rename=prompt('Subtopic name:', st.name);
           if(rename){
             st.name=rename;
@@ -205,37 +192,37 @@ function renderTopics(){
             fillSubtopics();
           }
         };
-        stDiv.appendChild(stEdit);
+        stDiv.appendChild(sedit);
 
-        d.appendChild(stDiv);
+        div.appendChild(stDiv);
       });
     }
+
     // add subtopic
     const addSt=document.createElement('button');
     addSt.textContent='Add Subtopic';
     addSt.classList.add('btn-blue');
     addSt.onclick=()=>{
-      const subn=prompt('Subtopic name?');
-      if(!subn)return;
-      const fileName=(t.topicName.replace(/\s+/g,'_')+"_"+subn.replace(/\s+/g,'_')).toLowerCase()+'.json';
+      const sn=prompt('Subtopic name?');
+      if(!sn)return;
+      const fileName=(t.topicName.replace(/\s+/g,'_')+"_"+sn.replace(/\s+/g,'_')).toLowerCase()+'.json';
       const path='data/'+fileName;
       if(!t.subTopics) t.subTopics=[];
-      t.subTopics.push({ name:subn, file:path });
+      t.subTopics.push({name:sn, file:path});
       renderTopics();
       fillSubtopics();
     };
-    d.appendChild(addSt);
+    div.appendChild(addSt);
 
-    list.appendChild(d);
+    list.appendChild(div);
   });
 }
 
 async function saveTopics(){
   if(!topicsSha){
-    log("No topics loaded or missing sha.");
+    alert('No topics loaded');
     return;
   }
-  log("Saving topics.json...");
   try{
     const body={ topics:cachedTopics, sha:topicsSha };
     const r=await fetch('/api/topics',{
@@ -244,23 +231,17 @@ async function saveTopics(){
       body:JSON.stringify(body)
     });
     const j=await r.json();
-    if(!j.success){
-      log("Error saving topics: "+ j.error);
-      return;
-    }
-    log("Saved topics.json. commit="+JSON.stringify(j.commit));
+    if(!j.success){ alert('Error: '+j.error); return;}
+    alert('Saved topics.json. commit='+JSON.stringify(j.commit));
   }catch(err){
-    log("Error: "+err);
+    alert('Error: '+err);
   }
 }
 
 function addTopic(){
   const nm=document.getElementById('newTopicName').value.trim();
   const ds=document.getElementById('newTopicDesc').value.trim();
-  if(!nm){
-    alert('Enter topic name');
-    return;
-  }
+  if(!nm){ alert('Enter topic name'); return; }
   cachedTopics.push({
     topicName:nm,
     description:ds,
@@ -272,7 +253,7 @@ function addTopic(){
   fillSubtopics();
 }
 
-// ======== 2) Subtopic Manager (Load/Save) =========
+// ============ Subtopic Manager ============
 function fillSubtopics(){
   const sel=document.getElementById('subtopicSelect');
   sel.innerHTML='';
@@ -291,67 +272,56 @@ function fillSubtopics(){
 async function loadSubtopic(){
   const sel=document.getElementById('subtopicSelect');
   if(!sel.value){
-    alert('No subtopic chosen');
+    alert('No subtopic selected');
     return;
   }
   currentSubtopicPath=sel.value;
-  log("Loading subtopic: "+currentSubtopicPath);
   try{
     const r=await fetch('/api/get-subtopic-file?path='+encodeURIComponent(currentSubtopicPath));
     const j=await r.json();
-    if(!j.success){
-      log("Error: "+j.error);
-      return;
-    }
+    if(!j.success){ alert('Error: '+ j.error); return;}
     currentSubtopicSha=j.sha;
-    currentSubtopicQuestions=Array.isArray(j.content)? j.content : [];
-    log(`Loaded subtopic file (sha=${j.sha}). Found ${currentSubtopicQuestions.length} questions.`);
+    currentQuestions=j.content;
+    alert(`Loaded subtopic file: ${currentSubtopicPath} (sha=${j.sha}), found ${currentQuestions.length} questions.`);
     renderSubtopicQuestions();
   }catch(err){
-    log("Error: "+err);
+    alert('Error: '+err);
   }
 }
 
 function renderSubtopicQuestions(){
   const box=document.getElementById('subtopicQuestions');
   box.innerHTML='';
-  currentSubtopicQuestions.forEach((q, idx)=>{
+  currentQuestions.forEach((q, idx)=>{
     const div=document.createElement('div');
-    div.style.border='1px solid #ccc';
-    div.style.padding='5px';
-    div.style.borderRadius='4px';
-    div.style.marginBottom='5px';
-
+    div.classList.add('q-item');
     let shortQ=q.question? q.question.substring(0,60) : "No question text";
     div.textContent=`[${idx}] => ${shortQ}... `;
-
     // delete
-    const delBtn=document.createElement('button');
-    delBtn.textContent='Delete';
-    delBtn.classList.add('btn-red');
-    delBtn.style.marginLeft='10px';
-    delBtn.onclick=()=>{
+    const del=document.createElement('button');
+    del.textContent='Delete';
+    del.classList.add('btn-red');
+    del.style.marginLeft='5px';
+    del.onclick=()=>{
       if(confirm('Delete this question?')){
-        currentSubtopicQuestions.splice(idx,1);
+        currentQuestions.splice(idx,1);
         renderSubtopicQuestions();
       }
     };
-    div.appendChild(delBtn);
-
+    div.appendChild(del);
     box.appendChild(div);
   });
 }
 
 async function saveSubtopic(){
   if(!currentSubtopicPath){
-    alert('No subtopic loaded');
+    alert('No subtopic selected');
     return;
   }
-  log(`Saving subtopic: ${currentSubtopicPath}`);
   try{
     const body={
       path:currentSubtopicPath,
-      content: currentSubtopicQuestions,
+      content:currentQuestions,
       sha: currentSubtopicSha
     };
     const r=await fetch('/api/update-subtopic-file',{
@@ -360,110 +330,106 @@ async function saveSubtopic(){
       body:JSON.stringify(body)
     });
     const j=await r.json();
-    if(!j.success){
-      log("Error saving subtopic: "+ j.error);
-      return;
-    }
-    log("Saved subtopic file. commit="+JSON.stringify(j.commit));
-  }catch(err){
-    log("Error: "+err);
+    if(!j.success){ alert('Error: '+j.error); return; }
+    alert('Saved subtopic file. commit='+JSON.stringify(j.commit));
+  } catch(err){
+    alert('Error: '+err);
   }
 }
 
-// ======== Add New Questions (Convert + Images) ========
+// ===== Add new questions with images (Convert & Append) =====
 function addImageField(){
-  const c=document.getElementById('imageContainer');
+  const container=document.getElementById('imageContainer');
   const row=document.createElement('div');
   row.classList.add('image-field-row');
 
-  const qNumInput=document.createElement('input');
-  qNumInput.type='number';
-  qNumInput.placeholder='Q#';
-  qNumInput.min=1;
+  const qNum=document.createElement('input');
+  qNum.type='number';
+  qNum.placeholder='Q#';
+  qNum.min=1;
 
-  const fileInput=document.createElement('input');
-  fileInput.type='file';
-  fileInput.accept='image/*';
+  const fileIn=document.createElement('input');
+  fileIn.type='file';
+  fileIn.accept='image/*';
 
   const delBtn=document.createElement('button');
   delBtn.textContent='Remove';
   delBtn.classList.add('btn-orange');
-  delBtn.onclick=()=> c.removeChild(row);
+  delBtn.onclick=()=> container.removeChild(row);
 
-  const progress=document.createElement('div');
-  progress.classList.add('progress');
+  const prog=document.createElement('div');
+  prog.classList.add('progress');
   const pbar=document.createElement('div');
   pbar.classList.add('progress-bar');
   pbar.textContent='0%';
-  progress.appendChild(pbar);
+  prog.appendChild(pbar);
 
-  row.appendChild(qNumInput);
-  row.appendChild(fileInput);
+  row.appendChild(qNum);
+  row.appendChild(fileIn);
   row.appendChild(delBtn);
-  row.appendChild(progress);
-  c.appendChild(row);
+  row.appendChild(prog);
+  container.appendChild(row);
 }
 
 async function convertAndAppend(){
   if(!currentSubtopicPath){
-    alert('No subtopic loaded');
+    alert('No subtopic selected to append questions');
     return;
   }
-  log("Converting & appending new questions...");
   const prefix=document.getElementById('prefixInput').value.trim();
-  const text=document.getElementById('questionsText').value;
+  let text=document.getElementById('questionsText').value.trim();
   if(!text){
     alert('No questions text');
     return;
   }
 
-  // 1) try parse JSON
+  // 1) نحاول JSON
   let arr=null;
-  let raw=text.trim();
-  try{
-    if(raw.startsWith('let quizData =')){
-      raw=raw.replace('let quizData =','').trim();
-      if(raw.endsWith(';')) raw=raw.slice(0,-1);
+  try {
+    if(text.startsWith('let quizData =')){
+      text=text.replace('let quizData =','').trim();
+      if(text.endsWith(';')) text=text.slice(0,-1);
     }
-    arr=JSON.parse(raw);
+    arr=JSON.parse(text);
     if(Array.isArray(arr)){
       // append
-      currentSubtopicQuestions=currentSubtopicQuestions.concat(arr);
-      log(`Appended ${arr.length} questions (JSON parse). Now total: ${currentSubtopicQuestions.length}`);
+      // لكن سنرفع الصور لربطها
+      await uploadImagesAndBind(arr);
+      currentQuestions=currentQuestions.concat(arr);
+      alert(`Appended ${arr.length} questions (JSON). Now total ${currentQuestions.length}`);
       renderSubtopicQuestions();
       return;
     }
   }catch(e){
-    // not JSON => parse lines
+    // لا شيء => نستخدم التنسيق النصي
   }
 
-  // 2) parse lines 1. ... A. ...
+  // 2) تنسيق نصي
   const lines=text.split('\n');
-  let questionText=null, options=[], ansIndex=-1, ansText=null, explanation=null;
+  let questionText=null, options=[], answerIdx=-1, answerText=null, explanation=null;
   let out=[];
-  for(let i=0; i<lines.length; i++){
+  for(let i=0;i<lines.length;i++){
     let ln=lines[i].trim();
     let qM=ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
       if(questionText!==null){
         out.push({
           question:questionText,
-          options, answer:ansIndex,
-          answerText:ansText, explanation,
+          options, answer:answerIdx, answerText, explanation,
           userAnswer:null
         });
       }
       let qn=parseInt(qM[1],10);
       questionText=`<span style='color: darkred; font-weight:bold;'>${prefix? prefix+' ':''}Question ${qn}</span> ${qM[2]}`;
-      options=[]; ansIndex=-1; ansText=null; explanation=null;
+      options=[]; answerIdx=-1; answerText=null; explanation=null;
     } else {
       let opt=ln.match(/^([A-F])\.\s+(.*)/i);
       if(opt){
         let txt=opt[2].trim();
         if(txt.endsWith('***')){
           txt=txt.slice(0,-3).trim();
-          ansIndex=options.length;
-          ansText=txt;
+          answerIdx=options.length;
+          answerText=txt;
         }
         options.push(txt);
       } else {
@@ -477,59 +443,60 @@ async function convertAndAppend(){
   if(questionText!==null){
     out.push({
       question:questionText,
-      options, answer:ansIndex,
-      answerText:ansText, explanation,
+      options, answer:answerIdx, answerText, explanation,
       userAnswer:null
     });
   }
-  // 3) upload images
-  const imagesMap=await handleImagesUpload(prefix);
-  out.forEach(q=>{
-    const m=q.question.match(/Question\s+(\d+)/);
-    if(m){
-      let qn=parseInt(m[1],10);
-      if(imagesMap[qn]){
-        imagesMap[qn].forEach(url=>{
-          q.question+=`<br><img src='${url}' style='max-width:100%; height:auto;'>`;
-        });
-      }
-    }
-  });
-  currentSubtopicQuestions=currentSubtopicQuestions.concat(out);
-  log(`Converted & appended ${out.length} questions. Now total: ${currentSubtopicQuestions.length}`);
+  // رفع الصور
+  await uploadImagesAndBind(out);
+  currentQuestions=currentQuestions.concat(out);
+  alert(`Converted & appended ${out.length} questions. Now total: ${currentQuestions.length}`);
   renderSubtopicQuestions();
 }
 
-async function handleImagesUpload(prefix){
-  // upload each file
-  const c=document.getElementById('imageContainer');
-  const rows=c.querySelectorAll('.image-field-row');
-  const map={};
+// رفع الصور + إدراجها في السؤال
+async function uploadImagesAndBind(questionsArr){
+  // نحن نعتمد على Q#
+  const container=document.getElementById('imageContainer');
+  const rows=container.querySelectorAll('.image-field-row');
+
   for(const row of rows){
     const inputs=row.querySelectorAll('input');
-    const qNum=parseInt(inputs[0].value,10);
-    if(!qNum) continue;
-    const fileInput=inputs[1];
-    if(fileInput.files && fileInput.files.length>0){
-      const file=fileInput.files[0];
-      const progress=row.querySelector('.progress');
-      const pbar=progress.querySelector('.progress-bar');
-      const url=await uploadOneFile(file, progress, pbar);
+    const qnum=parseInt(inputs[0].value,10);
+    if(!qnum) continue;
+    const fileIn=inputs[1];
+    if(fileIn.files && fileIn.files.length>0){
+      const file=fileIn.files[0];
+      const prog=row.querySelector('.progress');
+      const pbar=prog.querySelector('.progress-bar');
+      // رفع
+      const url=await uploadSingleFile(file,prog,pbar);
       if(url){
-        if(!map[qNum]) map[qNum]=[];
-        map[qNum].push(url);
+        // نعثر على السؤال المطابق qnum
+        // question = "... Question qnum</span>"
+        // note: if user has prefix => "Question 2" or "Question 2"
+        for(let q of questionsArr){
+          let match=q.question.match(/Question\s+(\d+)/);
+          if(match){
+            let num=parseInt(match[1],10);
+            if(num===qnum){
+              // append <img> to question
+              q.question+=`<br><img src='${url}' alt='Image for Question ${qnum}' style='max-width: 100%; height: auto;'>`;
+              break;
+            }
+          }
+        }
       }
     }
   }
-  return map;
 }
 
-function uploadOneFile(file, progressDiv, progressBar){
+function uploadSingleFile(file, progressDiv, progressBar){
   return new Promise((resolve)=>{
-    if(!file) return resolve("");
     progressDiv.style.display='block';
     progressBar.style.width='0%';
     progressBar.textContent='0%';
+
     const xhr=new XMLHttpRequest();
     xhr.open("POST","/api/upload-image",true);
     xhr.setRequestHeader("Content-Type","application/json");
@@ -549,11 +516,11 @@ function uploadOneFile(file, progressDiv, progressBar){
             progressBar.style.width='100%';
             progressBar.textContent='تم رفع الصورة';
             resolve(resp.url);
-          } else{
+          }else{
             progressBar.textContent='فشل الرفع';
             resolve("");
           }
-        } catch(e){
+        }catch(e){
           progressBar.textContent='فشل الرفع';
           resolve("");
         }
@@ -576,24 +543,23 @@ function uploadOneFile(file, progressDiv, progressBar){
   });
 }
 
-// ======== Delete by bold prefix ========
+// حذف بالاعتماد على الكلام الغامق
 async function deleteByPrefix(){
   if(!currentSubtopicPath){
     alert('No subtopic loaded');
     return;
   }
-  const prefix=document.getElementById('deletePrefix').value.trim();
-  if(!prefix){
+  const p=document.getElementById('deletePrefix').value.trim();
+  if(!p){
     alert('Enter prefix');
     return;
   }
-  if(!currentSubtopicSha && currentSubtopicQuestions.length===0){
-    log("No existing file or questions to delete from.");
+  if(!currentSubtopicSha && currentQuestions.length===0){
+    alert("No existing subtopic file or questions to delete from");
     return;
   }
-  log(`Deleting questions containing prefix: ${prefix} ...`);
   try{
-    const body={ path: currentSubtopicPath, sha: currentSubtopicSha, prefix };
+    const body={ path: currentSubtopicPath, sha: currentSubtopicSha, prefix:p };
     const r=await fetch('/api/delete-questions-by-prefix',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -601,20 +567,14 @@ async function deleteByPrefix(){
     });
     const j=await r.json();
     if(!j.success){
-      log("Error: "+j.error);
+      alert("Error: "+j.error);
       return;
     }
-    log(`DeletedCount=${j.deletedCount}, commit=${JSON.stringify(j.commit)}. Reloading subtopic...`);
+    alert(`Deleted ${j.deletedCount} questions with prefix '${p}'. Reloading subtopic...`);
     loadSubtopic();
   }catch(err){
-    log("Error: "+err);
+    alert("Error: "+err);
   }
-}
-
-// ========= logger =========
-function log(msg){
-  const area=document.getElementById('logArea');
-  area.textContent += (msg+"\n");
 }
 </script>
 </body>
