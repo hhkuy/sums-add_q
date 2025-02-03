@@ -1,7 +1,7 @@
 {
   "name": "quiz-manager-merged",
   "version": "1.0.0",
-  "description": "Quiz converter + subtopic manager + image upload with updated method, and back-to-topics button color changed",
+  "description": "Quiz converter + subtopic manager with image upload. Requests: No alerts, no back-to-topics, custom question numbering, etc.",
   "scripts": {
     "start": "node server.js"
   },
