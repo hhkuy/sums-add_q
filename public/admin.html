@@ -513,6 +513,7 @@ async function loadSubtopic(){
     currentSubtopicSha=j.sha;
     currentQuestions=j.content;
     renderSubtopicQuestions();
+    renderEditableQuestions();
   }catch(e){}
 }
 function renderSubtopicQuestions(){
@@ -553,6 +554,7 @@ async function saveSubtopic(){
     let j=await r.json();
     if(!j.success)return;
     showSaveMessage();
+    renderEditableQuestions();
   }catch(e){}
 }
 
@@ -770,6 +772,171 @@ function formatTo12Hour(tVal){
   let period=(hh>=12)?"م":"ص";
   let newH=(hh%12)||12;
   return newH+":"+mm+" "+period;
+}
+
+  // Render questions with editable fields
+function renderEditableQuestions() {
+  let container = document.getElementById('questionsEditList');
+  container.innerHTML = '';
+  
+  currentQuestions.forEach((q, index) => {
+    let qDiv = document.createElement('div');
+    qDiv.className = 'q-item';
+    qDiv.style.marginBottom = '15px';
+    qDiv.style.padding = '10px';
+    qDiv.style.border = '1px solid #ddd';
+    
+    // Question number and move buttons
+    qDiv.innerHTML = `
+      <div style="margin-bottom:10px;">
+        <strong>Question ${index + 1}</strong>
+        <button class="arrow-btn" onclick="handleMoveUp(${index})">▲</button>
+        <button class="arrow-btn" onclick="handleMoveDown(${index})">▼</button>
+      </div>
+      <textarea class="editable-question" 
+                style="width:100%; margin-bottom:8px;" 
+                data-index="${index}">${q.question}</textarea>
+      <div id="options-${index}"></div>
+      <div style="margin-top:8px;">
+        Correct Answer Index: 
+        <input type="number" min="0" value="${q.answer}" 
+               data-index="${index}" class="correct-answer">
+        Explanation: 
+        <input type="text" value="${q.explanation || ''}" 
+               data-index="${index}" class="explanation">
+      </div>
+      <button class="btn-blue" style="margin-top:5px;" 
+              onclick="saveQuestionChanges(${index})">Save Changes</button>
+    `;
+
+    // Render options
+    let optionsContainer = qDiv.querySelector(`#options-${index}`);
+    q.options.forEach((opt, optIndex) => {
+      let optInput = document.createElement('input');
+      optInput.type = 'text';
+      optInput.value = opt;
+      optInput.style.width = '100%';
+      optInput.style.marginBottom = '5px';
+      optInput.dataset.index = index;
+      optInput.dataset.optIndex = optIndex;
+      optionsContainer.appendChild(optInput);
+    });
+
+    container.appendChild(qDiv);
+  });
+}
+
+// Handle moving questions
+function handleMoveUp(index) {
+  if(index > 0) {
+    [currentQuestions[index-1], currentQuestions[index]] = 
+    [currentQuestions[index], currentQuestions[index-1]];
+    renderEditableQuestions();
+  }
+}
+
+function handleMoveDown(index) {
+  if(index < currentQuestions.length - 1) {
+    [currentQuestions[index], currentQuestions[index+1]] = 
+    [currentQuestions[index+1], currentQuestions[index]];
+    renderEditableQuestions();
+  }
+}
+
+// Save changes for individual question
+function saveQuestionChanges(index) {
+  const questionText = document.querySelector(`textarea[data-index="${index}"]`).value;
+  const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
+                     .sort((a,b) => a.dataset.optIndex - b.dataset.optIndex)
+                     .map(input => input.value);
+  const correctAnswer = parseInt(document.querySelector(`input.correct-answer[data-index="${index}"]`).value);
+  const explanation = document.querySelector(`input.explanation[data-index="${index}"]`).value;
+
+  currentQuestions[index] = {
+    ...currentQuestions[index],
+    question: questionText,
+    options,
+    answer: correctAnswer,
+    explanation
+  };
+}
+
+// Bulk reorder by bold groups
+async function loadBoldGroups() {
+  const boldGroups = detectBoldGroups();
+  renderBoldGroups(boldGroups);
+}
+
+function detectBoldGroups() {
+  const groups = [];
+  let currentGroup = null;
+  
+  currentQuestions.forEach((q, index) => {
+    const boldMatch = q.question.match(/<strong>(.*?)<\/strong>/);
+    if(boldMatch && boldMatch[1].includes('Question')) {
+      if(currentGroup) groups.push(currentGroup);
+      currentGroup = {
+        title: boldMatch[1],
+        indices: [index],
+        start: index
+      };
+    } else if(currentGroup) {
+      currentGroup.indices.push(index);
+    }
+  });
+  
+  if(currentGroup) groups.push(currentGroup);
+  return groups;
+}
+
+function renderBoldGroups(groups) {
+  const container = document.getElementById('boldGroupsList');
+  container.innerHTML = '';
+  
+  groups.forEach((group, groupIndex) => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'q-item';
+    groupDiv.style.marginBottom = '10px';
+    
+    groupDiv.innerHTML = `
+      <div style="margin-bottom:8px;">
+        <strong>${group.title}</strong> (Questions ${group.indices[0]+1}-${group.indices.slice(-1)[0]+1})
+        <button class="arrow-btn" onclick="moveGroupUp(${groupIndex})">▲</button>
+        <button class="arrow-btn" onclick="moveGroupDown(${groupIndex})">▼</button>
+      </div>
+      <div>Contains ${group.indices.length} questions</div>
+    `;
+    
+    container.appendChild(groupDiv);
+  });
+}
+
+function moveGroupUp(groupIndex) {
+  const groups = detectBoldGroups();
+  if(groupIndex === 0) return;
+  
+  const currentGroup = groups[groupIndex];
+  const prevGroup = groups[groupIndex-1];
+  
+  const movedQuestions = currentQuestions.splice(currentGroup.start, currentGroup.indices.length);
+  currentQuestions.splice(prevGroup.start, 0, ...movedQuestions);
+  
+  renderEditableQuestions();
+  loadBoldGroups();
+}
+
+function moveGroupDown(groupIndex) {
+  const groups = detectBoldGroups();
+  if(groupIndex === groups.length-1) return;
+  
+  const currentGroup = groups[groupIndex];
+  const nextGroup = groups[groupIndex+1];
+  
+  const movedQuestions = currentQuestions.splice(currentGroup.start, currentGroup.indices.length);
+  currentQuestions.splice(nextGroup.start + nextGroup.indices.length, 0, ...movedQuestions);
+  
+  renderEditableQuestions();
+  loadBoldGroups();
 }
 </script>
 </body>
