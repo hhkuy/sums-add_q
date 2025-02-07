@@ -868,6 +868,7 @@
     
         let containerDiv = document.createElement('div');
         containerDiv.innerHTML = html;
+        containerDiv.id = `q-${index+1}`;
     
         // عرض خيارات السؤال مع زر راديو
         let optionGroup = containerDiv.querySelector(`#optionGroup-${index}`);
@@ -884,9 +885,7 @@
           radio.value = optIndex;
           if(q.answer === optIndex) radio.checked = true;
           radio.onchange = function() {
-            // عند تغيير الاختيار، تحديث الإجابة الصحيحة
             q.answer = parseInt(this.value);
-            // تحديث answerText تلقائياً
             let opts = [];
             let inputs = optionGroup.querySelectorAll('input[type="text"]');
             inputs.forEach(inp => opts.push(inp.value));
@@ -899,7 +898,6 @@
           optInput.className = 'form-control';
           optInput.dataset.index = index;
           optInput.dataset.optIndex = optIndex;
-          // عند تغيير نص الخيار، إذا هذا الخيار هو الإجابة الصحيحة يتم تحديث answerText
           optInput.oninput = function(){
             if(q.answer === parseInt(this.dataset.optIndex)) {
               q.answerText = this.value;
@@ -933,14 +931,11 @@
       const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
       const optionInputs = Array.from(document.querySelectorAll(`#optionGroup-${index} input[type="text"]`));
       const options = optionInputs.map(input => input.value);
-      // الحصول على قيمة الخيار الصحيح من زر الراديو
       const selectedRadio = document.querySelector(`input[name="correctOption_${index}"]:checked`);
       const correctAnswer = selectedRadio ? parseInt(selectedRadio.value) : 0;
       const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
-      // تحديث answerText تلقائيًا
       const newAnswerText = options[correctAnswer] || "";
     
-      // التحقق من وجود صورة جديدة
       let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
       let newImageUrl = "";
       if(imageFileInput && imageFileInput.files.length > 0) {
