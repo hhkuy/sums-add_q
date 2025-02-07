@@ -1,169 +1,224 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <title>No Changes + Delete subtopic file from repo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>No Changes + Delete Subtopic File from Repo</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <!-- Custom Styles -->
   <style>
     body {
-      margin:0; padding:20px; background:#f0f2f5; font-family:sans-serif; color:#333;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      font-family: 'Roboto', sans-serif;
+      padding-top: 20px;
+      padding-bottom: 20px;
     }
-    .container {
-      max-width:1200px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
-      position:relative;
+    .container-custom {
+      max-width: 1000px;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      margin: auto;
     }
     h1 {
-      text-align:center; color:#4a90e2; margin-bottom:20px; font-size:28px;
+      text-align: center;
+      margin-bottom: 30px;
+      color: #343a40;
+      font-weight: 600;
     }
     .section {
-      background:#f9f9f9; border:1px solid #ccc; border-radius:5px; padding:15px; margin-bottom:20px;
+      margin-bottom: 30px;
     }
-    .section h2 { color:#4a90e2; margin:0 0 10px; font-size:22px; }
-
-    button {
-      padding:12px 24px; border:none; border-radius:4px; cursor:pointer;
-      margin-right:5px; margin-top:5px; font-size:16px;
+    .section h2 {
+      color: #343a40;
+      font-size: 1.8em;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #dee2e6;
+      padding-bottom: 5px;
     }
-    button:hover {opacity:0.9;}
-    .btn-blue { background:#4a90e2; color:#fff; }
-    .btn-green { background:#28a745; color:#fff; }
-    .btn-red { background:#dc3545; color:#fff; }
-    .btn-orange { background:#ff9800; color:#fff; }
-
-    .arrow-btn {
-      background:#6c757d; color:#fff; font-size:14px; 
-      margin-left:3px; cursor:pointer; border:none; border-radius:4px;
-      padding:4px 8px;
+    .btn-custom {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.1em;
+      border-radius: 50px;
+      transition: all 0.3s ease;
     }
-    .arrow-btn:hover { opacity:0.8; }
-
-    input[type="text"], input[type="number"], textarea, select {
-      width:100%; padding:12px; margin-bottom:8px; border:1px solid #ccc; border-radius:4px; font-size:16px;
+    .btn-custom:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
     }
-    #topicsList, #subtopicQuestions, #questionsEditList, #boldGroupsList {
-      background:#fff; border:1px solid #ccc; border-radius:4px; padding:10px; min-height:60px; margin-top:10px;
+    #loadMessage {
+      margin-top: 15px;
     }
-    .q-item {
-      border:1px solid #ccc; padding:8px; border-radius:4px; margin-bottom:5px;
+    /* Bulk Reorder Styles */
+    .group-card {
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background-color: #f8f9fa;
     }
-    .image-field-row {
-      display:flex; align-items:center; gap:10px; margin-bottom:8px;
+    .group-card h5 {
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #495057;
     }
-    .progress {
-      width:100%; background:#e0e0e0; border-radius:5px; overflow:hidden; height:24px; display:none;
+    .group-actions button {
+      margin-right: 10px;
     }
-    .progress-bar {
-      background:#4a90e2; height:100%; width:0%; color:#fff; text-align:center; line-height:24px; transition:width 0.3s; font-size:14px;
-    }
-
+    /* Floating Scroll Button */
     #floatScrollBtn {
-      position: fixed; width:50px; height:50px; bottom:30px; right:30px;
-      background:#4a90e2; color:#fff; border:none; border-radius:50%;
-      display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; z-index:999;
+      position: fixed;
+      width: 50px;
+      height: 50px;
+      bottom: 30px;
+      right: 30px;
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 999;
     }
-    #floatScrollBtn:hover { opacity:0.8; }
-
+    #floatScrollBtn:hover {
+      opacity: 0.8;
+    }
+    /* Modal Overrides (كما في الكود الأصلي) */
     .modal-overlay {
-      position:fixed; top:0; left:0; right:0; bottom:0;
-      background:rgba(0,0,0,0.5);
-      display:none; 
-      justify-content:center; align-items:center;
-      z-index:9999;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
     }
     .modal-box {
-      background:#fff; border-radius:8px; padding:20px;
-      max-width:400px; width:90%;
-      text-align:center;
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
     }
-    .modal-box h3 { margin-bottom:20px; font-size:1.1rem; color:#333; }
+    .modal-box h3 { margin-bottom: 20px; font-size: 1.1rem; color: #333; }
     .modal-buttons {
-      display:flex; justify-content:center; gap:10px; margin-top:10px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
     }
-    .btn-modal { padding:8px 16px; border:none; border-radius:4px; cursor:pointer; font-size:0.9em; }
-    .btn-modal-primary { background:#007bff; color:#fff; }
-    .btn-modal-danger { background:#dc3545; color:#fff; }
-    .btn-modal-cancel { background:#6c757d; color:#fff; }
-
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>All Original + Delete Subtopic File from Repo</h1>
-
-    <!-- Manage Topics -->
+  <div class="container-custom">
+    <h1><i class="bi bi-journal-text"></i> All Original + Delete Subtopic File from Repo</h1>
+    
+    <!-- Manage Topics Section -->
     <div class="section">
       <h2>Manage Topics</h2>
-      <button class="btn-blue" onclick="loadTopics()">Load topics.json</button>
-
+      <div class="mb-3">
+        <button class="btn btn-primary btn-custom" onclick="loadTopics()">Load topics.json</button>
+      </div>
       <div id="topicsList"></div>
-      <div style="margin-top:10px;">
-        <input type="text" id="newTopicName" placeholder="Topic Name...">
-        <input type="text" id="newTopicDesc" placeholder="Topic Description...">
-        <button class="btn-blue" onclick="addTopic()">Add Topic</button>
-        <button class="btn-green" onclick="saveTopics()">Save topics.json</button>
+      <div class="row g-2 mt-3">
+        <div class="col-md-4">
+          <input type="text" id="newTopicName" class="form-control" placeholder="Topic Name...">
+        </div>
+        <div class="col-md-4">
+          <input type="text" id="newTopicDesc" class="form-control" placeholder="Topic Description...">
+        </div>
+        <div class="col-md-4">
+          <button class="btn btn-primary btn-custom" onclick="addTopic()">Add Topic</button>
+        </div>
+        <div class="col-md-4 mt-2">
+          <button class="btn btn-success btn-custom" onclick="saveTopics()">Save topics.json</button>
+        </div>
       </div>
     </div>
-
-    <!-- Subtopic Manager -->
+    
+    <!-- Subtopic Manager Section -->
     <div class="section">
       <h2>Subtopic Questions Manager</h2>
-      <select id="subtopicSelect"></select>
-      <div style="margin-top:10px;">
-        <button class="btn-blue" onclick="loadSubtopic()">Load Questions</button>
+      <div class="mb-3">
+        <select id="subtopicSelect" class="form-select"></select>
       </div>
-      <!-- سيتم إخفاء عرض الأسئلة هنا -->
-      <div id="subtopicQuestions"></div>
-
-      <h3 style="margin-top:20px;">Add New Questions</h3>
-      <label>Prefix (optional):</label>
-      <input type="text" id="prefixInput" placeholder="e.g. Dr. Ali -">
-      <label>Start Q#:</label>
-      <input type="number" id="startQNumber" value="1" min="1" style="width:120px;">
-      <label>Questions Text:</label>
-      <textarea id="questionsText" rows="6"></textarea>
-
-      <button class="btn-orange" onclick="addImageField()">Add Image Field</button>
-      <div id="imageContainer" style="margin-top:10px;"></div>
-
-      <div style="margin-top:10px;">
-        <button class="btn-blue" onclick="convertAndAppend()">Convert & Append</button>
-        <button class="btn-green" onclick="saveSubtopic()">Save Questions</button>
+      <div class="mb-3">
+        <button class="btn btn-primary btn-custom" onclick="loadSubtopic()">Load Questions</button>
       </div>
-
-      <h3 style="margin-top:20px;">Delete by Bold Prefix</h3>
-      <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
-      <button class="btn-red" onclick="deleteByPrefix()">Delete</button>
+      <!-- رسالة تأكيد تحميل الأسئلة -->
+      <div id="loadMessage"></div>
+      <div class="mb-3">
+        <label for="questionsText" class="form-label">Add New Questions</label>
+        <input type="text" id="prefixInput" class="form-control mb-2" placeholder="Prefix (optional) e.g. Dr. Ali -">
+        <div class="row g-2 mb-2">
+          <div class="col-md-3">
+            <input type="number" id="startQNumber" class="form-control" value="1" min="1" placeholder="Start Q#">
+          </div>
+        </div>
+        <textarea id="questionsText" class="form-control" rows="6" placeholder="Enter questions text..."></textarea>
+      </div>
+      <div class="mb-3">
+        <button class="btn btn-warning btn-custom" onclick="addImageField()">Add Image Field</button>
+      </div>
+      <div id="imageContainer" class="mb-3"></div>
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <button class="btn btn-primary btn-custom" onclick="convertAndAppend()">Convert &amp; Append</button>
+        </div>
+        <div class="col-md-6">
+          <button class="btn btn-success btn-custom" onclick="saveSubtopic()">Save Questions</button>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="deletePrefix" class="form-label">Delete by Bold Prefix</label>
+        <div class="input-group">
+          <input type="text" id="deletePrefix" class="form-control" placeholder="e.g. Dr. Golshan">
+          <button class="btn btn-danger" onclick="deleteByPrefix()">Delete</button>
+        </div>
+      </div>
     </div>
-
+    
     <!-- Edit Questions Section -->
     <div class="section">
       <h2>Edit Questions</h2>
-      
-      <!-- Search by Number -->
-      <div style="margin-bottom:15px;">
-        <input type="number" id="jumpToQuestion" placeholder="Enter question number" 
-               min="1" style="width:200px; margin-right:10px;">
-        <button class="btn-blue" onclick="jumpToQuestion()">Jump to Question</button>
+      <div class="mb-3">
+        <input type="number" id="jumpToQuestion" class="form-control" placeholder="Enter question number to jump" min="1">
       </div>
-
+      <div class="mb-3">
+        <button class="btn btn-primary btn-custom" onclick="jumpToQuestion()">Jump to Question</button>
+      </div>
       <div id="questionsEditList"></div>
     </div>
-
+    
     <!-- Bulk Reorder Section -->
     <div class="section">
       <h2>Bulk Reorder Questions</h2>
-      <button class="btn-blue" onclick="loadBoldGroups()">Load Bold Groups</button>
-      <div id="boldGroupsList" style="margin-top:10px;"></div>
+      <div class="mb-3">
+        <button class="btn btn-primary btn-custom" onclick="loadBoldGroups()">Load Bold Groups</button>
+      </div>
+      <div id="boldGroupsList"></div>
     </div>
   </div>
-
+  
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
-
-  <!-- Custom modals for alert/confirm/prompt (unchanged) -->
+  
+  <!-- Custom modals for alert/confirm/prompt (كما في الكود الأصلي) -->
   <div class="modal-overlay" id="alertOverlay">
     <div class="modal-box">
       <h3 id="alertMsg"></h3>
       <div class="modal-buttons">
-        <button class="btn-modal btn-modal-primary" id="alertOkBtn">OK</button>
+        <button class="btn btn-primary" id="alertOkBtn">OK</button>
       </div>
     </div>
   </div>
@@ -171,844 +226,824 @@
     <div class="modal-box">
       <h3 id="confirmMsg"></h3>
       <div class="modal-buttons">
-        <button class="btn-modal btn-modal-primary" id="confirmYesBtn">Yes</button>
-        <button class="btn-modal btn-modal-danger" id="confirmNoBtn">No</button>
+        <button class="btn btn-primary" id="confirmYesBtn">Yes</button>
+        <button class="btn btn-danger" id="confirmNoBtn">No</button>
       </div>
     </div>
   </div>
   <div class="modal-overlay" id="promptOverlay">
     <div class="modal-box">
       <h3 id="promptMsg"></h3>
-      <input type="text" id="promptInput" style="width:80%; margin-bottom:10px;">
+      <input type="text" id="promptInput" class="form-control mb-3">
       <div class="modal-buttons">
-        <button class="btn-modal btn-modal-primary" id="promptOkBtn">OK</button>
-        <button class="btn-modal btn-modal-cancel" id="promptCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="promptOkBtn">OK</button>
+        <button class="btn btn-secondary" id="promptCancelBtn">Cancel</button>
       </div>
     </div>
   </div>
-
-<script>
-/** same overrides as before (non-blocking confirm/prompt with modals) **/
-let alertOverlay = document.getElementById('alertOverlay');
-let alertMsg = document.getElementById('alertMsg');
-let alertOkBtn = document.getElementById('alertOkBtn');
-
-let confirmOverlay = document.getElementById('confirmOverlay');
-let confirmMsg = document.getElementById('confirmMsg');
-let confirmYesBtn = document.getElementById('confirmYesBtn');
-let confirmNoBtn = document.getElementById('confirmNoBtn');
-
-let promptOverlay = document.getElementById('promptOverlay');
-let promptMsg = document.getElementById('promptMsg');
-let promptInput = document.getElementById('promptInput');
-let promptOkBtn = document.getElementById('promptOkBtn');
-let promptCancelBtn = document.getElementById('promptCancelBtn');
-
-function customAlert(message){
-  return new Promise(resolve => {
-    alertMsg.textContent = message;
-    alertOverlay.style.display = 'flex';
-    alertOkBtn.onclick = () => {
-      alertOverlay.style.display = 'none';
-      resolve();
+  
+  <!-- JavaScript -->
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script>
+    /*** Modal Overrides ***/
+    let alertOverlay = document.getElementById('alertOverlay');
+    let alertMsg = document.getElementById('alertMsg');
+    let alertOkBtn = document.getElementById('alertOkBtn');
+    
+    let confirmOverlay = document.getElementById('confirmOverlay');
+    let confirmMsg = document.getElementById('confirmMsg');
+    let confirmYesBtn = document.getElementById('confirmYesBtn');
+    let confirmNoBtn = document.getElementById('confirmNoBtn');
+    
+    let promptOverlay = document.getElementById('promptOverlay');
+    let promptMsg = document.getElementById('promptMsg');
+    let promptInput = document.getElementById('promptInput');
+    let promptOkBtn = document.getElementById('promptOkBtn');
+    let promptCancelBtn = document.getElementById('promptCancelBtn');
+    
+    function customAlert(message) {
+      return new Promise(resolve => {
+        alertMsg.textContent = message;
+        alertOverlay.style.display = 'flex';
+        alertOkBtn.onclick = () => {
+          alertOverlay.style.display = 'none';
+          resolve();
+        };
+      });
+    }
+    function customConfirm(message) {
+      return new Promise(resolve => {
+        confirmMsg.textContent = message;
+        confirmOverlay.style.display = 'flex';
+        confirmYesBtn.onclick = () => {
+          confirmOverlay.style.display = 'none';
+          resolve(true);
+        };
+        confirmNoBtn.onclick = () => {
+          confirmOverlay.style.display = 'none';
+          resolve(false);
+        };
+      });
+    }
+    function customPrompt(message, defVal) {
+      return new Promise(resolve => {
+        promptMsg.textContent = message;
+        promptInput.value = defVal || '';
+        promptOverlay.style.display = 'flex';
+        promptOkBtn.onclick = () => {
+          let val = promptInput.value;
+          promptOverlay.style.display = 'none';
+          resolve(val);
+        };
+        promptCancelBtn.onclick = () => {
+          promptOverlay.style.display = 'none';
+          resolve(null);
+        };
+      });
+    }
+    
+    window.alert = async function(msg) {
+      await customAlert(msg);
     };
-  });
-}
-function customConfirm(message){
-  return new Promise(resolve => {
-    confirmMsg.textContent = message;
-    confirmOverlay.style.display = 'flex';
-    confirmYesBtn.onclick = () => {
-      confirmOverlay.style.display = 'none';
-      resolve(true);
+    window.confirm = async function(msg) {
+      return customConfirm(msg);
     };
-    confirmNoBtn.onclick = () => {
-      confirmOverlay.style.display = 'none';
-      resolve(false);
+    window.prompt = async function(msg, defVal) {
+      return customPrompt(msg, defVal);
     };
-  });
-}
-function customPrompt(message, defVal){
-  return new Promise(resolve => {
-    promptMsg.textContent = message;
-    promptInput.value = defVal || '';
-    promptOverlay.style.display = 'flex';
-    promptOkBtn.onclick = () => {
-      let val = promptInput.value;
-      promptOverlay.style.display = 'none';
-      resolve(val);
-    };
-    promptCancelBtn.onclick = () => {
-      promptOverlay.style.display = 'none';
-      resolve(null);
-    };
-  });
-}
-
-window.alert = async function(msg){
-  await customAlert(msg);
-};
-window.confirm = async function(msg){
-  return customConfirm(msg);
-};
-window.prompt = async function(msg, defVal){
-  return customPrompt(msg, defVal);
-};
-
-// float scroll
-let scrollState = false;
-function toggleScroll(){
-  let btn = document.getElementById('floatScrollBtn');
-  if(!scrollState){
-    window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
-    btn.textContent = '↑';
-    scrollState = true;
-  } else {
-    window.scrollTo({top:0, behavior:'smooth'});
-    btn.textContent = '↓';
-    scrollState = false;
-  }
-}
-
-// original Vars
-let cachedTopics = [];
-let topicsSha = null;
-let currentSubtopicPath = null;
-let currentSubtopicSha = null;
-let currentQuestions = [];
-
-function showSaveMessage(){
-  alert("Operation completed.");
-}
-
-// =============== load/save topics ================
-async function loadTopics(){
-  try{
-    let r = await fetch('/api/topics');
-    let j = await r.json();
-    if(!j.success) return;
-    cachedTopics = j.topics;
-    topicsSha = j.sha;
-    renderTopics();
-    fillSubtopics();
-  } catch(e){}
-}
-async function saveTopics(){
-  if(!topicsSha) return;
-  try{
-    let body = { topics: cachedTopics, sha: topicsSha };
-    let r = await fetch('/api/topics',{
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify(body)
-    });
-    let j = await r.json();
-    if(!j.success){ alert("Saving topics failed: " + j.error); return; }
-    showSaveMessage();
-  } catch(e){}
-}
-
-// ================ render + reorder + delete subtopic file ================
-function renderTopics(){
-  let list = document.getElementById('topicsList');
-  list.innerHTML = '';
-  cachedTopics.forEach((t, idx) => {
-    let d = document.createElement('div');
-    d.style.border = '1px solid #ccc';
-    d.style.padding = '8px';
-    d.style.borderRadius = '4px';
-    d.style.marginBottom = '8px';
-    d.innerHTML = `
-      <strong>${t.topicName}</strong> (sub:${t.subTopics ? t.subTopics.length : 0})
-      <br>${t.description || ''}
-    `;
-    // reorder up
-    let upBtn = document.createElement('button');
-    upBtn.className = 'arrow-btn';
-    upBtn.textContent = '▲';
-    upBtn.onclick = () => {
-      if(idx > 0){
-        [cachedTopics[idx-1], cachedTopics[idx]] = [cachedTopics[idx], cachedTopics[idx-1]];
+    
+    // float scroll
+    let scrollState = false;
+    function toggleScroll(){
+      let btn = document.getElementById('floatScrollBtn');
+      if(!scrollState){
+        window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'});
+        btn.textContent = '↑';
+        scrollState = true;
+      } else {
+        window.scrollTo({top: 0, behavior:'smooth'});
+        btn.textContent = '↓';
+        scrollState = false;
+      }
+    }
+    
+    // original Vars
+    let cachedTopics = [];
+    let topicsSha = null;
+    let currentSubtopicPath = null;
+    let currentSubtopicSha = null;
+    let currentQuestions = [];
+    
+    function showSaveMessage(){
+      alert("Operation completed.");
+    }
+    
+    // =============== load/save topics ================
+    async function loadTopics(){
+      try{
+        let r = await fetch('/api/topics');
+        let j = await r.json();
+        if(!j.success) return;
+        cachedTopics = j.topics;
+        topicsSha = j.sha;
         renderTopics();
         fillSubtopics();
+      } catch(e){}
+    }
+    async function saveTopics(){
+      if(!topicsSha) return;
+      try{
+        let body = { topics: cachedTopics, sha: topicsSha };
+        let r = await fetch('/api/topics',{
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        let j = await r.json();
+        if(!j.success){ alert("Saving topics failed: " + j.error); return; }
+        showSaveMessage();
+      } catch(e){}
+    }
+    
+    // ================ render + reorder + delete subtopic file ================
+    function renderTopics(){
+      let list = document.getElementById('topicsList');
+      list.innerHTML = '';
+      cachedTopics.forEach((t, idx) => {
+        let d = document.createElement('div');
+        d.className = "p-3 mb-2 border rounded";
+        d.innerHTML = `
+          <strong>${t.topicName}</strong> (sub: ${t.subTopics ? t.subTopics.length : 0})
+          <br>${t.description || ''}
+        `;
+        // reorder up
+        let upBtn = document.createElement('button');
+        upBtn.className = 'btn btn-secondary btn-sm me-1';
+        upBtn.textContent = '▲';
+        upBtn.onclick = () => {
+          if(idx > 0){
+            [cachedTopics[idx-1], cachedTopics[idx]] = [cachedTopics[idx], cachedTopics[idx-1]];
+            renderTopics();
+            fillSubtopics();
+          }
+        };
+        d.appendChild(upBtn);
+    
+        // reorder down
+        let downBtn = document.createElement('button');
+        downBtn.className = 'btn btn-secondary btn-sm me-1';
+        downBtn.textContent = '▼';
+        downBtn.onclick = () => {
+          if(idx < cachedTopics.length - 1){
+            [cachedTopics[idx], cachedTopics[idx+1]] = [cachedTopics[idx+1], cachedTopics[idx]];
+            renderTopics();
+            fillSubtopics();
+          }
+        };
+        d.appendChild(downBtn);
+    
+        // delete topic
+        let delBtn = document.createElement('button');
+        delBtn.className = 'btn btn-danger btn-sm me-1';
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = async () => {
+          let c = await confirm("Delete this topic?");
+          if(c){
+            cachedTopics.splice(idx, 1);
+            renderTopics();
+            fillSubtopics();
+          }
+        };
+        d.appendChild(delBtn);
+    
+        // edit topic
+        let edBtn = document.createElement('button');
+        edBtn.className = 'btn btn-warning btn-sm me-1';
+        edBtn.textContent = 'Edit';
+        edBtn.onclick = async () => {
+          let newName = await prompt("Topic name:", t.topicName);
+          if(newName !== null && newName !== '') t.topicName = newName;
+          let newDesc = await prompt("Topic desc:", t.description || '');
+          if(newDesc !== null) t.description = newDesc;
+          renderTopics();
+          fillSubtopics();
+        };
+        d.appendChild(edBtn);
+    
+        // subtopics
+        if(t.subTopics && t.subTopics.length > 0){
+          t.subTopics.forEach((st, stidx) => {
+            let stDiv = document.createElement('div');
+            stDiv.className = "ms-3 mt-2";
+            stDiv.innerHTML = `${st.name} => ${st.file}`;
+    
+            // reorder sub
+            let subUp = document.createElement('button');
+            subUp.className = 'btn btn-secondary btn-sm me-1';
+            subUp.textContent = '▲';
+            subUp.onclick = () => {
+              if(stidx > 0){
+                [t.subTopics[stidx-1], t.subTopics[stidx]] = [t.subTopics[stidx], t.subTopics[stidx-1]];
+                renderTopics();
+                fillSubtopics();
+              }
+            };
+            stDiv.appendChild(subUp);
+    
+            let subDown = document.createElement('button');
+            subDown.className = 'btn btn-secondary btn-sm me-1';
+            subDown.textContent = '▼';
+            subDown.onclick = () => {
+              if(stidx < t.subTopics.length - 1){
+                [t.subTopics[stidx], t.subTopics[stidx+1]] = [t.subTopics[stidx+1], t.subTopics[stidx]];
+                renderTopics();
+                fillSubtopics();
+              }
+            };
+            stDiv.appendChild(subDown);
+    
+            // حذف subtopic + حذف ملفها
+            let sdel = document.createElement('button');
+            sdel.className = 'btn btn-danger btn-sm me-1';
+            sdel.textContent = 'X';
+            sdel.onclick = async () => {
+              let c = await confirm("Delete subtopic?");
+              if(c){
+                t.subTopics.splice(stidx, 1);
+                renderTopics();
+                fillSubtopics();
+                if(st.file){
+                  await deleteSubtopicFileFromRepo(st.file);
+                }
+              }
+            };
+            stDiv.appendChild(sdel);
+    
+            let sedit = document.createElement('button');
+            sedit.className = 'btn btn-warning btn-sm';
+            sedit.textContent = 'Edit';
+            sedit.onclick = async () => {
+              let rename = await prompt("Subtopic name:", st.name);
+              if(rename !== null && rename !== ''){
+                st.name = rename;
+                renderTopics();
+                fillSubtopics();
+              }
+            };
+            stDiv.appendChild(sedit);
+    
+            d.appendChild(stDiv);
+          });
+        }
+    
+        let addSt = document.createElement('button');
+        addSt.className = 'btn btn-primary btn-sm mt-2';
+        addSt.textContent = 'Add Subtopic';
+        addSt.onclick = async () => {
+          let sbName = await prompt("Subtopic name?");
+          if(!sbName) return;
+          let fileName = (t.topicName.replace(/\s+/g, '_') + "_" + sbName.replace(/\s+/g, '_')).toLowerCase() + '.json';
+          let path = 'data/' + fileName;
+          if(!t.subTopics) t.subTopics = [];
+          t.subTopics.push({name: sbName, file: path});
+          renderTopics();
+          fillSubtopics();
+        };
+        d.appendChild(addSt);
+    
+        list.appendChild(d);
+      });
+    }
+    
+    // دالة حذف ملف subtopic من المستودع
+    async function deleteSubtopicFileFromRepo(filePath){
+      try{
+        let resp = await fetch('/api/delete-file?filePath=' + encodeURIComponent(filePath), {
+          method: 'DELETE'
+        });
+        let j = await resp.json();
+        if(!resp.ok || !j.success){
+          console.warn("Failed to delete subtopic file", j.error || resp.statusText);
+        } else {
+          console.log("Subtopic file deleted from repo:", filePath);
+        }
+      } catch(e){
+        console.error("Error deleting subtopic file from repo:", e);
       }
-    };
-    d.appendChild(upBtn);
-
-    // reorder down
-    let downBtn = document.createElement('button');
-    downBtn.className = 'arrow-btn';
-    downBtn.textContent = '▼';
-    downBtn.onclick = () => {
-      if(idx < cachedTopics.length - 1){
-        [cachedTopics[idx], cachedTopics[idx+1]] = [cachedTopics[idx+1], cachedTopics[idx]];
-        renderTopics();
-        fillSubtopics();
-      }
-    };
-    d.appendChild(downBtn);
-
-    // delete topic
-    let delBtn = document.createElement('button');
-    delBtn.textContent = 'Delete';
-    delBtn.classList.add('btn-red');
-    delBtn.onclick = async () => {
-      let c = await confirm("Delete this topic?");
-      if(c){
-        cachedTopics.splice(idx, 1);
-        renderTopics();
-        fillSubtopics();
-      }
-    };
-    d.appendChild(delBtn);
-
-    // edit topic
-    let edBtn = document.createElement('button');
-    edBtn.textContent = 'Edit';
-    edBtn.classList.add('btn-orange');
-    edBtn.onclick = async () => {
-      let newName = await prompt("Topic name:", t.topicName);
-      if(newName !== null && newName !== '') t.topicName = newName;
-      let newDesc = await prompt("Topic desc:", t.description || '');
-      if(newDesc !== null) t.description = newDesc;
+    }
+    
+    // addTopic
+    function addTopic(){
+      let nm = document.getElementById('newTopicName').value.trim();
+      let ds = document.getElementById('newTopicDesc').value.trim();
+      if(!nm) return;
+      cachedTopics.push({topicName: nm, description: ds, subTopics: []});
+      document.getElementById('newTopicName').value = '';
+      document.getElementById('newTopicDesc').value = '';
       renderTopics();
       fillSubtopics();
-    };
-    d.appendChild(edBtn);
-
-    // subtopics
-    if(t.subTopics && t.subTopics.length > 0){
-      t.subTopics.forEach((st, stidx) => {
-        let stDiv = document.createElement('div');
-        stDiv.style.marginLeft = '15px';
-        stDiv.style.marginTop = '5px';
-        stDiv.innerHTML = `${st.name} => ${st.file}`;
-
-        // reorder sub
-        let subUp = document.createElement('button');
-        subUp.className = 'arrow-btn';
-        subUp.textContent = '▲';
-        subUp.onclick = () => {
-          if(stidx > 0){
-            [t.subTopics[stidx-1], t.subTopics[stidx]] = [t.subTopics[stidx], t.subTopics[stidx-1]];
-            renderTopics();
-            fillSubtopics();
+    }
+    
+    // fill subtopics
+    function fillSubtopics(){
+      let sel = document.getElementById('subtopicSelect');
+      sel.innerHTML = '';
+      cachedTopics.forEach(t => {
+        if(t.subTopics){
+          t.subTopics.forEach(st => {
+            let opt = document.createElement('option');
+            opt.value = st.file;
+            opt.textContent = `[${t.topicName}] - ${st.name}`;
+            sel.appendChild(opt);
+          });
+        }
+      });
+    }
+    
+    // load subtopic
+    async function loadSubtopic(){
+      let sel = document.getElementById('subtopicSelect');
+      if(!sel.value) return;
+      currentSubtopicPath = sel.value;
+      try{
+        let r = await fetch('/api/get-subtopic-file?path=' + encodeURIComponent(currentSubtopicPath));
+        let j = await r.json();
+        if(!j.success) return;
+        currentSubtopicSha = j.sha;
+        currentQuestions = j.content;
+        // عند التحميل بنجاح، عرض رسالة تأكيد
+        document.getElementById('loadMessage').innerHTML = '<div class="alert alert-success" role="alert">Questions loaded successfully!</div>';
+        renderSubtopicQuestions();
+        renderEditableQuestions();
+      } catch(e){}
+    }
+    // هنا نقوم بإخفاء عرض الأسئلة في القسم "subtopicQuestions"
+    function renderSubtopicQuestions(){
+      let box = document.getElementById('subtopicQuestions');
+      box.innerHTML = '';
+    }
+    
+    async function saveSubtopic(){
+      if(!currentSubtopicPath) return;
+      try{
+        let body = { path: currentSubtopicPath, content: currentQuestions, sha: currentSubtopicSha };
+        let r = await fetch('/api/update-subtopic-file', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify(body)
+        });
+        let j = await r.json();
+        if(!j.success) return;
+        showSaveMessage();
+        renderEditableQuestions();
+      } catch(e){}
+    }
+    
+    // images
+    function addImageField(){
+      let c = document.getElementById('imageContainer');
+      let row = document.createElement('div');
+      row.classList.add('image-field-row', 'mb-2');
+    
+      let qNum = document.createElement('input');
+      qNum.type = 'number';
+      qNum.placeholder = 'Q#';
+      qNum.min = 1;
+      qNum.className = 'form-control';
+      qNum.style.maxWidth = '100px';
+    
+      let fileIn = document.createElement('input');
+      fileIn.type = 'file';
+      fileIn.accept = 'image/*';
+      fileIn.className = 'form-control';
+    
+      let delBtn = document.createElement('button');
+      delBtn.textContent = 'Remove';
+      delBtn.className = 'btn btn-warning';
+      delBtn.onclick = () => c.removeChild(row);
+    
+      let prog = document.createElement('div');
+      prog.classList.add('progress');
+      prog.style.height = '24px';
+      prog.style.display = 'none';
+      let pbar = document.createElement('div');
+      pbar.classList.add('progress-bar');
+      pbar.textContent = '0%';
+      prog.appendChild(pbar);
+    
+      row.appendChild(qNum);
+      row.appendChild(fileIn);
+      row.appendChild(delBtn);
+      row.appendChild(prog);
+      c.appendChild(row);
+    }
+    
+    async function convertAndAppend(){
+      if(!currentSubtopicPath) return;
+      let prefix = document.getElementById('prefixInput').value.trim();
+      let startNumber = parseInt(document.getElementById('startQNumber').value, 10);
+      if(isNaN(startNumber) || startNumber < 1) startNumber = 1;
+    
+      let text = document.getElementById('questionsText').value.trim();
+      if(!text) return;
+    
+      let arr = null;
+      try{
+        if(text.startsWith('let quizData =')){
+          text = text.replace('let quizData =','').trim();
+          if(text.endsWith(';')) text = text.slice(0,-1);
+        }
+        arr = JSON.parse(text);
+        if(Array.isArray(arr)){
+          await handleImagesAndBind(arr);
+          currentQuestions = currentQuestions.concat(arr);
+          renderSubtopicQuestions();
+          renderEditableQuestions();
+          return;
+        }
+      } catch(e){}
+      let lines = text.split('\n');
+      let questionText = null, options = [], ansIdx = -1, ansText = null, explanation = null;
+      let out = [];
+      for(let i = 0; i < lines.length; i++){
+        let ln = lines[i].trim();
+        let qM = ln.match(/^(\d+)\.\s+(.*)/);
+        if(qM){
+          if(questionText !== null){
+            out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
           }
-        };
-        stDiv.appendChild(subUp);
-
-        let subDown = document.createElement('button');
-        subDown.className = 'arrow-btn';
-        subDown.textContent = '▼';
-        subDown.onclick = () => {
-          if(stidx < t.subTopics.length - 1){
-            [t.subTopics[stidx], t.subTopics[stidx+1]] = [t.subTopics[stidx+1], t.subTopics[stidx]];
-            renderTopics();
-            fillSubtopics();
-          }
-        };
-        stDiv.appendChild(subDown);
-
-        // حذف subtopic + حذف ملفها
-        let sdel = document.createElement('button');
-        sdel.textContent = 'X';
-        sdel.classList.add('btn-red');
-        sdel.onclick = async () => {
-          let c = await confirm("Delete subtopic?");
-          if(c){
-            // 1) احذف subtopic من array
-            t.subTopics.splice(stidx, 1);
-            renderTopics();
-            fillSubtopics();
-            // 2) احذف ملفه من GitHub
-            if(st.file){
-              // Delete /api/delete-file?filePath=...
-              await deleteSubtopicFileFromRepo(st.file);
+          questionText = `<span style='color: darkred; font-weight:bold;'>${prefix ? prefix + ' ' : ''}Question ${startNumber}</span> ${qM[2]}`;
+          startNumber++;
+          options = []; ansIdx = -1; ansText = null; explanation = null;
+        } else {
+          let opt = ln.match(/^([A-F])\.\s+(.*)/i);
+          if(opt){
+            let txt = opt[2].trim();
+            if(txt.endsWith('***')){
+              txt = txt.slice(0, -3).trim();
+              ansIdx = options.length;
+              ansText = txt;
+            }
+            options.push(txt);
+          } else {
+            let ex = ln.match(/^Explanation\s*:\s*(.*)/i);
+            if(ex){
+              explanation = ex[1];
             }
           }
-        };
-        stDiv.appendChild(sdel);
-
-        let sedit = document.createElement('button');
-        sedit.textContent = 'Edit';
-        sedit.classList.add('btn-orange');
-        sedit.onclick = async () => {
-          let rename = await prompt("Subtopic name:", st.name);
-          if(rename !== null && rename !== ''){
-            st.name = rename;
-            renderTopics();
-            fillSubtopics();
-          }
-        };
-        stDiv.appendChild(sedit);
-
-        d.appendChild(stDiv);
-      });
-    }
-
-    let addSt = document.createElement('button');
-    addSt.textContent = 'Add Subtopic';
-    addSt.classList.add('btn-blue');
-    addSt.onclick = async () => {
-      let sbName = await prompt("Subtopic name?");
-      if(!sbName) return;
-      let fileName = (t.topicName.replace(/\s+/g, '_') + "_" + sbName.replace(/\s+/g, '_')).toLowerCase() + '.json';
-      let path = 'data/' + fileName;
-      if(!t.subTopics) t.subTopics = [];
-      t.subTopics.push({name: sbName, file: path});
-      renderTopics();
-      fillSubtopics();
-    };
-    d.appendChild(addSt);
-
-    list.appendChild(d);
-  });
-}
-
-// دالة جديدة لحذف ملف subtopic من المستودع
-async function deleteSubtopicFileFromRepo(filePath){
-  try{
-    let resp = await fetch('/api/delete-file?filePath=' + encodeURIComponent(filePath), {
-      method:'DELETE'
-    });
-    let j = await resp.json();
-    if(!resp.ok || !j.success){
-      console.warn("Failed to delete subtopic file", j.error || resp.statusText);
-    } else {
-      console.log("Subtopic file deleted from repo:", filePath);
-    }
-  } catch(e){
-    console.error("Error deleting subtopic file from repo:", e);
-  }
-}
-
-// addTopic
-function addTopic(){
-  let nm = document.getElementById('newTopicName').value.trim();
-  let ds = document.getElementById('newTopicDesc').value.trim();
-  if(!nm) return;
-  cachedTopics.push({topicName: nm, description: ds, subTopics: []});
-  document.getElementById('newTopicName').value = '';
-  document.getElementById('newTopicDesc').value = '';
-  renderTopics();
-  fillSubtopics();
-}
-
-// fill subtopics
-function fillSubtopics(){
-  let sel = document.getElementById('subtopicSelect');
-  sel.innerHTML = '';
-  cachedTopics.forEach(t => {
-    if(t.subTopics){
-      t.subTopics.forEach(st => {
-        let opt = document.createElement('option');
-        opt.value = st.file;
-        opt.textContent = `[${t.topicName}] - ${st.name}`;
-        sel.appendChild(opt);
-      });
-    }
-  });
-}
-
-// load subtopic
-async function loadSubtopic(){
-  let sel = document.getElementById('subtopicSelect');
-  if(!sel.value) return;
-  currentSubtopicPath = sel.value;
-  try{
-    let r = await fetch('/api/get-subtopic-file?path=' + encodeURIComponent(currentSubtopicPath));
-    let j = await r.json();
-    if(!j.success) return;
-    currentSubtopicSha = j.sha;
-    currentQuestions = j.content;
-    // لن يتم عرض الأسئلة في القسم الخاص بها (subtopicQuestions)
-    renderSubtopicQuestions();
-    renderEditableQuestions();
-  } catch(e){}
-}
-// هنا نقوم بإخفاء عرض الأسئلة في القسم "subtopicQuestions"
-function renderSubtopicQuestions(){
-  let box = document.getElementById('subtopicQuestions');
-  box.innerHTML = ''; 
-}
-
-async function saveSubtopic(){
-  if(!currentSubtopicPath) return;
-  try{
-    let body = { path: currentSubtopicPath, content: currentQuestions, sha: currentSubtopicSha };
-    let r = await fetch('/api/update-subtopic-file',{
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify(body)
-    });
-    let j = await r.json();
-    if(!j.success) return;
-    showSaveMessage();
-    renderEditableQuestions();
-  } catch(e){}
-}
-
-// images
-function addImageField(){
-  let c = document.getElementById('imageContainer');
-  let row = document.createElement('div');
-  row.classList.add('image-field-row');
-
-  let qNum = document.createElement('input');
-  qNum.type = 'number';
-  qNum.placeholder = 'Q#';
-  qNum.min = 1;
-
-  let fileIn = document.createElement('input');
-  fileIn.type = 'file';
-  fileIn.accept = 'image/*';
-
-  let delBtn = document.createElement('button');
-  delBtn.textContent = 'Remove';
-  delBtn.classList.add('btn-orange');
-  delBtn.onclick = () => c.removeChild(row);
-
-  let prog = document.createElement('div');
-  prog.classList.add('progress');
-  let pbar = document.createElement('div');
-  pbar.classList.add('progress-bar');
-  pbar.textContent = '0%';
-  prog.appendChild(pbar);
-
-  row.appendChild(qNum);
-  row.appendChild(fileIn);
-  row.appendChild(delBtn);
-  row.appendChild(prog);
-  c.appendChild(row);
-}
-
-async function convertAndAppend(){
-  if(!currentSubtopicPath) return;
-  let prefix = document.getElementById('prefixInput').value.trim();
-  let startNumber = parseInt(document.getElementById('startQNumber').value, 10);
-  if(isNaN(startNumber) || startNumber < 1) startNumber = 1;
-
-  let text = document.getElementById('questionsText').value.trim();
-  if(!text) return;
-
-  let arr = null;
-  try{
-    if(text.startsWith('let quizData =')){
-      text = text.replace('let quizData =','').trim();
-      if(text.endsWith(';')) text = text.slice(0,-1);
-    }
-    arr = JSON.parse(text);
-    if(Array.isArray(arr)){
-      await handleImagesAndBind(arr);
-      currentQuestions = currentQuestions.concat(arr);
-      renderSubtopicQuestions();
-      renderEditableQuestions();
-      return;
-    }
-  } catch(e){}
-  let lines = text.split('\n');
-  let questionText = null, options = [], ansIdx = -1, ansText = null, explanation = null;
-  let out = [];
-  for(let i = 0; i < lines.length; i++){
-    let ln = lines[i].trim();
-    let qM = ln.match(/^(\d+)\.\s+(.*)/);
-    if(qM){
+        }
+      }
       if(questionText !== null){
         out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
       }
-      questionText = `<span style='color: darkred; font-weight:bold;'>${prefix ? prefix + ' ' : ''}Question ${startNumber}</span> ${qM[2]}`;
-      startNumber++;
-      options = []; ansIdx = -1; ansText = null; explanation = null;
-    } else {
-      let opt = ln.match(/^([A-F])\.\s+(.*)/i);
-      if(opt){
-        let txt = opt[2].trim();
-        if(txt.endsWith('***')){
-          txt = txt.slice(0,-3).trim();
-          ansIdx = options.length;
-          ansText = txt;
+      await handleImagesAndBind(out);
+      currentQuestions = currentQuestions.concat(out);
+      renderSubtopicQuestions();
+      renderEditableQuestions();
+    }
+    
+    async function handleImagesAndBind(questionsArr){
+      let c = document.getElementById('imageContainer');
+      let rows = c.querySelectorAll('.image-field-row');
+      let dataMap = {};
+      for(let row of rows){
+        let inputs = row.querySelectorAll('input');
+        let qnum = parseInt(inputs[0].value, 10);
+        if(!qnum) continue;
+        let fileIn = inputs[1];
+        if(fileIn.files && fileIn.files.length > 0){
+          let file = fileIn.files[0];
+          let prog = row.querySelector('.progress');
+          let pbar = prog.querySelector('.progress-bar');
+          let url = await uploadImageToImgHippo(file, prog, pbar);
+          if(url){
+            if(!dataMap[qnum]) dataMap[qnum] = [];
+            dataMap[qnum].push(url);
+          }
         }
-        options.push(txt);
-      } else {
-        let ex = ln.match(/^Explanation\s*:\s*(.*)/i);
-        if(ex){
-          explanation = ex[1];
+      }
+      questionsArr.forEach(obj => {
+        let match = obj.question.match(/Question\s+(\d+)/);
+        if(match){
+          let qn = parseInt(match[1], 10);
+          if(dataMap[qn]){
+            dataMap[qn].forEach(imgUrl => {
+              obj.question += `<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
+            });
+          }
         }
-      }
+      });
     }
-  }
-  if(questionText !== null){
-    out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
-  }
-  await handleImagesAndBind(out);
-  currentQuestions = currentQuestions.concat(out);
-  renderSubtopicQuestions();
-  renderEditableQuestions();
-}
-
-async function handleImagesAndBind(questionsArr){
-  let c = document.getElementById('imageContainer');
-  let rows = c.querySelectorAll('.image-field-row');
-  let dataMap = {};
-  for(let row of rows){
-    let inputs = row.querySelectorAll('input');
-    let qnum = parseInt(inputs[0].value, 10);
-    if(!qnum) continue;
-    let fileIn = inputs[1];
-    if(fileIn.files && fileIn.files.length > 0){
-      let file = fileIn.files[0];
-      let prog = row.querySelector('.progress');
-      let pbar = prog.querySelector('.progress-bar');
-      let url = await uploadImageToImgHippo(file, prog, pbar);
-      if(url){
-        if(!dataMap[qnum]) dataMap[qnum] = [];
-        dataMap[qnum].push(url);
-      }
-    }
-  }
-  questionsArr.forEach(obj => {
-    let match = obj.question.match(/Question\s+(\d+)/);
-    if(match){
-      let qn = parseInt(match[1], 10);
-      if(dataMap[qn]){
-        dataMap[qn].forEach(imgUrl => {
-          obj.question += `<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
-        });
-      }
-    }
-  });
-}
-
-function uploadImageToImgHippo(file, progressContainer, progressBar) {
-  return new Promise((resolve) => {
-    if (!file) {
-      return resolve("");
-    }
-    if (progressContainer) {
-      progressContainer.style.display = "block";
-    }
-    if (progressBar) {
-      progressBar.style.width = "0%";
-      progressBar.textContent = "0%";
-    }
-
-    let formData = new FormData();
-    formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c");
-    formData.append("file", file);
-
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://api.imghippo.com/v1/upload", true);
-    xhr.setRequestHeader("Accept", "application/json");
-
-    xhr.upload.onprogress = function(event) {
-      if (event.lengthComputable) {
-        let percent = Math.floor((event.loaded / event.total) * 100);
-        progressBar.style.width = percent + "%";
-        progressBar.textContent = percent + "%";
-      }
-    };
-    xhr.onload = function(){
-      if(xhr.status === 200){
-        try{
-          let response = JSON.parse(xhr.responseText);
-          if(response.success && response.data && response.data.url){
-            progressBar.style.width = "100%";
-            progressBar.textContent = "تم رفع الصورة";
-            return resolve(response.data.url);
+    
+    function uploadImageToImgHippo(file, progressContainer, progressBar) {
+      return new Promise((resolve) => {
+        if (!file) {
+          return resolve("");
+        }
+        if (progressContainer) {
+          progressContainer.style.display = "block";
+        }
+        if (progressBar) {
+          progressBar.style.width = "0%";
+          progressBar.textContent = "0%";
+        }
+    
+        let formData = new FormData();
+        formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c");
+        formData.append("file", file);
+    
+        let xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://api.imghippo.com/v1/upload", true);
+        xhr.setRequestHeader("Accept", "application/json");
+    
+        xhr.upload.onprogress = function(event) {
+          if (event.lengthComputable) {
+            let percent = Math.floor((event.loaded / event.total) * 100);
+            progressBar.style.width = percent + "%";
+            progressBar.textContent = percent + "%";
+          }
+        };
+        xhr.onload = function(){
+          if(xhr.status === 200){
+            try{
+              let response = JSON.parse(xhr.responseText);
+              if(response.success && response.data && response.data.url){
+                progressBar.style.width = "100%";
+                progressBar.textContent = "تم رفع الصورة";
+                return resolve(response.data.url);
+              } else {
+                console.error("فشل رفع الصورة:", response);
+                progressBar.textContent = "فشل الرفع";
+                return resolve("");
+              }
+            } catch(e){
+              console.error("خطأ في تحليل الاستجابة:", e);
+              progressBar.textContent = "فشل الرفع";
+              return resolve("");
+            }
           } else {
-            console.error("فشل رفع الصورة:", response);
+            console.error("فشل الرفع. حالة الطلب:", xhr.status);
             progressBar.textContent = "فشل الرفع";
             return resolve("");
           }
-        } catch(e){
-          console.error("خطأ في تحليل الاستجابة:", e);
+        };
+        xhr.onerror = function(){
+          console.error("حدث خطأ أثناء الاتصال.");
           progressBar.textContent = "فشل الرفع";
-          return resolve("");
-        }
-      } else {
-        console.error("فشل الرفع. حالة الطلب:", xhr.status);
-        progressBar.textContent = "فشل الرفع";
-        return resolve("");
+          resolve("");
+        };
+        xhr.send(formData);
+      });
+    }
+    
+    // delete prefix
+    async function deleteByPrefix(){
+      if(!currentSubtopicPath) return;
+      let prefix = document.getElementById('deletePrefix').value.trim();
+      if(!prefix) return;
+      if(!currentSubtopicSha && currentQuestions.length === 0) return;
+      try{
+        let body = { path: currentSubtopicPath, sha: currentSubtopicSha, prefix };
+        await fetch('/api/delete-questions-by-prefix', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify(body)
+        });
+        loadSubtopic();
+      } catch(e){}
+    }
+    
+    function formatTo12Hour(tVal){
+      if(!tVal) return "";
+      let [hh, mm] = tVal.split(":");
+      hh = parseInt(hh, 10);
+      let period = (hh >= 12) ? "م" : "ص";
+      let newH = (hh % 12) || 12;
+      return newH + ":" + mm + " " + period;
+    }
+    
+    /********** Edit Questions Section **********/
+    function renderEditableQuestions() {
+      let container = document.getElementById('questionsEditList');
+      container.innerHTML = '';
+      
+      currentQuestions.forEach((q, index) => {
+        let qDiv = document.createElement('div');
+        qDiv.className = 'q-item p-3 mb-3 border rounded';
+        qDiv.id = `q-${index+1}`; // للانتقال للسؤال
+        // استخراج الجزء الغامق (إن وُجد) وفصل نص السؤال
+        let boldMatch = q.question.match(/<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>(.*)/i);
+        let boldPart = boldMatch ? boldMatch[1].trim() : '';
+        let questionText = boldMatch ? boldMatch[2].trim() : q.question;
+        
+        qDiv.innerHTML = `
+          <div class="mb-2">
+            <strong>Question ${index + 1}</strong>
+            <button class="btn btn-secondary btn-sm" onclick="handleMoveUp(${index})">▲</button>
+            <button class="btn btn-secondary btn-sm" onclick="handleMoveDown(${index})">▼</button>
+            <button class="btn btn-danger btn-sm ms-2" onclick="deleteQuestion(${index})">Delete</button>
+          </div>
+          <div class="mb-2">
+            <input type="text" class="form-control bold-prefix" data-index="${index}" 
+                   value="${boldPart}" 
+                   placeholder="Bold prefix (e.g. Second Batch (2024) - Dr. Zeinab Hamidizad)">
+          </div>
+          <div class="mb-2">
+            <textarea class="form-control question-text" data-index="${index}" rows="3" placeholder="Question text...">${questionText}</textarea>
+          </div>
+          <div id="options-${index}" class="mb-2"></div>
+          <div class="mb-2">
+            <label>Correct Answer Index:</label>
+            <input type="number" min="0" value="${q.answer}" data-index="${index}" class="form-control correct-answer" style="max-width:100px; display:inline-block;">
+            <label class="ms-2">Explanation:</label>
+            <input type="text" value="${q.explanation || ''}" data-index="${index}" class="form-control explanation" style="display:inline-block; width:300px;">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveQuestionChanges(${index})">Save Changes</button>
+        `;
+    
+        // عرض الخيارات
+        let optionsContainer = qDiv.querySelector(`#options-${index}`);
+        q.options.forEach((opt, optIndex) => {
+          let optInput = document.createElement('input');
+          optInput.type = 'text';
+          optInput.value = opt.replace('***', '').trim();
+          optInput.className = 'form-control mb-1';
+          optInput.dataset.index = index;
+          optInput.dataset.optIndex = optIndex;
+          optionsContainer.appendChild(optInput);
+        });
+    
+        container.appendChild(qDiv);
+      });
+    }
+    
+    // Handle moving questions فردياً
+    function handleMoveUp(index) {
+      if(index > 0) {
+        [currentQuestions[index-1], currentQuestions[index]] = [currentQuestions[index], currentQuestions[index-1]];
+        renderEditableQuestions();
       }
-    };
-    xhr.onerror = function(){
-      console.error("حدث خطأ أثناء الاتصال.");
-      progressBar.textContent = "فشل الرفع";
-      resolve("");
-    };
-    xhr.send(formData);
-  });
-}
-
-// delete prefix
-async function deleteByPrefix(){
-  if(!currentSubtopicPath) return;
-  let prefix = document.getElementById('deletePrefix').value.trim();
-  if(!prefix) return;
-  if(!currentSubtopicSha && currentQuestions.length === 0) return;
-  try{
-    let body = { path: currentSubtopicPath, sha: currentSubtopicSha, prefix };
-    await fetch('/api/delete-questions-by-prefix',{
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify(body)
-    });
-    loadSubtopic();
-  } catch(e){}
-}
-
-function formatTo12Hour(tVal){
-  if(!tVal) return "";
-  let [hh, mm] = tVal.split(":");
-  hh = parseInt(hh, 10);
-  let period = (hh >= 12) ? "م" : "ص";
-  let newH = (hh % 12) || 12;
-  return newH + ":" + mm + " " + period;
-}
-
-/* =====================================================================
-   الجزء الخاص بعرض الأسئلة مع إمكانية تعديلها وإعادة ترتيبها فردياً
-===================================================================== */
-function renderEditableQuestions() {
-  let container = document.getElementById('questionsEditList');
-  container.innerHTML = '';
-  
-  currentQuestions.forEach((q, index) => {
-    let qDiv = document.createElement('div');
-    qDiv.className = 'q-item';
-    qDiv.id = `q-${index+1}`; // ID للانتقال للسؤال
-    qDiv.style.marginBottom = '15px';
-    qDiv.style.padding = '10px';
-    qDiv.style.border = '1px solid #ddd';
+    }
+    function handleMoveDown(index) {
+      if(index < currentQuestions.length - 1) {
+        [currentQuestions[index], currentQuestions[index+1]] = [currentQuestions[index+1], currentQuestions[index]];
+        renderEditableQuestions();
+      }
+    }
+    // Save changes for individual question
+    function saveQuestionChanges(index) {
+      const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
+      const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
+      const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
+                         .sort((a, b) => a.dataset.optIndex - b.dataset.optIndex)
+                         .map(input => input.value);
+      const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
+      const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
     
-    // استخراج الجزء الغامق (إن وُجد) وفصل نص السؤال
-    let boldMatch = q.question.match(/<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>(.*)/i);
-    let boldPart = boldMatch ? boldMatch[1].trim() : '';
-    let questionText = boldMatch ? boldMatch[2].trim() : q.question;
+      currentQuestions[index] = {
+        ...currentQuestions[index],
+        question: `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`,
+        options: options,
+        answer: correctAnswer,
+        explanation: explanation
+      };
+    }
     
-    qDiv.innerHTML = `
-      <div style="margin-bottom:10px;">
-        <strong>Question ${index + 1}</strong>
-        <button class="arrow-btn" onclick="handleMoveUp(${index})">▲</button>
-        <button class="arrow-btn" onclick="handleMoveDown(${index})">▼</button>
-        <button class="btn-red" style="margin-left:10px;" onclick="deleteQuestion(${index})">Delete</button>
-      </div>
-      
-      <div style="margin-bottom:8px;">
-        <input type="text" class="bold-prefix" data-index="${index}" 
-               value="${boldPart}" 
-               placeholder="Bold prefix (e.g. Second Batch (2024) - Dr. Zeinab Hamidizad)"
-               style="width:100%; margin-bottom:5px;">
-        
-        <textarea class="question-text" data-index="${index}" 
-                  placeholder="Question text..."
-                  style="width:100%; height:80px;">${questionText}</textarea>
-      </div>
-
-      <div id="options-${index}"></div>
-      
-      <div style="margin-top:8px;">
-        Correct Answer Index: 
-        <input type="number" min="0" value="${q.answer}" 
-               data-index="${index}" class="correct-answer" style="width:80px;">
-        
-        Explanation: 
-        <input type="text" value="${q.explanation || ''}" 
-               data-index="${index}" class="explanation" style="width:300px;">
-      </div>
-      
-      <button class="btn-blue" style="margin-top:5px;" 
-              onclick="saveQuestionChanges(${index})">Save Changes</button>
-    `;
-
-    // عرض الخيارات
-    let optionsContainer = qDiv.querySelector(`#options-${index}`);
-    q.options.forEach((opt, optIndex) => {
-      let optInput = document.createElement('input');
-      optInput.type = 'text';
-      optInput.value = opt.replace('***', '').trim(); // إزالة علامات الإجابة الصحيحة إن وجدت
-      optInput.style.width = '100%';
-      optInput.style.marginBottom = '5px';
-      optInput.dataset.index = index;
-      optInput.dataset.optIndex = optIndex;
-      optionsContainer.appendChild(optInput);
-    });
-
-    container.appendChild(qDiv);
-  });
-}
-
-// Handle moving questions فردياً
-function handleMoveUp(index) {
-  if(index > 0) {
-    [currentQuestions[index-1], currentQuestions[index]] = [currentQuestions[index], currentQuestions[index-1]];
-    renderEditableQuestions();
-  }
-}
-
-function handleMoveDown(index) {
-  if(index < currentQuestions.length - 1) {
-    [currentQuestions[index], currentQuestions[index+1]] = [currentQuestions[index+1], currentQuestions[index]];
-    renderEditableQuestions();
-  }
-}
-
-// Save changes for individual question
-function saveQuestionChanges(index) {
-  const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
-  const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
-  const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
-                     .sort((a, b) => a.dataset.optIndex - b.dataset.optIndex)
-                     .map(input => input.value);
-  const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
-  const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
-
-  currentQuestions[index] = {
-    ...currentQuestions[index],
-    question: `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`,
-    options: options,
-    answer: correctAnswer,
-    explanation: explanation
-  };
-}
-
-/* =====================================================================
-   الجزء الخاص بإعادة ترتيب الأسئلة دفعة (Bulk Reorder) عبر التعرف على النص الغامق
-===================================================================== */
-// دالة استخراج المجاميع من الأسئلة
-function detectBoldGroups() {
-  const groupMap = {};
-  currentQuestions.forEach((q, index) => {
-    // البحث عن نص داخل <span> يحتوي على font-weight:bold
-    const regex = /<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>/i;
-    const match = q.question.match(regex);
-    if (match) {
-      // نفترض أن النص يحتوي على " - Question"؛ نقسم النص على هذا العنوان
-      let boldContent = match[1];
-      let parts = boldContent.split(/- Question/i);
-      if (parts.length > 0) {
-        let groupName = parts[0].trim();
-        if (groupName) {
-          if (!groupMap[groupName]) {
-            groupMap[groupName] = { title: groupName, indices: [] };
+    /********** Bulk Reorder Section **********/
+    // دالة استخراج المجموعات من الأسئلة
+    function detectBoldGroups() {
+      const groups = [];
+      currentQuestions.forEach((q, index) => {
+        const regex = /<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>/i;
+        const match = q.question.match(regex);
+        if (match) {
+          // نقسم النص على "- Question"
+          let parts = match[1].split(/- Question/i);
+          if (parts.length > 0) {
+            let groupName = parts[0].trim();
+            if (groupName) {
+              // ابحث عما إذا كانت المجموعة موجودة بالفعل
+              let existing = groups.find(g => g.title === groupName);
+              if (existing) {
+                existing.indices.push(index);
+              } else {
+                groups.push({ title: groupName, indices: [index] });
+              }
+            }
           }
-          groupMap[groupName].indices.push(index);
         }
+      });
+      // فرز المجموعات حسب أقل رقم سؤال فيها
+      groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
+      return groups;
+    }
+    
+    // عرض المجموعات مع تنسيق "Group Name ( Q : start - end )" وأزرار النقل
+    function renderBoldGroups(boldGroups) {
+      const container = document.getElementById('boldGroupsList');
+      container.innerHTML = '';
+      boldGroups.forEach((group) => {
+        const start = Math.min(...group.indices) + 1;
+        const end = Math.max(...group.indices) + 1;
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'group-card';
+        groupDiv.innerHTML = `<h5>${group.title} ( Q : ${start} - ${end} )</h5>`;
+    
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'group-actions';
+    
+        const upBtn = document.createElement('button');
+        upBtn.className = 'btn btn-secondary btn-sm';
+        upBtn.textContent = 'Group Up';
+        upBtn.onclick = function() {
+          moveGroupUp(group.title);
+        };
+        actionsDiv.appendChild(upBtn);
+    
+        const downBtn = document.createElement('button');
+        downBtn.className = 'btn btn-secondary btn-sm';
+        downBtn.textContent = 'Group Down';
+        downBtn.onclick = function() {
+          moveGroupDown(group.title);
+        };
+        actionsDiv.appendChild(downBtn);
+    
+        groupDiv.appendChild(actionsDiv);
+        container.appendChild(groupDiv);
+      });
+    }
+    
+    // تحميل المجموعات وعرضها
+    async function loadBoldGroups() {
+      try {
+        if (!currentSubtopicPath) {
+          alert("Please select and load a subtopic first!");
+          return;
+        }
+        const boldGroups = detectBoldGroups();
+        if (boldGroups.length === 0) {
+          alert(`No groups found! Ensure questions have this format:
+<span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
+          return;
+        }
+        renderBoldGroups(boldGroups);
+      } catch (error) {
+        console.error("Load Bold Groups Error:", error);
+        alert("Error loading groups. Check console.");
       }
     }
-  });
-  return Object.values(groupMap);
-}
-
-// عرض المجاميع مع أزرار التحريك
-function renderBoldGroups(boldGroups) {
-  const container = document.getElementById('boldGroupsList');
-  container.innerHTML = '';
-  // يمكن فرز المجموعات حسب أول ظهور في القائمة
-  boldGroups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
-  boldGroups.forEach((group, groupIndex) => {
-    const groupDiv = document.createElement('div');
-    groupDiv.style.border = "1px solid #ccc";
-    groupDiv.style.padding = "8px";
-    groupDiv.style.marginBottom = "8px";
-    groupDiv.innerHTML = `<strong>${group.title}</strong> (Questions: ${group.indices.join(', ')})`;
     
-    const upBtn = document.createElement('button');
-    upBtn.className = 'arrow-btn';
-    upBtn.textContent = 'Group Up';
-    upBtn.onclick = function() {
-      moveGroupUp(group.title);
-    };
-    groupDiv.appendChild(upBtn);
-    
-    const downBtn = document.createElement('button');
-    downBtn.className = 'arrow-btn';
-    downBtn.textContent = 'Group Down';
-    downBtn.onclick = function() {
-      moveGroupDown(group.title);
-    };
-    groupDiv.appendChild(downBtn);
-    
-    container.appendChild(groupDiv);
-  });
-}
-
-// دالة تحميل المجاميع
-async function loadBoldGroups() {
-  try {
-    if (!currentSubtopicPath) {
-      alert("Please select and load a subtopic first!");
-      return;
+    // نقل المجموعة للأعلى (تحريك دفعة كاملة)
+    function moveGroupUp(groupTitle) {
+      const groups = detectBoldGroups();
+      groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
+      const targetGroup = groups.find(g => g.title === groupTitle);
+      if (!targetGroup) return;
+      const startIndex = Math.min(...targetGroup.indices);
+      const groupLength = targetGroup.indices.length;
+      if (startIndex === 0) return; // لا يمكن التحريك للأعلى إذا كان أول عنصر
+      const movedBlock = currentQuestions.splice(startIndex, groupLength);
+      const newIndex = startIndex - 1;
+      currentQuestions.splice(newIndex, 0, ...movedBlock);
+      renderEditableQuestions();
+      loadBoldGroups();
     }
-
-    const boldGroups = detectBoldGroups();
     
-    if (boldGroups.length === 0) {
-      alert(`No groups found! Ensure questions have this format:
-<span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
-      return;
+    // نقل المجموعة للأسفل
+    function moveGroupDown(groupTitle) {
+      const groups = detectBoldGroups();
+      groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
+      const targetGroup = groups.find(g => g.title === groupTitle);
+      if (!targetGroup) return;
+      const startIndex = Math.min(...targetGroup.indices);
+      const groupLength = targetGroup.indices.length;
+      if (startIndex + groupLength >= currentQuestions.length) return; // لا يمكن التحريك للأسفل إذا كانت المجموعة في النهاية
+      const movedBlock = currentQuestions.splice(startIndex, groupLength);
+      const newIndex = startIndex + 1;
+      currentQuestions.splice(newIndex, 0, ...movedBlock);
+      renderEditableQuestions();
+      loadBoldGroups();
     }
-
-    renderBoldGroups(boldGroups);
-  } catch (error) {
-    console.error("Load Bold Groups Error:", error);
-    alert("Error loading groups. Check console.");
-  }
-}
-
-// تحريك مجموعة للأسفل أو للأعلى
-function moveGroupUp(groupTitle) {
-  const groups = detectBoldGroups();
-  groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
-  const targetGroup = groups.find(g => g.title === groupTitle);
-  if (!targetGroup) return;
-  const startIndex = Math.min(...targetGroup.indices);
-  const groupLength = targetGroup.indices.length;
-  if (startIndex === 0) return; // لا يمكن التحريك للأعلى
-  // إزالة الكتلة من القائمة
-  const movedBlock = currentQuestions.splice(startIndex, groupLength);
-  // إدراجها قبل العنصر السابق مباشرة
-  const newIndex = startIndex - 1;
-  currentQuestions.splice(newIndex, 0, ...movedBlock);
-  renderEditableQuestions();
-  loadBoldGroups();
-}
-
-function moveGroupDown(groupTitle) {
-  const groups = detectBoldGroups();
-  groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
-  const targetGroup = groups.find(g => g.title === groupTitle);
-  if (!targetGroup) return;
-  const startIndex = Math.min(...targetGroup.indices);
-  const groupLength = targetGroup.indices.length;
-  if (startIndex + groupLength >= currentQuestions.length) return; // لا يمكن التحريك للأسفل
-  const movedBlock = currentQuestions.splice(startIndex, groupLength);
-  // إدراجها بعد العنصر الذي يلي المجموعة مباشرة
-  const newIndex = startIndex + 1;
-  currentQuestions.splice(newIndex, 0, ...movedBlock);
-  renderEditableQuestions();
-  loadBoldGroups();
-}
-
-async function deleteQuestion(index) {
-  let c = await confirm("Delete this question?");
-  if(c){
-    currentQuestions.splice(index, 1);
-    renderEditableQuestions();
-  }
-}
-
-function jumpToQuestion() {
-  let qNum = parseInt(document.getElementById('jumpToQuestion').value);
-  if(isNaN(qNum) || qNum < 1 || qNum > currentQuestions.length) return;
-  
-  let target = document.getElementById(`q-${qNum}`);
-  if(target){
-    target.scrollIntoView({behavior: 'smooth', block: 'start'});
-    target.style.background = '#fff3e0';
-    setTimeout(() => target.style.background = '', 2000);
-  }
-}
-</script>
+    
+    async function deleteQuestion(index) {
+      let c = await confirm("Delete this question?");
+      if(c){
+        currentQuestions.splice(index, 1);
+        renderEditableQuestions();
+      }
+    }
+    
+    function jumpToQuestion() {
+      let qNum = parseInt(document.getElementById('jumpToQuestion').value);
+      if(isNaN(qNum) || qNum < 1 || qNum > currentQuestions.length) return;
+      let target = document.getElementById(`q-${qNum}`);
+      if(target){
+        target.scrollIntoView({behavior: 'smooth', block: 'start'});
+        target.style.background = '#fff3e0';
+        setTimeout(() => target.style.background = '', 2000);
+      }
+    }
+  </script>
 </body>
 </html>
