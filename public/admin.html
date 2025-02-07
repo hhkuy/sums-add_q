@@ -96,7 +96,7 @@
       bottom: 30px;
       right: 30px;
     }
-    /* زر عائم إضافي للنقل السريع إلى زر Save Questions */
+    /* زر عائم إضافي للنقل السريع إلى Save Questions */
     #floatSaveBtn {
       bottom: 100px;
       right: 30px;
@@ -395,7 +395,7 @@
       } catch(e){}
     }
     
-    // ================ render + reorder + delete subtopic file ================
+    // =============== render + reorder + delete subtopic file ================
     function renderTopics(){
       let list = document.getElementById('topicsList');
       list.innerHTML = '';
@@ -818,15 +818,16 @@
       container.innerHTML = '';
       
       currentQuestions.forEach((q, index) => {
-        // استخراج الجزء الغامق من السؤال
+        // استخراج النص الغامق
         let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
         let boldPart = boldMatch ? boldMatch[2].trim() : '';
-        // استخراج الصورة إذا وُجدت
+        // استخراج الصورة إن وُجدت
         let imgMatch = q.question.match(/<img\s+[^>]*src=['"]([^'"]+)['"]/i);
         let currentImage = imgMatch ? imgMatch[1] : "";
-        // إزالة وسم الصورة من نص السؤال
-        let textWithoutImg = q.question.replace(/<img\s+[^>]*>/i, "").trim();
-        // إزالة وسم النص الغامق
+        // إزالة وسوم <br> من نص السؤال
+        let textWithoutBr = q.question.replace(/<br\s*\/?>/gi, " ");
+        // إزالة وسم الصورة والنص الغامق للحصول على النص الفعلي للسؤال
+        let textWithoutImg = textWithoutBr.replace(/<img\s+[^>]*>/gi, "").trim();
         let questionText = boldMatch ? textWithoutImg.replace(boldMatch[0], "").trim() : textWithoutImg;
     
         let html = `
@@ -859,7 +860,7 @@
             <label>Explanation:</label>
             <textarea class="form-control explanation" data-index="${index}" rows="3" style="resize: vertical;" placeholder="Enter explanation...">${q.explanation || ''}</textarea>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="saveQuestionChanges(${index})">Save Changes</button>
+          <button class="btn btn-primary btn-sm" onclick="saveQuestionChanges(${index})">Update Question</button>
         `;
     
         let containerDiv = document.createElement('div');
@@ -900,8 +901,10 @@
                          .map(input => input.value);
       const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
       const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
+      // تحديث answerText تلقائيًا لتكون قيمة الخيار الذي تم اختياره
+      const newAnswerText = options[correctAnswer] || "";
     
-      // التحقق من وجود صورة جديدة في خانة رفع الصورة
+      // التحقق من وجود صورة جديدة
       let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
       let newImageUrl = "";
       if (imageFileInput && imageFileInput.files.length > 0) {
@@ -923,6 +926,7 @@
         question: newQuestion,
         options: options,
         answer: correctAnswer,
+        answerText: newAnswerText,
         explanation: explanation
       };
     }
