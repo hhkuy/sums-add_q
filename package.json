@@ -1,7 +1,7 @@
 {
-  "name": "quiz-manager-delete-subtopic-file",
+  "name": "quiz-manager-reorder-edit",
   "version": "1.0.0",
-  "description": "All original code, with an added feature to delete subtopic file from repo when subtopic is removed.",
+  "description": "All original features plus: editing questions (with choices) and reordering questions (individually and by bold text group).",
   "scripts": {
     "start": "node server.js"
   },
