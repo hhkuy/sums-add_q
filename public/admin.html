@@ -193,7 +193,6 @@
             <button class="btn btn-success btn-custom" id="saveQuestionsBtn" onclick="saveSubtopic()">Save Questions</button>
           </div>
         </div>
-        <!-- تم حذف ميزة Delete by Bold Prefix -->
       </div>
     </div>
     
@@ -670,6 +669,8 @@
           await handleImagesAndBind(arr);
           currentQuestions = currentQuestions.concat(arr);
           renderEditableQuestions();
+          // عرض رسالة اكتمال العملية
+          alert("Conversion completed!");
           return;
         }
       } catch(e){}
@@ -710,6 +711,7 @@
       await handleImagesAndBind(out);
       currentQuestions = currentQuestions.concat(out);
       renderEditableQuestions();
+      alert("Conversion completed!");
     }
     
     async function handleImagesAndBind(questionsArr){
@@ -857,7 +859,7 @@
             <label>Explanation:</label>
             <textarea class="form-control explanation" data-index="${index}" rows="3" style="resize: vertical;" placeholder="Enter explanation...">${q.explanation || ''}</textarea>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="saveQuestionChanges(${index})">Update Question</button>
+          <button class="btn btn-primary btn-sm" id="updateBtn-${index}" onclick="saveQuestionChanges(${index})">Update Question</button>
         `;
     
         let containerDiv = document.createElement('div');
@@ -921,40 +923,51 @@
     }
     
     async function saveQuestionChanges(index) {
-      const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
-      const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
-      const optionInputs = Array.from(document.querySelectorAll(`#optionGroup-${index} input[type="text"]`));
-      const options = optionInputs.map(input => input.value);
-      const selectedRadio = document.querySelector(`input[name="correctOption_${index}"]:checked`);
-      const correctAnswer = selectedRadio ? parseInt(selectedRadio.value) : 0;
-      const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
-      const newAnswerText = options[correctAnswer] || "";
+      try {
+        const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
+        const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
+        const optionInputs = Array.from(document.querySelectorAll(`#optionGroup-${index} input[type="text"]`));
+        const options = optionInputs.map(input => input.value);
+        const selectedRadio = document.querySelector(`input[name="correctOption_${index}"]:checked`);
+        const correctAnswer = selectedRadio ? parseInt(selectedRadio.value) : 0;
+        const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
+        const newAnswerText = options[correctAnswer] || "";
     
-      let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
-      let newImageUrl = "";
-      if(imageFileInput && imageFileInput.files.length > 0) {
-        let progressContainer = document.getElementById(`uploadProgress-${index}`);
-        newImageUrl = await uploadImageToImgHippo(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild);
-      } else {
-        let previewDiv = document.getElementById(`imagePreview-${index}`);
-        if(previewDiv && previewDiv.querySelector('img')) {
-          newImageUrl = previewDiv.querySelector('img').src;
+        let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
+        let newImageUrl = "";
+        if(imageFileInput && imageFileInput.files.length > 0) {
+          let progressContainer = document.getElementById(`uploadProgress-${index}`);
+          newImageUrl = await uploadImageToImgHippo(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild);
+        } else {
+          let previewDiv = document.getElementById(`imagePreview-${index}`);
+          if(previewDiv && previewDiv.querySelector('img')) {
+            newImageUrl = previewDiv.querySelector('img').src;
+          }
         }
-      }
     
-      let newQuestion = `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`;
-      if(newImageUrl) {
-        newQuestion += `<br><img src="${newImageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">`;
-      }
+        let newQuestion = `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`;
+        if(newImageUrl) {
+          newQuestion += `<br><img src="${newImageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">`;
+        }
     
-      currentQuestions[index] = {
-        ...currentQuestions[index],
-        question: newQuestion,
-        options: options,
-        answer: correctAnswer,
-        answerText: newAnswerText,
-        explanation: explanation
-      };
+        currentQuestions[index] = {
+          ...currentQuestions[index],
+          question: newQuestion,
+          options: options,
+          answer: correctAnswer,
+          answerText: newAnswerText,
+          explanation: explanation
+        };
+    
+        // إظهار علامة صح عند نجاح التحديث
+        let btn = document.getElementById("updateBtn-" + index);
+        btn.innerHTML = "Update Question <i class='bi bi-check-circle-fill text-success'></i>";
+        setTimeout(() => { btn.innerHTML = "Update Question"; }, 2000);
+      } catch(e) {
+        let btn = document.getElementById("updateBtn-" + index);
+        btn.innerHTML = "Update Question <i class='bi bi-x-circle-fill text-danger'></i>";
+        setTimeout(() => { btn.innerHTML = "Update Question"; }, 2000);
+      }
     }
     
     function deleteImage(index) {
@@ -1062,7 +1075,6 @@
       let groups = detectBoldGroups();
       let targetGroup = groups.find(g => g.title === groupTitle);
       if(!targetGroup) return;
-      // حذف الأسئلة بالترتيب التنازلي لتجنب تغيير الفهارس
       let indicesToDelete = targetGroup.indices.sort((a, b) => b - a);
       indicesToDelete.forEach(i => {
         currentQuestions.splice(i, 1);
