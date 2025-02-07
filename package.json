@@ -1,7 +1,7 @@
 {
   "name": "quiz-manager-reorder-edit",
   "version": "1.0.0",
-  "description": "All original features plus: editing questions (with choices) and reordering questions (individually and by bold text group).",
+  "description": "المشروع الأصلي مع إضافة إمكانية تحرير وترتيب الأسئلة (فردياً ودفعة باستخدام الكتابة الغامقة) وحذف ملف الـsubtopic من المستودع.",
   "scripts": {
     "start": "node server.js"
   },
