@@ -131,6 +131,9 @@
       <h3 style="margin-top:20px;">Delete by Bold Prefix</h3>
       <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
       <button class="btn-red" onclick="deleteByPrefix()">Delete</button>
+      
+      <!-- الزر الجديد لتفعيل وضع التعديل وإعادة الترتيب -->
+      <button class="btn-orange" id="toggleEditModeBtn" onclick="toggleEditMode()">Toggle Edit Mode</button>
     </div>
   </div>
 
@@ -296,10 +299,10 @@ function renderTopics(){
     d.style.padding='8px';
     d.style.borderRadius='4px';
     d.style.marginBottom='8px';
-    d.innerHTML=`
+    d.innerHTML=
       <strong>${t.topicName}</strong> (sub:${t.subTopics?t.subTopics.length:0})
       <br>${t.description||''}
-    `;
+    ;
     // reorder up
     let upBtn=document.createElement('button');
     upBtn.className='arrow-btn';
@@ -360,7 +363,7 @@ function renderTopics(){
         let stDiv=document.createElement('div');
         stDiv.style.marginLeft='15px';
         stDiv.style.marginTop='5px';
-        stDiv.innerHTML=`${st.name} => ${st.file}`;
+        stDiv.innerHTML=${st.name} => ${st.file};
 
         // reorder sub
         let subUp=document.createElement('button');
@@ -481,7 +484,7 @@ function fillSubtopics(){
       t.subTopics.forEach(st=>{
         let opt=document.createElement('option');
         opt.value=st.file;
-        opt.textContent=`[${t.topicName}] - ${st.name}`;
+        opt.textContent=[${t.topicName}] - ${st.name};
         sel.appendChild(opt);
       });
     }
@@ -610,7 +613,7 @@ async function convertAndAppend(){
       if(questionText!==null){
         out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
       }
-      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix?prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
+      questionText=<span style='color: darkred; font-weight:bold;'>${prefix?prefix+' ':''}Question ${startNumber}</span> ${qM[2]};
       startNumber++;
       options=[]; ansIdx=-1; ansText=null; explanation=null;
     } else {
@@ -665,7 +668,7 @@ async function handleImagesAndBind(questionsArr){
       let qn=parseInt(match[1],10);
       if(dataMap[qn]){
         dataMap[qn].forEach(imgUrl=>{
-          obj.question+=`<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
+          obj.question+=<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>;
         });
       }
     }
@@ -757,6 +760,219 @@ function formatTo12Hour(tVal){
   let period=(hh>=12)?"م":"ص";
   let newH=(hh%12)||12;
   return newH+":"+mm+" "+period;
+}
+
+/* =====================================================================
+   الكود الجديد لإضافة الميزات: عرض الأسئلة مع الاختيارات وتعديلها 
+   وإعادة ترتيبها (فردياً وكدفعة بناءً على التعرف على النص الغامق)
+   دون التأثير على باقي الميزات.
+===================================================================== */
+
+// متغير لتفعيل وضع التعديل
+let editMode = false;
+
+function toggleEditMode() {
+  editMode = !editMode;
+  const btn = document.getElementById('toggleEditModeBtn');
+  btn.textContent = editMode ? "Exit Edit Mode" : "Toggle Edit Mode";
+  if (editMode) {
+    renderEditableQuestions();
+  } else {
+    renderSubtopicQuestions();
+  }
+}
+
+function renderEditableQuestions() {
+  const box = document.getElementById('subtopicQuestions');
+  box.innerHTML = '';
+  currentQuestions.forEach((q, index) => {
+    const container = document.createElement('div');
+    container.classList.add('q-item');
+    container.style.padding = "10px";
+    container.style.border = "1px solid #aaa";
+    container.style.marginBottom = "10px";
+
+    // رقم السؤال
+    const numDiv = document.createElement('div');
+    numDiv.style.fontWeight = "bold";
+    numDiv.textContent = (index + 1) + ". ";
+    container.appendChild(numDiv);
+
+    // تعديل نص السؤال
+    const questionLabel = document.createElement('label');
+    questionLabel.textContent = "Question:";
+    container.appendChild(questionLabel);
+    const questionInput = document.createElement('textarea');
+    questionInput.style.width = "100%";
+    questionInput.value = q.question || '';
+    questionInput.oninput = function() {
+      currentQuestions[index].question = this.value;
+    };
+    container.appendChild(questionInput);
+
+    // عرض وتعديل الاختيارات إن وُجدت
+    if (Array.isArray(q.options) && q.options.length > 0) {
+      const optionsDiv = document.createElement('div');
+      optionsDiv.style.marginTop = "8px";
+      const optionsLabel = document.createElement('label');
+      optionsLabel.textContent = "Options:";
+      optionsDiv.appendChild(optionsLabel);
+      q.options.forEach((opt, optIndex) => {
+        const optContainer = document.createElement('div');
+        optContainer.style.display = "flex";
+        optContainer.style.alignItems = "center";
+        optContainer.style.marginTop = "4px";
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = "correctAnswer_" + index;
+        radio.checked = (q.answer === optIndex);
+        radio.onclick = function() {
+          currentQuestions[index].answer = optIndex;
+        };
+        optContainer.appendChild(radio);
+        const optInput = document.createElement('input');
+        optInput.type = 'text';
+        optInput.value = opt;
+        optInput.style.flex = "1";
+        optInput.style.marginLeft = "6px";
+        optInput.oninput = function() {
+          currentQuestions[index].options[optIndex] = this.value;
+        };
+        optContainer.appendChild(optInput);
+        optionsDiv.appendChild(optContainer);
+      });
+      // زر لإضافة خيار جديد
+      const addOptionBtn = document.createElement('button');
+      addOptionBtn.textContent = "Add Option";
+      addOptionBtn.className = "btn-blue";
+      addOptionBtn.style.marginTop = "4px";
+      addOptionBtn.onclick = function() {
+        currentQuestions[index].options.push("");
+        renderEditableQuestions();
+      };
+      optionsDiv.appendChild(addOptionBtn);
+      container.appendChild(optionsDiv);
+    }
+
+    // تعديل شرح السؤال إن وُجد
+    const explLabel = document.createElement('label');
+    explLabel.textContent = "Explanation:";
+    explLabel.style.display = "block";
+    explLabel.style.marginTop = "8px";
+    container.appendChild(explLabel);
+    const explInput = document.createElement('input');
+    explInput.type = "text";
+    explInput.style.width = "100%";
+    explInput.value = q.explanation || '';
+    explInput.oninput = function() {
+      currentQuestions[index].explanation = this.value;
+    };
+    container.appendChild(explInput);
+
+    // أزرار إعادة ترتيب السؤال فردياً
+    const reorderDiv = document.createElement('div');
+    reorderDiv.style.marginTop = "8px";
+    const upBtn = document.createElement('button');
+    upBtn.textContent = "Move Up";
+    upBtn.className = "arrow-btn";
+    upBtn.onclick = function() {
+      if (index > 0) {
+        [currentQuestions[index-1], currentQuestions[index]] = [currentQuestions[index], currentQuestions[index-1]];
+        renderEditableQuestions();
+      }
+    };
+    reorderDiv.appendChild(upBtn);
+    const downBtn = document.createElement('button');
+    downBtn.textContent = "Move Down";
+    downBtn.className = "arrow-btn";
+    downBtn.onclick = function() {
+      if (index < currentQuestions.length - 1) {
+        [currentQuestions[index], currentQuestions[index+1]] = [currentQuestions[index+1], currentQuestions[index]];
+        renderEditableQuestions();
+      }
+    };
+    reorderDiv.appendChild(downBtn);
+
+    // زر الحذف كما هو
+    const delBtn = document.createElement('button');
+    delBtn.textContent = "Delete";
+    delBtn.className = "btn-red";
+    delBtn.style.marginLeft = "5px";
+    delBtn.onclick = async function() {
+      let c = await confirm("Delete this question?");
+      if(c){
+        currentQuestions.splice(index,1);
+        renderEditableQuestions();
+      }
+    };
+    reorderDiv.appendChild(delBtn);
+    container.appendChild(reorderDiv);
+
+    // التحقق من وجود نص غامق (bold) لتجميع الأسئلة وإعادة ترتيبها كدفعة
+    const boldPrefix = getBoldPrefix(q.question);
+    if(boldPrefix && (index === 0 || getBoldPrefix(currentQuestions[index-1].question) !== boldPrefix)){
+      let groupStart = index;
+      let groupEnd = index;
+      for(let j = index + 1; j < currentQuestions.length; j++){
+        if(getBoldPrefix(currentQuestions[j].question) === boldPrefix){
+          groupEnd = j;
+        } else {
+          break;
+        }
+      }
+      if(groupEnd > groupStart){
+        const groupDiv = document.createElement('div');
+        groupDiv.style.marginTop = "8px";
+        const groupLabel = document.createElement('span');
+        groupLabel.textContent = "Group (" + boldPrefix + ") Actions: ";
+        groupLabel.style.fontWeight = "bold";
+        groupDiv.appendChild(groupLabel);
+        const groupUpBtn = document.createElement('button');
+        groupUpBtn.textContent = "Group Up";
+        groupUpBtn.className = "arrow-btn";
+        groupUpBtn.onclick = function() {
+          if(groupStart > 0){
+            const groupBlock = currentQuestions.splice(groupStart, groupEnd - groupStart + 1);
+            const newIndex = groupStart - 1;
+            currentQuestions.splice(newIndex, 0, ...groupBlock);
+            renderEditableQuestions();
+          }
+        };
+        groupDiv.appendChild(groupUpBtn);
+        const groupDownBtn = document.createElement('button');
+        groupDownBtn.textContent = "Group Down";
+        groupDownBtn.className = "arrow-btn";
+        groupDownBtn.onclick = function() {
+          if(groupEnd < currentQuestions.length - 1){
+            const groupBlock = currentQuestions.splice(groupStart, groupEnd - groupStart + 1);
+            const newIndex = groupStart + 1;
+            currentQuestions.splice(newIndex, 0, ...groupBlock);
+            renderEditableQuestions();
+          }
+        };
+        groupDiv.appendChild(groupDownBtn);
+        container.appendChild(groupDiv);
+      }
+    }
+
+    box.appendChild(container);
+  });
+}
+
+// دالة مساعدة لاستخراج النص الغامق من السؤال (إذا وُجد)
+function getBoldPrefix(questionText) {
+  if(!questionText) return null;
+  let regex = /<(span|strong)[^>]*font-weight:\s*bold;?[^>]*>(.*?)<\/\1>/i;
+  let match = regex.exec(questionText);
+  if(match && match[2]){
+    let prefix = match[2];
+    let idx = prefix.indexOf("Question");
+    if(idx !== -1){
+      return prefix.substring(0, idx).trim();
+    }
+    return prefix.trim();
+  }
+  return null;
 }
 </script>
 </body>
