@@ -134,8 +134,18 @@
     </div>
 
     <!-- Edit Questions Section -->
+<!-- Edit Questions Section -->
+<!-- Edit Questions Section -->
 <div class="section">
   <h2>Edit Questions</h2>
+  
+  <!-- Search by Number -->
+  <div style="margin-bottom:15px;">
+    <input type="number" id="jumpToQuestion" placeholder="Enter question number" 
+           min="1" style="width:200px; margin-right:10px;">
+    <button class="btn-blue" onclick="jumpToQuestion()">Jump to Question</button>
+  </div>
+
   <div id="questionsEditList"></div>
 </div>
 
@@ -782,39 +792,57 @@ function renderEditableQuestions() {
   currentQuestions.forEach((q, index) => {
     let qDiv = document.createElement('div');
     qDiv.className = 'q-item';
+    qDiv.id = `q-${index+1}`; // ID للانتقال للسؤال
     qDiv.style.marginBottom = '15px';
     qDiv.style.padding = '10px';
     qDiv.style.border = '1px solid #ddd';
     
-    // Question number and move buttons
+    // استخراج الجزء الغامق والتفسير
+    let boldMatch = q.question.match(/<span style=['"]color: darkred; font-weight:bold;['"]>(.*?)<\/span>(.*)/);
+    let boldPart = boldMatch ? boldMatch[1] : '';
+    let questionText = boldMatch ? boldMatch[2].trim() : q.question;
+
     qDiv.innerHTML = `
       <div style="margin-bottom:10px;">
         <strong>Question ${index + 1}</strong>
         <button class="arrow-btn" onclick="handleMoveUp(${index})">▲</button>
         <button class="arrow-btn" onclick="handleMoveDown(${index})">▼</button>
+        <button class="btn-red" style="margin-left:10px;" onclick="deleteQuestion(${index})">Delete</button>
       </div>
-      <textarea class="editable-question" 
-                style="width:100%; margin-bottom:8px;" 
-                data-index="${index}">${q.question}</textarea>
+      
+      <div style="margin-bottom:8px;">
+        <input type="text" class="bold-prefix" data-index="${index}" 
+               value="${boldPart}" 
+               placeholder="Bold prefix (e.g. Dr. Ali - Question 1)"
+               style="width:100%; margin-bottom:5px;">
+        
+        <textarea class="question-text" data-index="${index}" 
+                  placeholder="Question text..."
+                  style="width:100%; height:80px;">${questionText}</textarea>
+      </div>
+
       <div id="options-${index}"></div>
+      
       <div style="margin-top:8px;">
         Correct Answer Index: 
         <input type="number" min="0" value="${q.answer}" 
-               data-index="${index}" class="correct-answer">
+               data-index="${index}" class="correct-answer" style="width:80px;">
+        
         Explanation: 
         <input type="text" value="${q.explanation || ''}" 
-               data-index="${index}" class="explanation">
+               data-index="${index}" class="explanation" style="width:300px;">
       </div>
+      
       <button class="btn-blue" style="margin-top:5px;" 
               onclick="saveQuestionChanges(${index})">Save Changes</button>
     `;
 
-    // Render options
+    // عرض الخيارات
     let optionsContainer = qDiv.querySelector(`#options-${index}`);
     q.options.forEach((opt, optIndex) => {
       let optInput = document.createElement('input');
       optInput.type = 'text';
-      optInput.value = opt;
+      optInput.value = opt.replace('***', '').trim(); // إزالة علامات الإجابة الصحيحة
       optInput.style.width = '100%';
       optInput.style.marginBottom = '5px';
       optInput.dataset.index = index;
@@ -845,19 +873,20 @@ function handleMoveDown(index) {
 
 // Save changes for individual question
 function saveQuestionChanges(index) {
-  const questionText = document.querySelector(`textarea[data-index="${index}"]`).value;
+  const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
+  const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
   const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
                      .sort((a,b) => a.dataset.optIndex - b.dataset.optIndex)
                      .map(input => input.value);
-  const correctAnswer = parseInt(document.querySelector(`input.correct-answer[data-index="${index}"]`).value);
-  const explanation = document.querySelector(`input.explanation[data-index="${index}"]`).value;
+  const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
+  const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
 
   currentQuestions[index] = {
     ...currentQuestions[index],
-    question: questionText,
-    options,
+    question: `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`,
+    options: options,
     answer: correctAnswer,
-    explanation
+    explanation: explanation
   };
 }
 
@@ -969,6 +998,26 @@ function moveGroupDown(groupIndex) {
   
   renderEditableQuestions();
   loadBoldGroups();
+}
+
+  async function deleteQuestion(index) {
+  let c = await confirm("Delete this question?");
+  if(c){
+    currentQuestions.splice(index,1);
+    renderEditableQuestions();
+  }
+}
+
+  function jumpToQuestion() {
+  let qNum = parseInt(document.getElementById('jumpToQuestion').value);
+  if(isNaN(qNum) || qNum <1 || qNum > currentQuestions.length) return;
+  
+  let target = document.getElementById(`q-${qNum}`);
+  if(target){
+    target.scrollIntoView({behavior: 'smooth', block: 'start'});
+    target.style.background = '#fff3e0';
+    setTimeout(() => target.style.background = '', 2000);
+  }
 }
 </script>
 </body>
