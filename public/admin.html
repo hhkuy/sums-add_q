@@ -39,7 +39,7 @@
     input[type="text"], input[type="number"], textarea, select {
       width:100%; padding:12px; margin-bottom:8px; border:1px solid #ccc; border-radius:4px; font-size:16px;
     }
-    #topicsList, #subtopicQuestions {
+    #topicsList, #subtopicQuestions, #questionsEditList, #boldGroupsList {
       background:#fff; border:1px solid #ccc; border-radius:4px; padding:10px; min-height:60px; margin-top:10px;
     }
     .q-item {
@@ -110,6 +110,7 @@
       <div style="margin-top:10px;">
         <button class="btn-blue" onclick="loadSubtopic()">Load Questions</button>
       </div>
+      <!-- سيتم إخفاء عرض الأسئلة هنا -->
       <div id="subtopicQuestions"></div>
 
       <h3 style="margin-top:20px;">Add New Questions</h3>
@@ -134,27 +135,25 @@
     </div>
 
     <!-- Edit Questions Section -->
-<!-- Edit Questions Section -->
-<!-- Edit Questions Section -->
-<div class="section">
-  <h2>Edit Questions</h2>
-  
-  <!-- Search by Number -->
-  <div style="margin-bottom:15px;">
-    <input type="number" id="jumpToQuestion" placeholder="Enter question number" 
-           min="1" style="width:200px; margin-right:10px;">
-    <button class="btn-blue" onclick="jumpToQuestion()">Jump to Question</button>
-  </div>
+    <div class="section">
+      <h2>Edit Questions</h2>
+      
+      <!-- Search by Number -->
+      <div style="margin-bottom:15px;">
+        <input type="number" id="jumpToQuestion" placeholder="Enter question number" 
+               min="1" style="width:200px; margin-right:10px;">
+        <button class="btn-blue" onclick="jumpToQuestion()">Jump to Question</button>
+      </div>
 
-  <div id="questionsEditList"></div>
-</div>
+      <div id="questionsEditList"></div>
+    </div>
 
-<!-- Bulk Reorder Section -->
-<div class="section">
-  <h2>Bulk Reorder Questions</h2>
-  <button class="btn-blue" onclick="loadBoldGroups()">Load Bold Groups</button>
-  <div id="boldGroupsList" style="margin-top:10px;"></div>
-</div>
+    <!-- Bulk Reorder Section -->
+    <div class="section">
+      <h2>Bulk Reorder Questions</h2>
+      <button class="btn-blue" onclick="loadBoldGroups()">Load Bold Groups</button>
+      <div id="boldGroupsList" style="margin-top:10px;"></div>
+    </div>
   </div>
 
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
@@ -189,94 +188,94 @@
   </div>
 
 <script>
-/** same overrides as before (non-blocking confirm/prompt with modals) */
-let alertOverlay=document.getElementById('alertOverlay');
-let alertMsg=document.getElementById('alertMsg');
-let alertOkBtn=document.getElementById('alertOkBtn');
+/** same overrides as before (non-blocking confirm/prompt with modals) **/
+let alertOverlay = document.getElementById('alertOverlay');
+let alertMsg = document.getElementById('alertMsg');
+let alertOkBtn = document.getElementById('alertOkBtn');
 
-let confirmOverlay=document.getElementById('confirmOverlay');
-let confirmMsg=document.getElementById('confirmMsg');
-let confirmYesBtn=document.getElementById('confirmYesBtn');
-let confirmNoBtn=document.getElementById('confirmNoBtn');
+let confirmOverlay = document.getElementById('confirmOverlay');
+let confirmMsg = document.getElementById('confirmMsg');
+let confirmYesBtn = document.getElementById('confirmYesBtn');
+let confirmNoBtn = document.getElementById('confirmNoBtn');
 
-let promptOverlay=document.getElementById('promptOverlay');
-let promptMsg=document.getElementById('promptMsg');
-let promptInput=document.getElementById('promptInput');
-let promptOkBtn=document.getElementById('promptOkBtn');
-let promptCancelBtn=document.getElementById('promptCancelBtn');
+let promptOverlay = document.getElementById('promptOverlay');
+let promptMsg = document.getElementById('promptMsg');
+let promptInput = document.getElementById('promptInput');
+let promptOkBtn = document.getElementById('promptOkBtn');
+let promptCancelBtn = document.getElementById('promptCancelBtn');
 
 function customAlert(message){
-  return new Promise(resolve=>{
-    alertMsg.textContent=message;
-    alertOverlay.style.display='flex';
-    alertOkBtn.onclick=()=>{
-      alertOverlay.style.display='none';
+  return new Promise(resolve => {
+    alertMsg.textContent = message;
+    alertOverlay.style.display = 'flex';
+    alertOkBtn.onclick = () => {
+      alertOverlay.style.display = 'none';
       resolve();
     };
   });
 }
 function customConfirm(message){
-  return new Promise(resolve=>{
-    confirmMsg.textContent=message;
-    confirmOverlay.style.display='flex';
-    confirmYesBtn.onclick=()=>{
-      confirmOverlay.style.display='none';
+  return new Promise(resolve => {
+    confirmMsg.textContent = message;
+    confirmOverlay.style.display = 'flex';
+    confirmYesBtn.onclick = () => {
+      confirmOverlay.style.display = 'none';
       resolve(true);
     };
-    confirmNoBtn.onclick=()=>{
-      confirmOverlay.style.display='none';
+    confirmNoBtn.onclick = () => {
+      confirmOverlay.style.display = 'none';
       resolve(false);
     };
   });
 }
 function customPrompt(message, defVal){
-  return new Promise(resolve=>{
-    promptMsg.textContent=message;
-    promptInput.value=defVal||'';
-    promptOverlay.style.display='flex';
-    promptOkBtn.onclick=()=>{
-      let val=promptInput.value;
-      promptOverlay.style.display='none';
+  return new Promise(resolve => {
+    promptMsg.textContent = message;
+    promptInput.value = defVal || '';
+    promptOverlay.style.display = 'flex';
+    promptOkBtn.onclick = () => {
+      let val = promptInput.value;
+      promptOverlay.style.display = 'none';
       resolve(val);
     };
-    promptCancelBtn.onclick=()=>{
-      promptOverlay.style.display='none';
+    promptCancelBtn.onclick = () => {
+      promptOverlay.style.display = 'none';
       resolve(null);
     };
   });
 }
 
-window.alert=async function(msg){
+window.alert = async function(msg){
   await customAlert(msg);
 };
-window.confirm=async function(msg){
+window.confirm = async function(msg){
   return customConfirm(msg);
 };
-window.prompt=async function(msg, defVal){
+window.prompt = async function(msg, defVal){
   return customPrompt(msg, defVal);
 };
 
 // float scroll
-let scrollState=false;
+let scrollState = false;
 function toggleScroll(){
-  let btn=document.getElementById('floatScrollBtn');
+  let btn = document.getElementById('floatScrollBtn');
   if(!scrollState){
-    window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
-    btn.textContent='↑';
-    scrollState=true;
+    window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+    btn.textContent = '↑';
+    scrollState = true;
   } else {
-    window.scrollTo({top:0,behavior:'smooth'});
-    btn.textContent='↓';
-    scrollState=false;
+    window.scrollTo({top:0, behavior:'smooth'});
+    btn.textContent = '↓';
+    scrollState = false;
   }
 }
 
 // original Vars
-let cachedTopics=[];
-let topicsSha=null;
-let currentSubtopicPath=null;
-let currentSubtopicSha=null;
-let currentQuestions=[];
+let cachedTopics = [];
+let topicsSha = null;
+let currentSubtopicPath = null;
+let currentSubtopicSha = null;
+let currentQuestions = [];
 
 function showSaveMessage(){
   alert("Operation completed.");
@@ -285,51 +284,51 @@ function showSaveMessage(){
 // =============== load/save topics ================
 async function loadTopics(){
   try{
-    let r=await fetch('/api/topics');
-    let j=await r.json();
-    if(!j.success)return;
-    cachedTopics=j.topics;
-    topicsSha=j.sha;
+    let r = await fetch('/api/topics');
+    let j = await r.json();
+    if(!j.success) return;
+    cachedTopics = j.topics;
+    topicsSha = j.sha;
     renderTopics();
     fillSubtopics();
-  }catch(e){}
+  } catch(e){}
 }
 async function saveTopics(){
-  if(!topicsSha)return;
+  if(!topicsSha) return;
   try{
-    let body={ topics:cachedTopics, sha:topicsSha };
-    let r=await fetch('/api/topics',{
+    let body = { topics: cachedTopics, sha: topicsSha };
+    let r = await fetch('/api/topics',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
     });
-    let j=await r.json();
-    if(!j.success){alert("Saving topics failed: "+j.error);return;}
+    let j = await r.json();
+    if(!j.success){ alert("Saving topics failed: " + j.error); return; }
     showSaveMessage();
-  }catch(e){}
+  } catch(e){}
 }
 
 // ================ render + reorder + delete subtopic file ================
 function renderTopics(){
-  let list=document.getElementById('topicsList');
-  list.innerHTML='';
-  cachedTopics.forEach((t, idx)=>{
-    let d=document.createElement('div');
-    d.style.border='1px solid #ccc';
-    d.style.padding='8px';
-    d.style.borderRadius='4px';
-    d.style.marginBottom='8px';
-    d.innerHTML=`
-      <strong>${t.topicName}</strong> (sub:${t.subTopics?t.subTopics.length:0})
-      <br>${t.description||''}
+  let list = document.getElementById('topicsList');
+  list.innerHTML = '';
+  cachedTopics.forEach((t, idx) => {
+    let d = document.createElement('div');
+    d.style.border = '1px solid #ccc';
+    d.style.padding = '8px';
+    d.style.borderRadius = '4px';
+    d.style.marginBottom = '8px';
+    d.innerHTML = `
+      <strong>${t.topicName}</strong> (sub:${t.subTopics ? t.subTopics.length : 0})
+      <br>${t.description || ''}
     `;
     // reorder up
-    let upBtn=document.createElement('button');
-    upBtn.className='arrow-btn';
-    upBtn.textContent='▲';
-    upBtn.onclick=()=>{
-      if(idx>0){
-        [cachedTopics[idx-1], cachedTopics[idx]]=[cachedTopics[idx], cachedTopics[idx-1]];
+    let upBtn = document.createElement('button');
+    upBtn.className = 'arrow-btn';
+    upBtn.textContent = '▲';
+    upBtn.onclick = () => {
+      if(idx > 0){
+        [cachedTopics[idx-1], cachedTopics[idx]] = [cachedTopics[idx], cachedTopics[idx-1]];
         renderTopics();
         fillSubtopics();
       }
@@ -337,12 +336,12 @@ function renderTopics(){
     d.appendChild(upBtn);
 
     // reorder down
-    let downBtn=document.createElement('button');
-    downBtn.className='arrow-btn';
-    downBtn.textContent='▼';
-    downBtn.onclick=()=>{
-      if(idx<cachedTopics.length-1){
-        [cachedTopics[idx], cachedTopics[idx+1]]=[cachedTopics[idx+1], cachedTopics[idx]];
+    let downBtn = document.createElement('button');
+    downBtn.className = 'arrow-btn';
+    downBtn.textContent = '▼';
+    downBtn.onclick = () => {
+      if(idx < cachedTopics.length - 1){
+        [cachedTopics[idx], cachedTopics[idx+1]] = [cachedTopics[idx+1], cachedTopics[idx]];
         renderTopics();
         fillSubtopics();
       }
@@ -350,13 +349,13 @@ function renderTopics(){
     d.appendChild(downBtn);
 
     // delete topic
-    let delBtn=document.createElement('button');
-    delBtn.textContent='Delete';
+    let delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
     delBtn.classList.add('btn-red');
-    delBtn.onclick=async ()=>{
-      let c=await confirm("Delete this topic?");
+    delBtn.onclick = async () => {
+      let c = await confirm("Delete this topic?");
       if(c){
-        cachedTopics.splice(idx,1);
+        cachedTopics.splice(idx, 1);
         renderTopics();
         fillSubtopics();
       }
@@ -364,46 +363,46 @@ function renderTopics(){
     d.appendChild(delBtn);
 
     // edit topic
-    let edBtn=document.createElement('button');
-    edBtn.textContent='Edit';
+    let edBtn = document.createElement('button');
+    edBtn.textContent = 'Edit';
     edBtn.classList.add('btn-orange');
-    edBtn.onclick=async ()=>{
-      let newName=await prompt("Topic name:", t.topicName);
-      if(newName!==null && newName!=='') t.topicName=newName;
-      let newDesc=await prompt("Topic desc:", t.description||'');
-      if(newDesc!==null) t.description=newDesc;
+    edBtn.onclick = async () => {
+      let newName = await prompt("Topic name:", t.topicName);
+      if(newName !== null && newName !== '') t.topicName = newName;
+      let newDesc = await prompt("Topic desc:", t.description || '');
+      if(newDesc !== null) t.description = newDesc;
       renderTopics();
       fillSubtopics();
     };
     d.appendChild(edBtn);
 
     // subtopics
-    if(t.subTopics && t.subTopics.length>0){
-      t.subTopics.forEach((st, stidx)=>{
-        let stDiv=document.createElement('div');
-        stDiv.style.marginLeft='15px';
-        stDiv.style.marginTop='5px';
-        stDiv.innerHTML=`${st.name} => ${st.file}`;
+    if(t.subTopics && t.subTopics.length > 0){
+      t.subTopics.forEach((st, stidx) => {
+        let stDiv = document.createElement('div');
+        stDiv.style.marginLeft = '15px';
+        stDiv.style.marginTop = '5px';
+        stDiv.innerHTML = `${st.name} => ${st.file}`;
 
         // reorder sub
-        let subUp=document.createElement('button');
-        subUp.className='arrow-btn';
-        subUp.textContent='▲';
-        subUp.onclick=()=>{
-          if(stidx>0){
-            [t.subTopics[stidx-1], t.subTopics[stidx]]=[t.subTopics[stidx], t.subTopics[stidx-1]];
+        let subUp = document.createElement('button');
+        subUp.className = 'arrow-btn';
+        subUp.textContent = '▲';
+        subUp.onclick = () => {
+          if(stidx > 0){
+            [t.subTopics[stidx-1], t.subTopics[stidx]] = [t.subTopics[stidx], t.subTopics[stidx-1]];
             renderTopics();
             fillSubtopics();
           }
         };
         stDiv.appendChild(subUp);
 
-        let subDown=document.createElement('button');
-        subDown.className='arrow-btn';
-        subDown.textContent='▼';
-        subDown.onclick=()=>{
-          if(stidx<t.subTopics.length-1){
-            [t.subTopics[stidx], t.subTopics[stidx+1]]=[t.subTopics[stidx+1], t.subTopics[stidx]];
+        let subDown = document.createElement('button');
+        subDown.className = 'arrow-btn';
+        subDown.textContent = '▼';
+        subDown.onclick = () => {
+          if(stidx < t.subTopics.length - 1){
+            [t.subTopics[stidx], t.subTopics[stidx+1]] = [t.subTopics[stidx+1], t.subTopics[stidx]];
             renderTopics();
             fillSubtopics();
           }
@@ -411,14 +410,14 @@ function renderTopics(){
         stDiv.appendChild(subDown);
 
         // حذف subtopic + حذف ملفها
-        let sdel=document.createElement('button');
-        sdel.textContent='X';
+        let sdel = document.createElement('button');
+        sdel.textContent = 'X';
         sdel.classList.add('btn-red');
-        sdel.onclick=async ()=>{
-          let c=await confirm("Delete subtopic?");
+        sdel.onclick = async () => {
+          let c = await confirm("Delete subtopic?");
           if(c){
             // 1) احذف subtopic من array
-            t.subTopics.splice(stidx,1);
+            t.subTopics.splice(stidx, 1);
             renderTopics();
             fillSubtopics();
             // 2) احذف ملفه من GitHub
@@ -430,13 +429,13 @@ function renderTopics(){
         };
         stDiv.appendChild(sdel);
 
-        let sedit=document.createElement('button');
-        sedit.textContent='Edit';
+        let sedit = document.createElement('button');
+        sedit.textContent = 'Edit';
         sedit.classList.add('btn-orange');
-        sedit.onclick=async ()=>{
-          let rename=await prompt("Subtopic name:", st.name);
-          if(rename!==null && rename!==''){
-            st.name=rename;
+        sedit.onclick = async () => {
+          let rename = await prompt("Subtopic name:", st.name);
+          if(rename !== null && rename !== ''){
+            st.name = rename;
             renderTopics();
             fillSubtopics();
           }
@@ -447,16 +446,16 @@ function renderTopics(){
       });
     }
 
-    let addSt=document.createElement('button');
-    addSt.textContent='Add Subtopic';
+    let addSt = document.createElement('button');
+    addSt.textContent = 'Add Subtopic';
     addSt.classList.add('btn-blue');
-    addSt.onclick=async ()=>{
-      let sbName=await prompt("Subtopic name?");
-      if(!sbName)return;
-      let fileName=(t.topicName.replace(/\s+/g,'_')+"_"+sbName.replace(/\s+/g,'_')).toLowerCase()+'.json';
-      let path='data/'+fileName;
-      if(!t.subTopics) t.subTopics=[];
-      t.subTopics.push({name:sbName, file:path});
+    addSt.onclick = async () => {
+      let sbName = await prompt("Subtopic name?");
+      if(!sbName) return;
+      let fileName = (t.topicName.replace(/\s+/g, '_') + "_" + sbName.replace(/\s+/g, '_')).toLowerCase() + '.json';
+      let path = 'data/' + fileName;
+      if(!t.subTopics) t.subTopics = [];
+      t.subTopics.push({name: sbName, file: path});
       renderTopics();
       fillSubtopics();
     };
@@ -469,42 +468,42 @@ function renderTopics(){
 // دالة جديدة لحذف ملف subtopic من المستودع
 async function deleteSubtopicFileFromRepo(filePath){
   try{
-    let resp=await fetch('/api/delete-file?filePath='+encodeURIComponent(filePath), {
+    let resp = await fetch('/api/delete-file?filePath=' + encodeURIComponent(filePath), {
       method:'DELETE'
     });
-    let j=await resp.json();
-    if(!resp.ok||!j.success){
-      console.warn("Failed to delete subtopic file", j.error||resp.statusText);
+    let j = await resp.json();
+    if(!resp.ok || !j.success){
+      console.warn("Failed to delete subtopic file", j.error || resp.statusText);
     } else {
       console.log("Subtopic file deleted from repo:", filePath);
     }
-  }catch(e){
+  } catch(e){
     console.error("Error deleting subtopic file from repo:", e);
   }
 }
 
 // addTopic
 function addTopic(){
-  let nm=document.getElementById('newTopicName').value.trim();
-  let ds=document.getElementById('newTopicDesc').value.trim();
-  if(!nm)return;
-  cachedTopics.push({topicName:nm, description:ds, subTopics:[]});
-  document.getElementById('newTopicName').value='';
-  document.getElementById('newTopicDesc').value='';
+  let nm = document.getElementById('newTopicName').value.trim();
+  let ds = document.getElementById('newTopicDesc').value.trim();
+  if(!nm) return;
+  cachedTopics.push({topicName: nm, description: ds, subTopics: []});
+  document.getElementById('newTopicName').value = '';
+  document.getElementById('newTopicDesc').value = '';
   renderTopics();
   fillSubtopics();
 }
 
 // fill subtopics
 function fillSubtopics(){
-  let sel=document.getElementById('subtopicSelect');
-  sel.innerHTML='';
-  cachedTopics.forEach(t=>{
+  let sel = document.getElementById('subtopicSelect');
+  sel.innerHTML = '';
+  cachedTopics.forEach(t => {
     if(t.subTopics){
-      t.subTopics.forEach(st=>{
-        let opt=document.createElement('option');
-        opt.value=st.file;
-        opt.textContent=`[${t.topicName}] - ${st.name}`;
+      t.subTopics.forEach(st => {
+        let opt = document.createElement('option');
+        opt.value = st.file;
+        opt.textContent = `[${t.topicName}] - ${st.name}`;
         sel.appendChild(opt);
       });
     }
@@ -513,86 +512,67 @@ function fillSubtopics(){
 
 // load subtopic
 async function loadSubtopic(){
-  let sel=document.getElementById('subtopicSelect');
-  if(!sel.value)return;
-  currentSubtopicPath=sel.value;
+  let sel = document.getElementById('subtopicSelect');
+  if(!sel.value) return;
+  currentSubtopicPath = sel.value;
   try{
-    let r=await fetch('/api/get-subtopic-file?path='+encodeURIComponent(currentSubtopicPath));
-    let j=await r.json();
-    if(!j.success)return;
-    currentSubtopicSha=j.sha;
-    currentQuestions=j.content;
+    let r = await fetch('/api/get-subtopic-file?path=' + encodeURIComponent(currentSubtopicPath));
+    let j = await r.json();
+    if(!j.success) return;
+    currentSubtopicSha = j.sha;
+    currentQuestions = j.content;
+    // لن يتم عرض الأسئلة في القسم الخاص بها (subtopicQuestions)
     renderSubtopicQuestions();
     renderEditableQuestions();
-  }catch(e){}
+  } catch(e){}
 }
+// هنا نقوم بإخفاء عرض الأسئلة في القسم "subtopicQuestions"
 function renderSubtopicQuestions(){
-  let box=document.getElementById('subtopicQuestions');
-  box.innerHTML='';
-  for(let i=0;i<currentQuestions.length;i++){
-    let q=currentQuestions[i];
-    let d=document.createElement('div');
-    d.classList.add('q-item');
-    let numbering=(i+1)+". ";
-    d.innerHTML=numbering+(q.question||'No question text');
-
-    let del=document.createElement('button');
-    del.textContent='Delete';
-    del.classList.add('btn-red');
-    del.style.marginLeft='5px';
-    del.onclick=async ()=>{
-      let c=await confirm("Delete this question?");
-      if(c){
-        currentQuestions.splice(i,1);
-        renderSubtopicQuestions();
-      }
-    };
-    d.appendChild(del);
-
-    box.appendChild(d);
-  }
+  let box = document.getElementById('subtopicQuestions');
+  box.innerHTML = ''; 
 }
+
 async function saveSubtopic(){
-  if(!currentSubtopicPath)return;
+  if(!currentSubtopicPath) return;
   try{
-    let body={ path:currentSubtopicPath, content:currentQuestions, sha: currentSubtopicSha };
-    let r=await fetch('/api/update-subtopic-file',{
+    let body = { path: currentSubtopicPath, content: currentQuestions, sha: currentSubtopicSha };
+    let r = await fetch('/api/update-subtopic-file',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
     });
-    let j=await r.json();
-    if(!j.success)return;
+    let j = await r.json();
+    if(!j.success) return;
     showSaveMessage();
     renderEditableQuestions();
-  }catch(e){}
+  } catch(e){}
 }
 
 // images
 function addImageField(){
-  let c=document.getElementById('imageContainer');
-  let row=document.createElement('div');
+  let c = document.getElementById('imageContainer');
+  let row = document.createElement('div');
   row.classList.add('image-field-row');
 
-  let qNum=document.createElement('input');
-  qNum.type='number';
-  qNum.placeholder='Q#';
-  qNum.min=1;
+  let qNum = document.createElement('input');
+  qNum.type = 'number';
+  qNum.placeholder = 'Q#';
+  qNum.min = 1;
 
-  let fileIn=document.createElement('input');
-  fileIn.type='file';
-  fileIn.accept='image/*';
+  let fileIn = document.createElement('input');
+  fileIn.type = 'file';
+  fileIn.accept = 'image/*';
 
-  let delBtn=document.createElement('button');
-  delBtn.textContent='Remove';
+  let delBtn = document.createElement('button');
+  delBtn.textContent = 'Remove';
   delBtn.classList.add('btn-orange');
-  delBtn.onclick=()=> c.removeChild(row);
+  delBtn.onclick = () => c.removeChild(row);
 
-  let prog=document.createElement('div');
+  let prog = document.createElement('div');
   prog.classList.add('progress');
-  let pbar=document.createElement('div');
+  let pbar = document.createElement('div');
   pbar.classList.add('progress-bar');
-  pbar.textContent='0%';
+  pbar.textContent = '0%';
   prog.appendChild(pbar);
 
   row.appendChild(qNum);
@@ -603,94 +583,96 @@ function addImageField(){
 }
 
 async function convertAndAppend(){
-  if(!currentSubtopicPath)return;
-  let prefix=document.getElementById('prefixInput').value.trim();
-  let startNumber=parseInt(document.getElementById('startQNumber').value,10);
-  if(isNaN(startNumber)||startNumber<1) startNumber=1;
+  if(!currentSubtopicPath) return;
+  let prefix = document.getElementById('prefixInput').value.trim();
+  let startNumber = parseInt(document.getElementById('startQNumber').value, 10);
+  if(isNaN(startNumber) || startNumber < 1) startNumber = 1;
 
-  let text=document.getElementById('questionsText').value.trim();
-  if(!text)return;
+  let text = document.getElementById('questionsText').value.trim();
+  if(!text) return;
 
-  let arr=null;
+  let arr = null;
   try{
     if(text.startsWith('let quizData =')){
-      text=text.replace('let quizData =','').trim();
-      if(text.endsWith(';')) text=text.slice(0,-1);
+      text = text.replace('let quizData =','').trim();
+      if(text.endsWith(';')) text = text.slice(0,-1);
     }
-    arr=JSON.parse(text);
+    arr = JSON.parse(text);
     if(Array.isArray(arr)){
       await handleImagesAndBind(arr);
-      currentQuestions=currentQuestions.concat(arr);
+      currentQuestions = currentQuestions.concat(arr);
       renderSubtopicQuestions();
+      renderEditableQuestions();
       return;
     }
-  }catch(e){}
-  let lines=text.split('\n');
-  let questionText=null, options=[], ansIdx=-1, ansText=null, explanation=null;
-  let out=[];
-  for(let i=0; i<lines.length;i++){
-    let ln=lines[i].trim();
-    let qM=ln.match(/^(\d+)\.\s+(.*)/);
+  } catch(e){}
+  let lines = text.split('\n');
+  let questionText = null, options = [], ansIdx = -1, ansText = null, explanation = null;
+  let out = [];
+  for(let i = 0; i < lines.length; i++){
+    let ln = lines[i].trim();
+    let qM = ln.match(/^(\d+)\.\s+(.*)/);
     if(qM){
-      if(questionText!==null){
-        out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
+      if(questionText !== null){
+        out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
       }
-      questionText=`<span style='color: darkred; font-weight:bold;'>${prefix?prefix+' ':''}Question ${startNumber}</span> ${qM[2]}`;
+      questionText = `<span style='color: darkred; font-weight:bold;'>${prefix ? prefix + ' ' : ''}Question ${startNumber}</span> ${qM[2]}`;
       startNumber++;
-      options=[]; ansIdx=-1; ansText=null; explanation=null;
+      options = []; ansIdx = -1; ansText = null; explanation = null;
     } else {
-      let opt=ln.match(/^([A-F])\.\s+(.*)/i);
+      let opt = ln.match(/^([A-F])\.\s+(.*)/i);
       if(opt){
-        let txt=opt[2].trim();
+        let txt = opt[2].trim();
         if(txt.endsWith('***')){
-          txt=txt.slice(0,-3).trim();
-          ansIdx=options.length;
-          ansText=txt;
+          txt = txt.slice(0,-3).trim();
+          ansIdx = options.length;
+          ansText = txt;
         }
         options.push(txt);
       } else {
-        let ex=ln.match(/^Explanation\s*:\s*(.*)/i);
+        let ex = ln.match(/^Explanation\s*:\s*(.*)/i);
         if(ex){
-          explanation=ex[1];
+          explanation = ex[1];
         }
       }
     }
   }
-  if(questionText!==null){
-    out.push({question:questionText,options,answer:ansIdx,answerText:ansText,explanation,userAnswer:null});
+  if(questionText !== null){
+    out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
   }
   await handleImagesAndBind(out);
-  currentQuestions=currentQuestions.concat(out);
+  currentQuestions = currentQuestions.concat(out);
   renderSubtopicQuestions();
+  renderEditableQuestions();
 }
 
 async function handleImagesAndBind(questionsArr){
-  let c=document.getElementById('imageContainer');
-  let rows=c.querySelectorAll('.image-field-row');
-  let dataMap={};
+  let c = document.getElementById('imageContainer');
+  let rows = c.querySelectorAll('.image-field-row');
+  let dataMap = {};
   for(let row of rows){
-    let inputs=row.querySelectorAll('input');
-    let qnum=parseInt(inputs[0].value,10);
+    let inputs = row.querySelectorAll('input');
+    let qnum = parseInt(inputs[0].value, 10);
     if(!qnum) continue;
-    let fileIn=inputs[1];
-    if(fileIn.files&&fileIn.files.length>0){
-      let file=fileIn.files[0];
-      let prog=row.querySelector('.progress');
-      let pbar=prog.querySelector('.progress-bar');
-      let url=await uploadImageToImgHippo(file, prog, pbar);
+    let fileIn = inputs[1];
+    if(fileIn.files && fileIn.files.length > 0){
+      let file = fileIn.files[0];
+      let prog = row.querySelector('.progress');
+      let pbar = prog.querySelector('.progress-bar');
+      let url = await uploadImageToImgHippo(file, prog, pbar);
       if(url){
-        if(!dataMap[qnum]) dataMap[qnum]=[];
+        if(!dataMap[qnum]) dataMap[qnum] = [];
         dataMap[qnum].push(url);
       }
     }
   }
-  questionsArr.forEach(obj=>{
-    let match=obj.question.match(/Question\s+(\d+)/);
+  questionsArr.forEach(obj => {
+    let match = obj.question.match(/Question\s+(\d+)/);
     if(match){
-      let qn=parseInt(match[1],10);
+      let qn = parseInt(match[1], 10);
       if(dataMap[qn]){
-        dataMap[qn].forEach(imgUrl=>{
-          obj.question+=`<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
+        dataMap[qn].forEach(imgUrl => {
+          obj.question += `<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
         });
       }
     }
@@ -720,38 +702,38 @@ function uploadImageToImgHippo(file, progressContainer, progressBar) {
 
     xhr.upload.onprogress = function(event) {
       if (event.lengthComputable) {
-        let percent = Math.floor((event.loaded / event.total)*100);
-        progressBar.style.width=percent+"%";
-        progressBar.textContent=percent+"%";
+        let percent = Math.floor((event.loaded / event.total) * 100);
+        progressBar.style.width = percent + "%";
+        progressBar.textContent = percent + "%";
       }
     };
-    xhr.onload=function(){
-      if(xhr.status===200){
+    xhr.onload = function(){
+      if(xhr.status === 200){
         try{
-          let response=JSON.parse(xhr.responseText);
+          let response = JSON.parse(xhr.responseText);
           if(response.success && response.data && response.data.url){
-            progressBar.style.width="100%";
-            progressBar.textContent="تم رفع الصورة";
+            progressBar.style.width = "100%";
+            progressBar.textContent = "تم رفع الصورة";
             return resolve(response.data.url);
           } else {
             console.error("فشل رفع الصورة:", response);
-            progressBar.textContent="فشل الرفع";
+            progressBar.textContent = "فشل الرفع";
             return resolve("");
           }
-        }catch(e){
+        } catch(e){
           console.error("خطأ في تحليل الاستجابة:", e);
-          progressBar.textContent="فشل الرفع";
+          progressBar.textContent = "فشل الرفع";
           return resolve("");
         }
       } else {
         console.error("فشل الرفع. حالة الطلب:", xhr.status);
-        progressBar.textContent="فشل الرفع";
+        progressBar.textContent = "فشل الرفع";
         return resolve("");
       }
     };
-    xhr.onerror=function(){
+    xhr.onerror = function(){
       console.error("حدث خطأ أثناء الاتصال.");
-      progressBar.textContent="فشل الرفع";
+      progressBar.textContent = "فشل الرفع";
       resolve("");
     };
     xhr.send(formData);
@@ -760,31 +742,33 @@ function uploadImageToImgHippo(file, progressContainer, progressBar) {
 
 // delete prefix
 async function deleteByPrefix(){
-  if(!currentSubtopicPath)return;
-  let prefix=document.getElementById('deletePrefix').value.trim();
-  if(!prefix)return;
-  if(!currentSubtopicSha && currentQuestions.length===0)return;
+  if(!currentSubtopicPath) return;
+  let prefix = document.getElementById('deletePrefix').value.trim();
+  if(!prefix) return;
+  if(!currentSubtopicSha && currentQuestions.length === 0) return;
   try{
-    let body={path:currentSubtopicPath, sha:currentSubtopicSha, prefix};
+    let body = { path: currentSubtopicPath, sha: currentSubtopicSha, prefix };
     await fetch('/api/delete-questions-by-prefix',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(body)
     });
     loadSubtopic();
-  }catch(e){}
+  } catch(e){}
 }
 
 function formatTo12Hour(tVal){
-  if(!tVal)return "";
-  let [hh,mm]=tVal.split(":");
-  hh=parseInt(hh,10);
-  let period=(hh>=12)?"م":"ص";
-  let newH=(hh%12)||12;
-  return newH+":"+mm+" "+period;
+  if(!tVal) return "";
+  let [hh, mm] = tVal.split(":");
+  hh = parseInt(hh, 10);
+  let period = (hh >= 12) ? "م" : "ص";
+  let newH = (hh % 12) || 12;
+  return newH + ":" + mm + " " + period;
 }
 
-  // Render questions with editable fields
+/* =====================================================================
+   الجزء الخاص بعرض الأسئلة مع إمكانية تعديلها وإعادة ترتيبها فردياً
+===================================================================== */
 function renderEditableQuestions() {
   let container = document.getElementById('questionsEditList');
   container.innerHTML = '';
@@ -797,11 +781,11 @@ function renderEditableQuestions() {
     qDiv.style.padding = '10px';
     qDiv.style.border = '1px solid #ddd';
     
-    // استخراج الجزء الغامق والتفسير
-    let boldMatch = q.question.match(/<span style=['"]color: darkred; font-weight:bold;['"]>(.*?)<\/span>(.*)/);
-    let boldPart = boldMatch ? boldMatch[1] : '';
+    // استخراج الجزء الغامق (إن وُجد) وفصل نص السؤال
+    let boldMatch = q.question.match(/<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>(.*)/i);
+    let boldPart = boldMatch ? boldMatch[1].trim() : '';
     let questionText = boldMatch ? boldMatch[2].trim() : q.question;
-
+    
     qDiv.innerHTML = `
       <div style="margin-bottom:10px;">
         <strong>Question ${index + 1}</strong>
@@ -813,7 +797,7 @@ function renderEditableQuestions() {
       <div style="margin-bottom:8px;">
         <input type="text" class="bold-prefix" data-index="${index}" 
                value="${boldPart}" 
-               placeholder="Bold prefix (e.g. Dr. Ali - Question 1)"
+               placeholder="Bold prefix (e.g. Second Batch (2024) - Dr. Zeinab Hamidizad)"
                style="width:100%; margin-bottom:5px;">
         
         <textarea class="question-text" data-index="${index}" 
@@ -842,7 +826,7 @@ function renderEditableQuestions() {
     q.options.forEach((opt, optIndex) => {
       let optInput = document.createElement('input');
       optInput.type = 'text';
-      optInput.value = opt.replace('***', '').trim(); // إزالة علامات الإجابة الصحيحة
+      optInput.value = opt.replace('***', '').trim(); // إزالة علامات الإجابة الصحيحة إن وجدت
       optInput.style.width = '100%';
       optInput.style.marginBottom = '5px';
       optInput.dataset.index = index;
@@ -854,19 +838,17 @@ function renderEditableQuestions() {
   });
 }
 
-// Handle moving questions
+// Handle moving questions فردياً
 function handleMoveUp(index) {
   if(index > 0) {
-    [currentQuestions[index-1], currentQuestions[index]] = 
-    [currentQuestions[index], currentQuestions[index-1]];
+    [currentQuestions[index-1], currentQuestions[index]] = [currentQuestions[index], currentQuestions[index-1]];
     renderEditableQuestions();
   }
 }
 
 function handleMoveDown(index) {
   if(index < currentQuestions.length - 1) {
-    [currentQuestions[index], currentQuestions[index+1]] = 
-    [currentQuestions[index+1], currentQuestions[index]];
+    [currentQuestions[index], currentQuestions[index+1]] = [currentQuestions[index+1], currentQuestions[index]];
     renderEditableQuestions();
   }
 }
@@ -876,7 +858,7 @@ function saveQuestionChanges(index) {
   const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
   const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
   const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
-                     .sort((a,b) => a.dataset.optIndex - b.dataset.optIndex)
+                     .sort((a, b) => a.dataset.optIndex - b.dataset.optIndex)
                      .map(input => input.value);
   const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
   const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
@@ -890,7 +872,68 @@ function saveQuestionChanges(index) {
   };
 }
 
-// Bulk reorder by bold groups
+/* =====================================================================
+   الجزء الخاص بإعادة ترتيب الأسئلة دفعة (Bulk Reorder) عبر التعرف على النص الغامق
+===================================================================== */
+// دالة استخراج المجاميع من الأسئلة
+function detectBoldGroups() {
+  const groupMap = {};
+  currentQuestions.forEach((q, index) => {
+    // البحث عن نص داخل <span> يحتوي على font-weight:bold
+    const regex = /<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>/i;
+    const match = q.question.match(regex);
+    if (match) {
+      // نفترض أن النص يحتوي على " - Question"؛ نقسم النص على هذا العنوان
+      let boldContent = match[1];
+      let parts = boldContent.split(/- Question/i);
+      if (parts.length > 0) {
+        let groupName = parts[0].trim();
+        if (groupName) {
+          if (!groupMap[groupName]) {
+            groupMap[groupName] = { title: groupName, indices: [] };
+          }
+          groupMap[groupName].indices.push(index);
+        }
+      }
+    }
+  });
+  return Object.values(groupMap);
+}
+
+// عرض المجاميع مع أزرار التحريك
+function renderBoldGroups(boldGroups) {
+  const container = document.getElementById('boldGroupsList');
+  container.innerHTML = '';
+  // يمكن فرز المجموعات حسب أول ظهور في القائمة
+  boldGroups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
+  boldGroups.forEach((group, groupIndex) => {
+    const groupDiv = document.createElement('div');
+    groupDiv.style.border = "1px solid #ccc";
+    groupDiv.style.padding = "8px";
+    groupDiv.style.marginBottom = "8px";
+    groupDiv.innerHTML = `<strong>${group.title}</strong> (Questions: ${group.indices.join(', ')})`;
+    
+    const upBtn = document.createElement('button');
+    upBtn.className = 'arrow-btn';
+    upBtn.textContent = 'Group Up';
+    upBtn.onclick = function() {
+      moveGroupUp(group.title);
+    };
+    groupDiv.appendChild(upBtn);
+    
+    const downBtn = document.createElement('button');
+    downBtn.className = 'arrow-btn';
+    downBtn.textContent = 'Group Down';
+    downBtn.onclick = function() {
+      moveGroupDown(group.title);
+    };
+    groupDiv.appendChild(downBtn);
+    
+    container.appendChild(groupDiv);
+  });
+}
+
+// دالة تحميل المجاميع
 async function loadBoldGroups() {
   try {
     if (!currentSubtopicPath) {
@@ -902,7 +945,7 @@ async function loadBoldGroups() {
     
     if (boldGroups.length === 0) {
       alert(`No groups found! Ensure questions have this format:
-        <span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
+<span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
       return;
     }
 
@@ -913,77 +956,51 @@ async function loadBoldGroups() {
   }
 }
 
-function detectBoldGroups() {
-  const groups = [];
-  let currentGroup = null;
-
-  currentQuestions.forEach((q, index) => {
-    // البحث عن النمط: <span style...>[النص] - Question X</span>
-    const boldMatch = q.question.match(
-      /<span style=['"]color: darkred; font-weight:bold;['"]>(.+?)\s*-\s*Question\s+\d+<\/span>/i
-    );
-
-    if (boldMatch) {
-      const groupName = boldMatch[1].trim(); // "Second Batch (2024) - Dr. Zeinab Hamidizad"
-      
-      if (currentGroup) {
-        if (currentGroup.title !== groupName) {
-          groups.push(currentGroup);
-          currentGroup = { title: groupName, indices: [index], start: index };
-        } else {
-          currentGroup.indices.push(index);
-        }
-      } else {
-        currentGroup = { title: groupName, indices: [index], start: index };
-      }
-    } else if (currentGroup) {
-      currentGroup.indices.push(index);
-    }
-  });
-
-  if (currentGroup) groups.push(currentGroup);
-  return groups;
-}
-  
-function moveGroupUp(groupIndex) {
+// تحريك مجموعة للأسفل أو للأعلى
+function moveGroupUp(groupTitle) {
   const groups = detectBoldGroups();
-  if(groupIndex === 0) return;
-  
-  const currentGroup = groups[groupIndex];
-  const prevGroup = groups[groupIndex-1];
-  
-  const movedQuestions = currentQuestions.splice(currentGroup.start, currentGroup.indices.length);
-  currentQuestions.splice(prevGroup.start, 0, ...movedQuestions);
-  
+  groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
+  const targetGroup = groups.find(g => g.title === groupTitle);
+  if (!targetGroup) return;
+  const startIndex = Math.min(...targetGroup.indices);
+  const groupLength = targetGroup.indices.length;
+  if (startIndex === 0) return; // لا يمكن التحريك للأعلى
+  // إزالة الكتلة من القائمة
+  const movedBlock = currentQuestions.splice(startIndex, groupLength);
+  // إدراجها قبل العنصر السابق مباشرة
+  const newIndex = startIndex - 1;
+  currentQuestions.splice(newIndex, 0, ...movedBlock);
   renderEditableQuestions();
   loadBoldGroups();
 }
 
-function moveGroupDown(groupIndex) {
+function moveGroupDown(groupTitle) {
   const groups = detectBoldGroups();
-  if(groupIndex === groups.length-1) return;
-  
-  const currentGroup = groups[groupIndex];
-  const nextGroup = groups[groupIndex+1];
-  
-  const movedQuestions = currentQuestions.splice(currentGroup.start, currentGroup.indices.length);
-  currentQuestions.splice(nextGroup.start + nextGroup.indices.length, 0, ...movedQuestions);
-  
+  groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
+  const targetGroup = groups.find(g => g.title === groupTitle);
+  if (!targetGroup) return;
+  const startIndex = Math.min(...targetGroup.indices);
+  const groupLength = targetGroup.indices.length;
+  if (startIndex + groupLength >= currentQuestions.length) return; // لا يمكن التحريك للأسفل
+  const movedBlock = currentQuestions.splice(startIndex, groupLength);
+  // إدراجها بعد العنصر الذي يلي المجموعة مباشرة
+  const newIndex = startIndex + 1;
+  currentQuestions.splice(newIndex, 0, ...movedBlock);
   renderEditableQuestions();
   loadBoldGroups();
 }
 
-  async function deleteQuestion(index) {
+async function deleteQuestion(index) {
   let c = await confirm("Delete this question?");
   if(c){
-    currentQuestions.splice(index,1);
+    currentQuestions.splice(index, 1);
     renderEditableQuestions();
   }
 }
 
-  function jumpToQuestion() {
+function jumpToQuestion() {
   let qNum = parseInt(document.getElementById('jumpToQuestion').value);
-  if(isNaN(qNum) || qNum <1 || qNum > currentQuestions.length) return;
+  if(isNaN(qNum) || qNum < 1 || qNum > currentQuestions.length) return;
   
   let target = document.getElementById(`q-${qNum}`);
   if(target){
