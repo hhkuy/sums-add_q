@@ -93,7 +93,7 @@
     #floatScrollBtn:hover {
       opacity: 0.8;
     }
-    /* Modal Overrides (كما في الكود الأصلي) */
+    /* Modal Overrides */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -213,7 +213,7 @@
   
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
   
-  <!-- Custom modals for alert/confirm/prompt (كما في الكود الأصلي) -->
+  <!-- Custom modals for alert/confirm/prompt -->
   <div class="modal-overlay" id="alertOverlay">
     <div class="modal-box">
       <h3 id="alertMsg"></h3>
@@ -242,11 +242,10 @@
     </div>
   </div>
   
-  <!-- JavaScript -->
   <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script>
-    /*** Modal Overrides ***/
+    /********** Modal Functions **********/
     let alertOverlay = document.getElementById('alertOverlay');
     let alertMsg = document.getElementById('alertMsg');
     let alertOkBtn = document.getElementById('alertOkBtn');
@@ -357,7 +356,7 @@
         let body = { topics: cachedTopics, sha: topicsSha };
         let r = await fetch('/api/topics',{
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type':'application/json' },
           body: JSON.stringify(body)
         });
         let j = await r.json();
@@ -572,13 +571,12 @@
         if(!j.success) return;
         currentSubtopicSha = j.sha;
         currentQuestions = j.content;
-        // عند التحميل بنجاح، عرض رسالة تأكيد
         document.getElementById('loadMessage').innerHTML = '<div class="alert alert-success" role="alert">Questions loaded successfully!</div>';
-        renderSubtopicQuestions();
+        // عرض جميع الأسئلة في خانة Edit Questions
         renderEditableQuestions();
       } catch(e){}
     }
-    // هنا نقوم بإخفاء عرض الأسئلة في القسم "subtopicQuestions"
+    // نقوم بإخفاء عرض الأسئلة في قسم subtopicQuestions
     function renderSubtopicQuestions(){
       let box = document.getElementById('subtopicQuestions');
       box.innerHTML = '';
@@ -658,7 +656,6 @@
         if(Array.isArray(arr)){
           await handleImagesAndBind(arr);
           currentQuestions = currentQuestions.concat(arr);
-          renderSubtopicQuestions();
           renderEditableQuestions();
           return;
         }
@@ -699,7 +696,6 @@
       }
       await handleImagesAndBind(out);
       currentQuestions = currentQuestions.concat(out);
-      renderSubtopicQuestions();
       renderEditableQuestions();
     }
     
@@ -797,32 +793,6 @@
       });
     }
     
-    // delete prefix
-    async function deleteByPrefix(){
-      if(!currentSubtopicPath) return;
-      let prefix = document.getElementById('deletePrefix').value.trim();
-      if(!prefix) return;
-      if(!currentSubtopicSha && currentQuestions.length === 0) return;
-      try{
-        let body = { path: currentSubtopicPath, sha: currentSubtopicSha, prefix };
-        await fetch('/api/delete-questions-by-prefix', {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify(body)
-        });
-        loadSubtopic();
-      } catch(e){}
-    }
-    
-    function formatTo12Hour(tVal){
-      if(!tVal) return "";
-      let [hh, mm] = tVal.split(":");
-      hh = parseInt(hh, 10);
-      let period = (hh >= 12) ? "م" : "ص";
-      let newH = (hh % 12) || 12;
-      return newH + ":" + mm + " " + period;
-    }
-    
     /********** Edit Questions Section **********/
     function renderEditableQuestions() {
       let container = document.getElementById('questionsEditList');
@@ -918,12 +888,10 @@
         const regex = /<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>/i;
         const match = q.question.match(regex);
         if (match) {
-          // نقسم النص على "- Question"
           let parts = match[1].split(/- Question/i);
           if (parts.length > 0) {
             let groupName = parts[0].trim();
             if (groupName) {
-              // ابحث عما إذا كانت المجموعة موجودة بالفعل
               let existing = groups.find(g => g.title === groupName);
               if (existing) {
                 existing.indices.push(index);
@@ -934,12 +902,11 @@
           }
         }
       });
-      // فرز المجموعات حسب أقل رقم سؤال فيها
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
       return groups;
     }
     
-    // عرض المجموعات مع تنسيق "Group Name ( Q : start - end )" وأزرار النقل
+    // عرض المجموعات مع التنسيق المطلوب: "Group Name ( Q : start - end )"
     function renderBoldGroups(boldGroups) {
       const container = document.getElementById('boldGroupsList');
       container.innerHTML = '';
@@ -974,54 +941,53 @@
       });
     }
     
-    // تحميل المجموعات وعرضها
-    async function loadBoldGroups() {
-      try {
-        if (!currentSubtopicPath) {
-          alert("Please select and load a subtopic first!");
-          return;
-        }
-        const boldGroups = detectBoldGroups();
-        if (boldGroups.length === 0) {
-          alert(`No groups found! Ensure questions have this format:
-<span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
-          return;
-        }
-        renderBoldGroups(boldGroups);
-      } catch (error) {
-        console.error("Load Bold Groups Error:", error);
-        alert("Error loading groups. Check console.");
-      }
-    }
-    
-    // نقل المجموعة للأعلى (تحريك دفعة كاملة)
+    // نقل المجموعة للأعلى: نقوم بتبديل المجموعة المستهدفة مع المجموعة السابقة كاملة
     function moveGroupUp(groupTitle) {
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
-      const targetGroup = groups.find(g => g.title === groupTitle);
-      if (!targetGroup) return;
-      const startIndex = Math.min(...targetGroup.indices);
-      const groupLength = targetGroup.indices.length;
-      if (startIndex === 0) return; // لا يمكن التحريك للأعلى إذا كان أول عنصر
-      const movedBlock = currentQuestions.splice(startIndex, groupLength);
-      const newIndex = startIndex - 1;
-      currentQuestions.splice(newIndex, 0, ...movedBlock);
+      const targetIndex = groups.findIndex(g => g.title === groupTitle);
+      if (targetIndex <= 0) return; // لا يوجد مجموعة سابقة للتبديل
+      const prevGroup = groups[targetIndex - 1];
+      const targetGroup = groups[targetIndex];
+      const prevStart = Math.min(...prevGroup.indices);
+      const prevEnd = Math.max(...prevGroup.indices);
+      const targetStart = Math.min(...targetGroup.indices);
+      const targetEnd = Math.max(...targetGroup.indices);
+    
+      // تقسيم currentQuestions إلى أجزاء وإعادة ترتيبها
+      const before = currentQuestions.slice(0, prevStart);
+      const blockPrev = currentQuestions.slice(prevStart, prevEnd + 1);
+      const middle = currentQuestions.slice(prevEnd + 1, targetStart);
+      const blockTarget = currentQuestions.slice(targetStart, targetEnd + 1);
+      const after = currentQuestions.slice(targetEnd + 1);
+    
+      // تبديل المجموعتين: المجموعة المستهدفة تأتي قبل المجموعة السابقة
+      currentQuestions = before.concat(blockTarget, middle, blockPrev, after);
       renderEditableQuestions();
       loadBoldGroups();
     }
     
-    // نقل المجموعة للأسفل
+    // نقل المجموعة للأسفل: تبديل المجموعة المستهدفة مع المجموعة التالية كاملة
     function moveGroupDown(groupTitle) {
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
-      const targetGroup = groups.find(g => g.title === groupTitle);
-      if (!targetGroup) return;
-      const startIndex = Math.min(...targetGroup.indices);
-      const groupLength = targetGroup.indices.length;
-      if (startIndex + groupLength >= currentQuestions.length) return; // لا يمكن التحريك للأسفل إذا كانت المجموعة في النهاية
-      const movedBlock = currentQuestions.splice(startIndex, groupLength);
-      const newIndex = startIndex + 1;
-      currentQuestions.splice(newIndex, 0, ...movedBlock);
+      const targetIndex = groups.findIndex(g => g.title === groupTitle);
+      if (targetIndex === -1 || targetIndex === groups.length - 1) return; // لا يوجد مجموعة تالفة للتبديل
+      const targetGroup = groups[targetIndex];
+      const nextGroup = groups[targetIndex + 1];
+      const targetStart = Math.min(...targetGroup.indices);
+      const targetEnd = Math.max(...targetGroup.indices);
+      const nextStart = Math.min(...nextGroup.indices);
+      const nextEnd = Math.max(...nextGroup.indices);
+    
+      const before = currentQuestions.slice(0, targetStart);
+      const blockTarget = currentQuestions.slice(targetStart, targetEnd + 1);
+      const middle = currentQuestions.slice(targetEnd + 1, nextStart);
+      const blockNext = currentQuestions.slice(nextStart, nextEnd + 1);
+      const after = currentQuestions.slice(nextEnd + 1);
+    
+      // تبديل المجموعتين: المجموعة التالية تأتي قبل المجموعة المستهدفة
+      currentQuestions = before.concat(blockNext, middle, blockTarget, after);
       renderEditableQuestions();
       loadBoldGroups();
     }
