@@ -785,7 +785,7 @@
               let response = JSON.parse(xhr.responseText);
               if(response.success && response.data && response.data.url){
                 progressBar.style.width = "100%";
-                progressBar.textContent = "تم رفع الصورة";
+                progressBar.textContent = "تم الرفع";
                 return resolve(response.data.url);
               } else {
                 console.error("فشل رفع الصورة:", response);
@@ -818,7 +818,7 @@
       container.innerHTML = '';
       
       currentQuestions.forEach((q, index) => {
-        // استخراج النص الغامق
+        // استخراج النص الغامق من السؤال
         let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
         let boldPart = boldMatch ? boldMatch[2].trim() : '';
         // استخراج الصورة إن وُجدت
@@ -826,7 +826,7 @@
         let currentImage = imgMatch ? imgMatch[1] : "";
         // إزالة وسوم <br> من نص السؤال
         let textWithoutBr = q.question.replace(/<br\s*\/?>/gi, " ");
-        // إزالة وسم الصورة والنص الغامق للحصول على النص الفعلي للسؤال
+        // إزالة وسم الصورة والنص الغامق للحصول على نص السؤال الفعلي
         let textWithoutImg = textWithoutBr.replace(/<img\s+[^>]*>/gi, "").trim();
         let questionText = boldMatch ? textWithoutImg.replace(boldMatch[0], "").trim() : textWithoutImg;
     
@@ -850,11 +850,14 @@
             </div>
             <input type="file" class="form-control mt-2 image-file" data-index="${index}" accept="image/*">
             <button class="btn btn-danger btn-sm mt-2" onclick="deleteImage(${index})">Delete Image</button>
+            <div id="uploadProgress-${index}" class="progress mt-2" style="height:24px; display:none;">
+              <div class="progress-bar" style="width:0%;">0%</div>
+            </div>
           </div>
           <div id="options-${index}" class="mb-2"></div>
           <div class="mb-2">
-            <label>Correct Answer Index:</label>
-            <input type="number" min="0" value="${q.answer}" data-index="${index}" class="form-control correct-answer" style="max-width:100px; display:inline-block;">
+            <label>Correct Answer:</label>
+            <div id="optionGroup-${index}"></div>
           </div>
           <div class="mb-2">
             <label>Explanation:</label>
@@ -865,15 +868,47 @@
     
         let containerDiv = document.createElement('div');
         containerDiv.innerHTML = html;
-        let optionsContainer = containerDiv.querySelector(`#options-${index}`);
+    
+        // عرض خيارات السؤال مع زر راديو
+        let optionGroup = containerDiv.querySelector(`#optionGroup-${index}`);
         q.options.forEach((opt, optIndex) => {
+          let groupDiv = document.createElement('div');
+          groupDiv.className = "input-group mb-1";
+    
+          let radio = document.createElement('input');
+          radio.type = "radio";
+          radio.name = "correctOption_" + index;
+          radio.className = "form-check-input";
+          radio.style.marginTop = "auto";
+          radio.style.marginBottom = "auto";
+          radio.value = optIndex;
+          if(q.answer === optIndex) radio.checked = true;
+          radio.onchange = function() {
+            // عند تغيير الاختيار، تحديث الإجابة الصحيحة
+            q.answer = parseInt(this.value);
+            // تحديث answerText تلقائياً
+            let opts = [];
+            let inputs = optionGroup.querySelectorAll('input[type="text"]');
+            inputs.forEach(inp => opts.push(inp.value));
+            q.answerText = opts[q.answer] || "";
+          };
+    
           let optInput = document.createElement('input');
           optInput.type = 'text';
           optInput.value = opt.replace('***', '').trim();
-          optInput.className = 'form-control mb-1';
+          optInput.className = 'form-control';
           optInput.dataset.index = index;
           optInput.dataset.optIndex = optIndex;
-          optionsContainer.appendChild(optInput);
+          // عند تغيير نص الخيار، إذا هذا الخيار هو الإجابة الصحيحة يتم تحديث answerText
+          optInput.oninput = function(){
+            if(q.answer === parseInt(this.dataset.optIndex)) {
+              q.answerText = this.value;
+            }
+          };
+    
+          groupDiv.appendChild(radio);
+          groupDiv.appendChild(optInput);
+          optionGroup.appendChild(groupDiv);
         });
     
         container.appendChild(containerDiv);
@@ -896,22 +931,24 @@
     async function saveQuestionChanges(index) {
       const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
       const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
-      const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
-                         .sort((a, b) => a.dataset.optIndex - b.dataset.optIndex)
-                         .map(input => input.value);
-      const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
+      const optionInputs = Array.from(document.querySelectorAll(`#optionGroup-${index} input[type="text"]`));
+      const options = optionInputs.map(input => input.value);
+      // الحصول على قيمة الخيار الصحيح من زر الراديو
+      const selectedRadio = document.querySelector(`input[name="correctOption_${index}"]:checked`);
+      const correctAnswer = selectedRadio ? parseInt(selectedRadio.value) : 0;
       const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
-      // تحديث answerText تلقائيًا لتكون قيمة الخيار الذي تم اختياره
+      // تحديث answerText تلقائيًا
       const newAnswerText = options[correctAnswer] || "";
     
       // التحقق من وجود صورة جديدة
       let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
       let newImageUrl = "";
-      if (imageFileInput && imageFileInput.files.length > 0) {
-        newImageUrl = await uploadImageToImgHippo(imageFileInput.files[0], null, null);
+      if(imageFileInput && imageFileInput.files.length > 0) {
+        let progressContainer = document.getElementById(`uploadProgress-${index}`);
+        newImageUrl = await uploadImageToImgHippo(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild);
       } else {
         let previewDiv = document.getElementById(`imagePreview-${index}`);
-        if (previewDiv && previewDiv.querySelector('img')) {
+        if(previewDiv && previewDiv.querySelector('img')) {
           newImageUrl = previewDiv.querySelector('img').src;
         }
       }
@@ -948,14 +985,14 @@
       const regex = /<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i;
       currentQuestions.forEach((q, index) => {
         const match = q.question.match(regex);
-        if (match) {
+        if(match) {
           let boldContent = match[2];
           let parts = boldContent.split(/- Question/i);
-          if (parts.length > 0) {
+          if(parts.length > 0) {
             let groupName = parts[0].trim();
-            if (groupName) {
+            if(groupName) {
               let existing = groups.find(g => g.title === groupName);
-              if (existing) {
+              if(existing) {
                 existing.indices.push(index);
               } else {
                 groups.push({ title: groupName, indices: [index] });
@@ -1009,7 +1046,7 @@
           return;
         }
         const boldGroups = detectBoldGroups();
-        if (boldGroups.length === 0) {
+        if(boldGroups.length === 0) {
           alert(`No groups found! Ensure questions have this format:
 <span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
           return;
@@ -1025,7 +1062,7 @@
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
       const targetIndex = groups.findIndex(g => g.title === groupTitle);
-      if (targetIndex <= 0) return;
+      if(targetIndex <= 0) return;
       const prevGroup = groups[targetIndex - 1];
       const targetGroup = groups[targetIndex];
       const prevStart = Math.min(...prevGroup.indices);
@@ -1048,7 +1085,7 @@
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
       const targetIndex = groups.findIndex(g => g.title === groupTitle);
-      if (targetIndex === -1 || targetIndex === groups.length - 1) return;
+      if(targetIndex === -1 || targetIndex === groups.length - 1) return;
       const targetGroup = groups[targetIndex];
       const nextGroup = groups[targetIndex + 1];
       const targetStart = Math.min(...targetGroup.indices);
