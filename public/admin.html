@@ -72,13 +72,11 @@
     .group-actions button {
       margin-right: 10px;
     }
-    /* Floating Scroll Button */
-    #floatScrollBtn {
+    /* Floating Scroll Buttons */
+    #floatScrollBtn, #floatSaveBtn {
       position: fixed;
       width: 50px;
       height: 50px;
-      bottom: 30px;
-      right: 30px;
       background: #4a90e2;
       color: #fff;
       border: none;
@@ -90,8 +88,19 @@
       cursor: pointer;
       z-index: 999;
     }
-    #floatScrollBtn:hover {
+    #floatScrollBtn:hover, #floatSaveBtn:hover {
       opacity: 0.8;
+    }
+    /* الزر العائم الافتراضي للنقل (من الأسفل) */
+    #floatScrollBtn {
+      bottom: 30px;
+      right: 30px;
+    }
+    /* الزر العائم الثاني للنقل السريع إلى Save Questions */
+    #floatSaveBtn {
+      bottom: 100px;
+      right: 30px;
+      background: #dc3545;
     }
     /* Modal Overrides */
     .modal-overlay {
@@ -181,7 +190,8 @@
             <button class="btn btn-primary btn-custom" onclick="convertAndAppend()">Convert &amp; Append</button>
           </div>
           <div class="col-md-6">
-            <button class="btn btn-success btn-custom" onclick="saveSubtopic()">Save Questions</button>
+            <!-- أضفنا معرّف للزر Save Questions -->
+            <button class="btn btn-success btn-custom" id="saveQuestionsBtn" onclick="saveSubtopic()">Save Questions</button>
           </div>
         </div>
         <div class="mb-3">
@@ -220,7 +230,10 @@
     </div>
   </div>
   
+  <!-- زر عائم للنقل السريع (الأساسي) -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
+  <!-- زر عائم إضافي للنقل السريع إلى زر Save Questions -->
+  <button id="floatSaveBtn" onclick="scrollToSaveQuestions()">💾</button>
   
   <!-- Custom modals for alert/confirm/prompt -->
   <div class="modal-overlay" id="alertOverlay">
@@ -336,6 +349,14 @@
       }
     }
     
+    // زر النقل السريع إلى زر Save Questions
+    function scrollToSaveQuestions(){
+      let saveBtn = document.getElementById('saveQuestionsBtn');
+      if(saveBtn){
+        saveBtn.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+    }
+    
     // original Vars
     let cachedTopics = [];
     let topicsSha = null;
@@ -360,7 +381,9 @@
       } catch(e){}
     }
     async function saveTopics(){
-      if(!topicsSha) return;
+      // تأكيد قبل الحفظ
+      let conf = await confirm("Are you sure you want to save topics?");
+      if(!conf) return;
       try{
         let body = { topics: cachedTopics, sha: topicsSha };
         let r = await fetch('/api/topics',{
@@ -439,7 +462,7 @@
         };
         d.appendChild(edBtn);
     
-        // subtopics (نعرض اسم الفرع فقط دون مسار الملف)
+        // subtopics (عرض اسم الفرع فقط دون مسار الملف)
         if(t.subTopics && t.subTopics.length > 0){
           t.subTopics.forEach((st, stidx) => {
             let stDiv = document.createElement('div');
@@ -592,6 +615,9 @@
     }
     
     async function saveSubtopic(){
+      // تأكيد قبل الحفظ
+      let conf = await confirm("Are you sure you want to save questions?");
+      if(!conf) return;
       if(!currentSubtopicPath) return;
       try{
         let body = { path: currentSubtopicPath, content: currentQuestions, sha: currentSubtopicSha };
@@ -811,9 +837,16 @@
         let qDiv = document.createElement('div');
         qDiv.className = 'q-item p-3 mb-3 border rounded';
         qDiv.id = `q-${index+1}`;
+        // استخراج النص الغامق من السؤال
         let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
         let boldPart = boldMatch ? boldMatch[2].trim() : '';
-        let questionText = boldMatch ? q.question.replace(boldMatch[0], '').trim() : q.question;
+        // استخراج صورة السؤال (إذا وُجدت)
+        let imgMatch = q.question.match(/<img\s+[^>]*src=['"]([^'"]+)['"]/i);
+        let currentImage = imgMatch ? imgMatch[1] : "";
+        // إزالة الوسم الخاص بالصورة من نص السؤال
+        let textWithoutImg = q.question.replace(/<img\s+[^>]*>/i, "").trim();
+        // إزالة الوسم الغامق من النص إذا وُجد (سنحتفظ به في خانة منفصلة)
+        let questionText = boldMatch ? textWithoutImg.replace(boldMatch[0], "").trim() : textWithoutImg;
         
         qDiv.innerHTML = `
           <div class="mb-2">
@@ -825,17 +858,21 @@
           <div class="mb-2">
             <input type="text" class="form-control bold-prefix" data-index="${index}" 
                    value="${boldPart}" 
-                   placeholder="Bold prefix (e.g. Second Batch (2024) - Dr. Zeinab Hamidizad)">
+                   placeholder="Bold prefix (e.g. Dr. Yasin - Question 5)">
           </div>
           <div class="mb-2">
             <textarea class="form-control question-text" data-index="${index}" rows="3" placeholder="Question text...">${questionText}</textarea>
+          </div>
+          <div class="mb-2">
+            <label>Image URL (optional):</label>
+            <input type="text" class="form-control image-url" data-index="${index}" value="${currentImage}" placeholder="Enter image URL">
           </div>
           <div id="options-${index}" class="mb-2"></div>
           <div class="mb-2">
             <label>Correct Answer Index:</label>
             <input type="number" min="0" value="${q.answer}" data-index="${index}" class="form-control correct-answer" style="max-width:100px; display:inline-block;">
             <label class="ms-2">Explanation:</label>
-            <input type="text" value="${q.explanation || ''}" data-index="${index}" class="form-control explanation" style="display:inline-block; width:300px;">
+            <textarea class="form-control explanation" data-index="${index}" rows="3" style="display:inline-block; width:300px;" placeholder="Enter explanation...">${q.explanation || ''}</textarea>
           </div>
           <button class="btn btn-primary btn-sm" onclick="saveQuestionChanges(${index})">Save Changes</button>
         `;
@@ -870,15 +907,21 @@
     function saveQuestionChanges(index) {
       const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
       const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
+      const imageUrl = document.querySelector(`.image-url[data-index="${index}"]`).value.trim();
       const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
                          .sort((a, b) => a.dataset.optIndex - b.dataset.optIndex)
                          .map(input => input.value);
       const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
       const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
     
+      let newQuestion = `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`;
+      if(imageUrl) {
+        newQuestion += `<br><img src="${imageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">`;
+      }
+    
       currentQuestions[index] = {
         ...currentQuestions[index],
-        question: `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`,
+        question: newQuestion,
         options: options,
         answer: correctAnswer,
         explanation: explanation
