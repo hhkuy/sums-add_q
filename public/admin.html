@@ -42,9 +42,8 @@
     }
     .btn-custom:hover {
       transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+      box-shadow: 0 5px 15px rgba(52,152,219,0.3);
     }
-    /* إضافات التنسيق الخاصة بإدارة المواضيع والأسئلة */
     .section {
       background: #f9f9f9;
       border: 1px solid #ccc;
@@ -70,7 +69,10 @@
     .arrow-btn:hover {
       opacity: 0.8;
     }
-    input[type="text"], input[type="number"], textarea, select {
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
       width: 100%;
       padding: 12px;
       margin-bottom: 8px;
@@ -78,7 +80,8 @@
       border-radius: 4px;
       font-size: 16px;
     }
-    #topicsList, #subtopicQuestions {
+    #topicsList,
+    #subtopicQuestions {
       background: #fff;
       border: 1px solid #ccc;
       border-radius: 4px;
@@ -255,7 +258,7 @@
   <!-- زر عائم للتمرير -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
   
-  <!-- مودالات التنبيه -->
+  <!-- مودالات التنبيه والمودالات المخصصة -->
   <div class="modal-overlay" id="alertOverlay">
     <div class="modal-box">
       <h3 id="alertMsg"></h3>
@@ -305,7 +308,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   
   <script>
-    /** Override alert/confirm/prompt with custom modals (async approach) */
+    /** Override alert/confirm/prompt باستخدام مودالات مخصصة (async) */
     let alertOverlay = document.getElementById('alertOverlay');
     let alertMsg = document.getElementById('alertMsg');
     let alertOkBtn = document.getElementById('alertOkBtn');
@@ -372,7 +375,7 @@
       return customPrompt(msg, defVal);
     };
     
-    /** زر العائم للتمرير */
+    /** زر عائم للتمرير */
     let scrollState = false;
     function toggleScroll() {
       let btn = document.getElementById('floatScrollBtn');
@@ -431,7 +434,7 @@
       }
     }
     
-    /** عرض المواضيع مع إعادة الترتيب والتعديل */
+    /** عرض المواضيع وإعادة ترتيبها وتعديلها */
     function renderTopics() {
       let list = document.getElementById('topicsList');
       list.innerHTML = '';
@@ -582,7 +585,7 @@
         });
         let j = await resp.json();
         if (!resp.ok || !j.success) {
-          console.warn("Failed to delete subtopic file", j.error || resp.statusText);
+          console.warn("Failed to delete subtopic file:", j.error || resp.statusText);
         } else {
           console.log("Subtopic file deleted from repo:", filePath);
         }
@@ -648,7 +651,7 @@
         editBtn.onclick = async () => { openEditQuestionModal(i); };
         d.appendChild(editBtn);
     
-        // زر إعادة ترتيب سؤال فردي
+        // أزرار إعادة ترتيب سؤال فردي
         let moveUpBtn = document.createElement('button');
         moveUpBtn.textContent = 'Move Up';
         moveUpBtn.classList.add('btn-blue');
@@ -661,7 +664,7 @@
         moveDownBtn.onclick = () => { moveQuestionDown(i); };
         d.appendChild(moveDownBtn);
     
-        // إعادة ترتيب دفعي بناءً على البريف (النص الغامق قبل كلمة "Question")
+        // ترتيب دفعي بناءً على البريف (النص الغامق قبل كلمة "Question")
         let boldPrefix = getBoldPrefix(q.question);
         if (boldPrefix) {
           let prevBold = i > 0 ? getBoldPrefix(currentQuestions[i - 1].question) : null;
@@ -900,7 +903,7 @@
       });
     }
     
-    // حذف بواسطة prefix (دالة كما هي)
+    // حذف بواسطة prefix تبقى كما هي
     async function deleteByPrefix() {
       if (!currentSubtopicPath) return;
       let prefix = document.getElementById('deletePrefix').value.trim();
@@ -926,7 +929,7 @@
       return newH + ":" + mm + " " + period;
     }
     
-    /** وظائف تحرير السؤال باستخدام مودال */
+    /** وظائف تحرير السؤال */
     let currentEditQuestionIndex = null;
     function openEditQuestionModal(index) {
       currentEditQuestionIndex = index;
@@ -1284,7 +1287,7 @@
       });
     }
     
-    // حذف بواسطة prefix
+    // حذف بواسطة prefix تبقى كما هي
     async function deleteByPrefix() {
       if (!currentSubtopicPath) return;
       let prefix = document.getElementById('deletePrefix').value.trim();
