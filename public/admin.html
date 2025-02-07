@@ -132,6 +132,19 @@
       <input type="text" id="deletePrefix" placeholder="e.g. Dr. Golshan">
       <button class="btn-red" onclick="deleteByPrefix()">Delete</button>
     </div>
+
+    <!-- Edit Questions Section -->
+<div class="section">
+  <h2>Edit Questions</h2>
+  <div id="questionsEditList"></div>
+</div>
+
+<!-- Bulk Reorder Section -->
+<div class="section">
+  <h2>Bulk Reorder Questions</h2>
+  <button class="btn-blue" onclick="loadBoldGroups()">Load Bold Groups</button>
+  <div id="boldGroupsList" style="margin-top:10px;"></div>
+</div>
   </div>
 
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
