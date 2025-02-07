@@ -170,7 +170,7 @@ app.post('/api/update-subtopic-file', async (req,res)=>{
 // 5) delete prefix
 app.post('/api/delete-questions-by-prefix', async (req,res)=>{
   const {path, sha, prefix}=req.body;
-  if(!path||!sha||!prefix)return res.status(400).json({success:false,error:'Missing data for prefix deleting'});
+  if(!path!sha!prefix)return res.status(400).json({success:false,error:'Missing data for prefix deleting'});
   try{
     const info=await getGitHubFile(path);
     const dec=Buffer.from(info.content,'base64').toString('utf-8');
