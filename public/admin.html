@@ -572,7 +572,7 @@
         currentSubtopicSha = j.sha;
         currentQuestions = j.content;
         document.getElementById('loadMessage').innerHTML = '<div class="alert alert-success" role="alert">Questions loaded successfully!</div>';
-        // عرض جميع الأسئلة في خانة Edit Questions
+        // عرض جميع الأسئلة في قسم Edit Questions
         renderEditableQuestions();
       } catch(e){}
     }
@@ -803,9 +803,9 @@
         qDiv.className = 'q-item p-3 mb-3 border rounded';
         qDiv.id = `q-${index+1}`; // للانتقال للسؤال
         // استخراج الجزء الغامق (إن وُجد) وفصل نص السؤال
-        let boldMatch = q.question.match(/<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>(.*)/i);
-        let boldPart = boldMatch ? boldMatch[1].trim() : '';
-        let questionText = boldMatch ? boldMatch[2].trim() : q.question;
+        let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
+        let boldPart = boldMatch ? boldMatch[2].trim() : '';
+        let questionText = boldMatch ? q.question.replace(boldMatch[0], '').trim() : q.question;
         
         qDiv.innerHTML = `
           <div class="mb-2">
@@ -881,14 +881,18 @@
     }
     
     /********** Bulk Reorder Section **********/
-    // دالة استخراج المجموعات من الأسئلة
+    // دالة استخراج المجموعات من الأسئلة باستخدام تعبير نمطي معدل
     function detectBoldGroups() {
       const groups = [];
+      // استخدام تعبير نمطي أكثر شمولاً للتعرف على النص داخل وسم <span> الذي يحتوي على font-weight:bold
+      const regex = /<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i;
       currentQuestions.forEach((q, index) => {
-        const regex = /<span\s+style=['"][^'"]*font-weight:\s*bold;?[^'"]*['"]>(.*?)<\/span>/i;
         const match = q.question.match(regex);
         if (match) {
-          let parts = match[1].split(/- Question/i);
+          // match[2] يحتوي على المحتوى داخل الوسم
+          let boldContent = match[2];
+          // نقسم النص عند ظهور "- Question" (بشكل غير حساس للحالة)
+          let parts = boldContent.split(/- Question/i);
           if (parts.length > 0) {
             let groupName = parts[0].trim();
             if (groupName) {
@@ -941,12 +945,32 @@
       });
     }
     
-    // نقل المجموعة للأعلى: نقوم بتبديل المجموعة المستهدفة مع المجموعة السابقة كاملة
+    // تحميل المجموعات وعرضها
+    async function loadBoldGroups() {
+      try {
+        if (!currentSubtopicPath) {
+          alert("Please select and load a subtopic first!");
+          return;
+        }
+        const boldGroups = detectBoldGroups();
+        if (boldGroups.length === 0) {
+          alert(`No groups found! Ensure questions have this format:
+<span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
+          return;
+        }
+        renderBoldGroups(boldGroups);
+      } catch (error) {
+        console.error("Load Bold Groups Error:", error);
+        alert("Error loading groups. Check console.");
+      }
+    }
+    
+    // نقل المجموعة للأعلى: تبديل كتلتين كاملةً
     function moveGroupUp(groupTitle) {
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
       const targetIndex = groups.findIndex(g => g.title === groupTitle);
-      if (targetIndex <= 0) return; // لا يوجد مجموعة سابقة للتبديل
+      if (targetIndex <= 0) return; // لا يوجد مجموعة سابقة
       const prevGroup = groups[targetIndex - 1];
       const targetGroup = groups[targetIndex];
       const prevStart = Math.min(...prevGroup.indices);
@@ -961,18 +985,18 @@
       const blockTarget = currentQuestions.slice(targetStart, targetEnd + 1);
       const after = currentQuestions.slice(targetEnd + 1);
     
-      // تبديل المجموعتين: المجموعة المستهدفة تأتي قبل المجموعة السابقة
+      // تبديل الكتل: المجموعة المستهدفة توضع قبل المجموعة السابقة
       currentQuestions = before.concat(blockTarget, middle, blockPrev, after);
       renderEditableQuestions();
       loadBoldGroups();
     }
     
-    // نقل المجموعة للأسفل: تبديل المجموعة المستهدفة مع المجموعة التالية كاملة
+    // نقل المجموعة للأسفل: تبديل كتلتين كاملةً
     function moveGroupDown(groupTitle) {
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
       const targetIndex = groups.findIndex(g => g.title === groupTitle);
-      if (targetIndex === -1 || targetIndex === groups.length - 1) return; // لا يوجد مجموعة تالفة للتبديل
+      if (targetIndex === -1 || targetIndex === groups.length - 1) return; // لا يوجد مجموعة تالفة
       const targetGroup = groups[targetIndex];
       const nextGroup = groups[targetIndex + 1];
       const targetStart = Math.min(...targetGroup.indices);
@@ -986,7 +1010,7 @@
       const blockNext = currentQuestions.slice(nextStart, nextEnd + 1);
       const after = currentQuestions.slice(nextEnd + 1);
     
-      // تبديل المجموعتين: المجموعة التالية تأتي قبل المجموعة المستهدفة
+      // تبديل الكتل: المجموعة التالية توضع قبل المجموعة المستهدفة
       currentQuestions = before.concat(blockNext, middle, blockTarget, after);
       renderEditableQuestions();
       loadBoldGroups();
