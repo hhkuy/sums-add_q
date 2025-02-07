@@ -909,68 +909,45 @@ function detectBoldGroups() {
   let currentGroup = null;
 
   currentQuestions.forEach((q, index) => {
-    // البحث عن النص الغامق الذي يحتوي على "Question"
-    const boldMatch = q.question.match(/<strong>(.*?)<\/strong>/);
-    
-    if (boldMatch && boldMatch[1].includes('Question')) {
-      // إذا وجدنا مجموعة جديدة، نحفظ المجموعة السابقة (إذا كانت موجودة)
-      if (currentGroup) {
-        groups.push(currentGroup);
-      }
+    // البحث عن النمط المحدد: <span style...>النص المطلوب - Question X</span>
+    const boldMatch = q.question.match(
+      /<span style=['"]color: darkred; font-weight:bold;['"]>(.+?) - Question \d+<\/span>/i
+    );
 
-      // نبدأ مجموعة جديدة
-      currentGroup = {
-        title: boldMatch[1].trim(), // النص الغامق
-        indices: [index], // نبدأ بمؤشر السؤال الحالي
-        start: index // مؤشر البداية
-      };
+    if (boldMatch) {
+      const groupName = boldMatch[1].trim(); // "Second Batch (2024) - Dr. Zeinab Hamidizad"
+      
+      if (currentGroup) {
+        // إذا كانت المجموعة الحالية مختلفة عن المكتشفة
+        if (currentGroup.title !== groupName) {
+          groups.push(currentGroup);
+          currentGroup = {
+            title: groupName,
+            indices: [index],
+            start: index
+          };
+        } else {
+          // نفس المجموعة، أضف المؤشر
+          currentGroup.indices.push(index);
+        }
+      } else {
+        // بداية مجموعة جديدة
+        currentGroup = {
+          title: groupName,
+          indices: [index],
+          start: index
+        };
+      }
     } else if (currentGroup) {
-      // إذا كنا داخل مجموعة، نضيف السؤال الحالي إليها
+      // أسئلة تتبع المجموعة الحالية بدون عنوان
       currentGroup.indices.push(index);
     }
   });
 
-  // نضيف المجموعة الأخيرة إذا كانت موجودة
-  if (currentGroup) {
-    groups.push(currentGroup);
-  }
-
+  // أضف المجموعة الأخيرة إذا موجودة
+  if (currentGroup) groups.push(currentGroup);
+  
   return groups;
-}
-
-function renderBoldGroups(groups) {
-  const container = document.getElementById('boldGroupsList');
-  container.innerHTML = '';
-
-  if (groups.length === 0) {
-    container.innerHTML = '<div style="color: #888; text-align: center;">No bold groups found.</div>';
-    return;
-  }
-
-  groups.forEach((group, groupIndex) => {
-    const groupDiv = document.createElement('div');
-    groupDiv.className = 'q-item';
-    groupDiv.style.marginBottom = '10px';
-    groupDiv.style.padding = '10px';
-    groupDiv.style.border = '1px solid #ddd';
-    groupDiv.style.borderRadius = '4px';
-
-    groupDiv.innerHTML = `
-      <div style="margin-bottom: 8px;">
-        <strong>${group.title}</strong> 
-        (Questions ${group.indices[0] + 1} to ${group.indices.slice(-1)[0] + 1})
-      </div>
-      <div style="margin-bottom: 8px;">
-        Contains ${group.indices.length} questions
-      </div>
-      <div>
-        <button class="arrow-btn" onclick="moveGroupUp(${groupIndex})">▲ Move Up</button>
-        <button class="arrow-btn" onclick="moveGroupDown(${groupIndex})">▼ Move Down</button>
-      </div>
-    `;
-
-    container.appendChild(groupDiv);
-  });
 }
 function moveGroupUp(groupIndex) {
   const groups = detectBoldGroups();
