@@ -91,12 +91,12 @@
     #floatScrollBtn:hover, #floatSaveBtn:hover {
       opacity: 0.8;
     }
-    /* الزر العائم الافتراضي للنقل (من الأسفل) */
+    /* الزر العائم الأساسي للنقل */
     #floatScrollBtn {
       bottom: 30px;
       right: 30px;
     }
-    /* الزر العائم الثاني للنقل السريع إلى Save Questions */
+    /* زر عائم إضافي للنقل السريع إلى زر Save Questions */
     #floatSaveBtn {
       bottom: 100px;
       right: 30px;
@@ -190,7 +190,6 @@
             <button class="btn btn-primary btn-custom" onclick="convertAndAppend()">Convert &amp; Append</button>
           </div>
           <div class="col-md-6">
-            <!-- أضفنا معرّف للزر Save Questions -->
             <button class="btn btn-success btn-custom" id="saveQuestionsBtn" onclick="saveSubtopic()">Save Questions</button>
           </div>
         </div>
@@ -230,9 +229,9 @@
     </div>
   </div>
   
-  <!-- زر عائم للنقل السريع (الأساسي) -->
+  <!-- زر عائم للنقل الأساسي -->
   <button id="floatScrollBtn" onclick="toggleScroll()">↓</button>
-  <!-- زر عائم إضافي للنقل السريع إلى زر Save Questions -->
+  <!-- زر عائم إضافي للنقل السريع إلى Save Questions -->
   <button id="floatSaveBtn" onclick="scrollToSaveQuestions()">💾</button>
   
   <!-- Custom modals for alert/confirm/prompt -->
@@ -381,7 +380,6 @@
       } catch(e){}
     }
     async function saveTopics(){
-      // تأكيد قبل الحفظ
       let conf = await confirm("Are you sure you want to save topics?");
       if(!conf) return;
       try{
@@ -408,7 +406,6 @@
           <strong>${t.topicName}</strong> (sub: ${t.subTopics ? t.subTopics.length : 0})
           <br>${t.description || ''}
         `;
-        // reorder up
         let upBtn = document.createElement('button');
         upBtn.className = 'btn btn-secondary btn-sm me-1';
         upBtn.textContent = '▲';
@@ -421,7 +418,6 @@
         };
         d.appendChild(upBtn);
     
-        // reorder down
         let downBtn = document.createElement('button');
         downBtn.className = 'btn btn-secondary btn-sm me-1';
         downBtn.textContent = '▼';
@@ -434,7 +430,6 @@
         };
         d.appendChild(downBtn);
     
-        // delete topic
         let delBtn = document.createElement('button');
         delBtn.className = 'btn btn-danger btn-sm me-1';
         delBtn.textContent = 'Delete';
@@ -448,7 +443,6 @@
         };
         d.appendChild(delBtn);
     
-        // edit topic
         let edBtn = document.createElement('button');
         edBtn.className = 'btn btn-warning btn-sm me-1';
         edBtn.textContent = 'Edit';
@@ -462,14 +456,12 @@
         };
         d.appendChild(edBtn);
     
-        // subtopics (عرض اسم الفرع فقط دون مسار الملف)
         if(t.subTopics && t.subTopics.length > 0){
           t.subTopics.forEach((st, stidx) => {
             let stDiv = document.createElement('div');
             stDiv.className = "ms-3 mt-2";
             stDiv.innerHTML = `${st.name}`;
     
-            // reorder sub
             let subUp = document.createElement('button');
             subUp.className = 'btn btn-secondary btn-sm me-1';
             subUp.textContent = '▲';
@@ -494,7 +486,6 @@
             };
             stDiv.appendChild(subDown);
     
-            // حذف subtopic
             let sdel = document.createElement('button');
             sdel.className = 'btn btn-danger btn-sm me-1';
             sdel.textContent = 'X';
@@ -547,7 +538,6 @@
       });
     }
     
-    // دالة حذف ملف subtopic من المستودع
     async function deleteSubtopicFileFromRepo(filePath){
       try{
         let resp = await fetch('/api/delete-file?filePath=' + encodeURIComponent(filePath), {
@@ -564,7 +554,6 @@
       }
     }
     
-    // addTopic
     function addTopic(){
       let nm = document.getElementById('newTopicName').value.trim();
       let ds = document.getElementById('newTopicDesc').value.trim();
@@ -576,7 +565,6 @@
       fillSubtopics();
     }
     
-    // fill subtopics
     function fillSubtopics(){
       let sel = document.getElementById('subtopicSelect');
       sel.innerHTML = '';
@@ -592,7 +580,6 @@
       });
     }
     
-    // load subtopic
     async function loadSubtopic(){
       let sel = document.getElementById('subtopicSelect');
       if(!sel.value) return;
@@ -604,18 +591,16 @@
         currentSubtopicSha = j.sha;
         currentQuestions = j.content;
         document.getElementById('loadMessage').innerHTML = '<div class="alert alert-success" role="alert">Questions loaded successfully!</div>';
-        // عرض جميع الأسئلة في قسم Edit Questions
         renderEditableQuestions();
       } catch(e){}
     }
-    // إخفاء عرض الأسئلة في قسم subtopicQuestions
+    
     function renderSubtopicQuestions(){
       let box = document.getElementById('subtopicQuestions');
       box.innerHTML = '';
     }
     
     async function saveSubtopic(){
-      // تأكيد قبل الحفظ
       let conf = await confirm("Are you sure you want to save questions?");
       if(!conf) return;
       if(!currentSubtopicPath) return;
@@ -633,7 +618,6 @@
       } catch(e){}
     }
     
-    // images
     function addImageField(){
       let c = document.getElementById('imageContainer');
       let row = document.createElement('div');
@@ -713,7 +697,7 @@
           if(opt){
             let txt = opt[2].trim();
             if(txt.endsWith('***')){
-              txt = txt.slice(0, -3).trim();
+              txt = txt.slice(0,-3).trim();
               ansIdx = options.length;
               ansText = txt;
             }
@@ -834,21 +818,18 @@
       container.innerHTML = '';
       
       currentQuestions.forEach((q, index) => {
-        let qDiv = document.createElement('div');
-        qDiv.className = 'q-item p-3 mb-3 border rounded';
-        qDiv.id = `q-${index+1}`;
-        // استخراج النص الغامق من السؤال
+        // استخراج الجزء الغامق من السؤال
         let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
         let boldPart = boldMatch ? boldMatch[2].trim() : '';
-        // استخراج صورة السؤال (إذا وُجدت)
+        // استخراج الصورة إذا وُجدت
         let imgMatch = q.question.match(/<img\s+[^>]*src=['"]([^'"]+)['"]/i);
         let currentImage = imgMatch ? imgMatch[1] : "";
-        // إزالة الوسم الخاص بالصورة من نص السؤال
+        // إزالة وسم الصورة من نص السؤال
         let textWithoutImg = q.question.replace(/<img\s+[^>]*>/i, "").trim();
-        // إزالة الوسم الغامق من النص إذا وُجد (سنحتفظ به في خانة منفصلة)
+        // إزالة وسم النص الغامق
         let questionText = boldMatch ? textWithoutImg.replace(boldMatch[0], "").trim() : textWithoutImg;
-        
-        qDiv.innerHTML = `
+    
+        let html = `
           <div class="mb-2">
             <strong>Question ${index + 1}</strong>
             <button class="btn btn-secondary btn-sm" onclick="handleMoveUp(${index})">▲</button>
@@ -856,28 +837,34 @@
             <button class="btn btn-danger btn-sm ms-2" onclick="deleteQuestion(${index})">Delete</button>
           </div>
           <div class="mb-2">
-            <input type="text" class="form-control bold-prefix" data-index="${index}" 
-                   value="${boldPart}" 
-                   placeholder="Bold prefix (e.g. Dr. Yasin - Question 5)">
+            <input type="text" class="form-control bold-prefix" data-index="${index}" value="${boldPart}" placeholder="Bold prefix (e.g. Dr. Yasin - Question 5)">
           </div>
           <div class="mb-2">
             <textarea class="form-control question-text" data-index="${index}" rows="3" placeholder="Question text...">${questionText}</textarea>
           </div>
           <div class="mb-2">
-            <label>Image URL (optional):</label>
-            <input type="text" class="form-control image-url" data-index="${index}" value="${currentImage}" placeholder="Enter image URL">
+            <label>Image:</label>
+            <div id="imagePreview-${index}" class="mb-2">
+              ${ currentImage ? `<img src="${currentImage}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">` : 'No image' }
+            </div>
+            <input type="file" class="form-control mt-2 image-file" data-index="${index}" accept="image/*">
+            <button class="btn btn-danger btn-sm mt-2" onclick="deleteImage(${index})">Delete Image</button>
           </div>
           <div id="options-${index}" class="mb-2"></div>
           <div class="mb-2">
             <label>Correct Answer Index:</label>
             <input type="number" min="0" value="${q.answer}" data-index="${index}" class="form-control correct-answer" style="max-width:100px; display:inline-block;">
-            <label class="ms-2">Explanation:</label>
-            <textarea class="form-control explanation" data-index="${index}" rows="3" style="display:inline-block; width:300px;" placeholder="Enter explanation...">${q.explanation || ''}</textarea>
+          </div>
+          <div class="mb-2">
+            <label>Explanation:</label>
+            <textarea class="form-control explanation" data-index="${index}" rows="3" style="resize: vertical;" placeholder="Enter explanation...">${q.explanation || ''}</textarea>
           </div>
           <button class="btn btn-primary btn-sm" onclick="saveQuestionChanges(${index})">Save Changes</button>
         `;
     
-        let optionsContainer = qDiv.querySelector(`#options-${index}`);
+        let containerDiv = document.createElement('div');
+        containerDiv.innerHTML = html;
+        let optionsContainer = containerDiv.querySelector(`#options-${index}`);
         q.options.forEach((opt, optIndex) => {
           let optInput = document.createElement('input');
           optInput.type = 'text';
@@ -888,7 +875,7 @@
           optionsContainer.appendChild(optInput);
         });
     
-        container.appendChild(qDiv);
+        container.appendChild(containerDiv);
       });
     }
     
@@ -904,19 +891,31 @@
         renderEditableQuestions();
       }
     }
-    function saveQuestionChanges(index) {
+    
+    async function saveQuestionChanges(index) {
       const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
       const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
-      const imageUrl = document.querySelector(`.image-url[data-index="${index}"]`).value.trim();
       const options = Array.from(document.querySelectorAll(`input[data-index="${index}"][data-opt-index]`))
                          .sort((a, b) => a.dataset.optIndex - b.dataset.optIndex)
                          .map(input => input.value);
       const correctAnswer = parseInt(document.querySelector(`.correct-answer[data-index="${index}"]`).value);
       const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
     
+      // التحقق من وجود صورة جديدة في خانة رفع الصورة
+      let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
+      let newImageUrl = "";
+      if (imageFileInput && imageFileInput.files.length > 0) {
+        newImageUrl = await uploadImageToImgHippo(imageFileInput.files[0], null, null);
+      } else {
+        let previewDiv = document.getElementById(`imagePreview-${index}`);
+        if (previewDiv && previewDiv.querySelector('img')) {
+          newImageUrl = previewDiv.querySelector('img').src;
+        }
+      }
+    
       let newQuestion = `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`;
-      if(imageUrl) {
-        newQuestion += `<br><img src="${imageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">`;
+      if(newImageUrl) {
+        newQuestion += `<br><img src="${newImageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">`;
       }
     
       currentQuestions[index] = {
@@ -926,6 +925,17 @@
         answer: correctAnswer,
         explanation: explanation
       };
+    }
+    
+    function deleteImage(index) {
+      let previewDiv = document.getElementById(`imagePreview-${index}`);
+      if(previewDiv){
+        previewDiv.innerHTML = 'No image';
+      }
+      let fileInput = document.querySelector(`.image-file[data-index="${index}"]`);
+      if(fileInput){
+        fileInput.value = "";
+      }
     }
     
     /********** Bulk Reorder Section **********/
