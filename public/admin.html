@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>No Changes + Delete Subtopic File from Repo</title>
+  <title>Quiz Manager Admin Panel</title>
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
   <!-- Bootstrap Icons -->
@@ -19,7 +19,7 @@
       padding-bottom: 20px;
     }
     .container-custom {
-      max-width: 1000px;
+      max-width: 1200px;
       background-color: #fff;
       padding: 30px;
       border-radius: 15px;
@@ -32,15 +32,15 @@
       color: #343a40;
       font-weight: 600;
     }
-    .section {
+    .card-section {
       margin-bottom: 30px;
     }
-    .section h2 {
-      color: #343a40;
-      font-size: 1.8em;
-      margin-bottom: 15px;
-      border-bottom: 2px solid #dee2e6;
-      padding-bottom: 5px;
+    .card-section .card-header {
+      background-color: #343a40;
+      color: #fff;
+      font-size: 1.25em;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
     }
     .btn-custom {
       width: 100%;
@@ -122,92 +122,101 @@
 </head>
 <body>
   <div class="container-custom">
-    <h1><i class="bi bi-journal-text"></i> All Original + Delete Subtopic File from Repo</h1>
+    <h1><i class="bi bi-journal-text"></i> Quiz Manager Admin Panel</h1>
     
     <!-- Manage Topics Section -->
-    <div class="section">
-      <h2>Manage Topics</h2>
-      <div class="mb-3">
-        <button class="btn btn-primary btn-custom" onclick="loadTopics()">Load topics.json</button>
-      </div>
-      <div id="topicsList"></div>
-      <div class="row g-2 mt-3">
-        <div class="col-md-4">
-          <input type="text" id="newTopicName" class="form-control" placeholder="Topic Name...">
+    <div class="card card-section">
+      <div class="card-header">Manage Topics</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <button class="btn btn-primary btn-custom" onclick="loadTopics()">Load topics.json</button>
         </div>
-        <div class="col-md-4">
-          <input type="text" id="newTopicDesc" class="form-control" placeholder="Topic Description...">
-        </div>
-        <div class="col-md-4">
-          <button class="btn btn-primary btn-custom" onclick="addTopic()">Add Topic</button>
-        </div>
-        <div class="col-md-4 mt-2">
-          <button class="btn btn-success btn-custom" onclick="saveTopics()">Save topics.json</button>
+        <div id="topicsList"></div>
+        <div class="row g-2 mt-3">
+          <div class="col-md-4">
+            <input type="text" id="newTopicName" class="form-control" placeholder="Topic Name...">
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="newTopicDesc" class="form-control" placeholder="Topic Description...">
+          </div>
+          <div class="col-md-4">
+            <button class="btn btn-primary btn-custom" onclick="addTopic()">Add Topic</button>
+          </div>
+          <div class="col-md-4 mt-2">
+            <button class="btn btn-success btn-custom" onclick="saveTopics()">Save topics.json</button>
+          </div>
         </div>
       </div>
     </div>
     
-    <!-- Subtopic Manager Section -->
-    <div class="section">
-      <h2>Subtopic Questions Manager</h2>
-      <div class="mb-3">
-        <select id="subtopicSelect" class="form-select"></select>
-      </div>
-      <div class="mb-3">
-        <button class="btn btn-primary btn-custom" onclick="loadSubtopic()">Load Questions</button>
-      </div>
-      <!-- رسالة تأكيد تحميل الأسئلة -->
-      <div id="loadMessage"></div>
-      <div class="mb-3">
-        <label for="questionsText" class="form-label">Add New Questions</label>
-        <input type="text" id="prefixInput" class="form-control mb-2" placeholder="Prefix (optional) e.g. Dr. Ali -">
-        <div class="row g-2 mb-2">
-          <div class="col-md-3">
-            <input type="number" id="startQNumber" class="form-control" value="1" min="1" placeholder="Start Q#">
+    <!-- Subtopic Questions Manager Section -->
+    <div class="card card-section">
+      <div class="card-header">Subtopic Questions Manager</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <select id="subtopicSelect" class="form-select"></select>
+        </div>
+        <div class="mb-3">
+          <button class="btn btn-primary btn-custom" onclick="loadSubtopic()">Load Questions</button>
+        </div>
+        <!-- رسالة تأكيد تحميل الأسئلة -->
+        <div id="loadMessage"></div>
+        <hr>
+        <div class="mb-3">
+          <label for="questionsText" class="form-label">Add New Questions</label>
+          <input type="text" id="prefixInput" class="form-control mb-2" placeholder="Prefix (optional) e.g. Dr. Ali -">
+          <div class="row g-2 mb-2">
+            <div class="col-md-3">
+              <input type="number" id="startQNumber" class="form-control" value="1" min="1" placeholder="Start Q#">
+            </div>
+          </div>
+          <textarea id="questionsText" class="form-control" rows="6" placeholder="Enter questions text..."></textarea>
+        </div>
+        <div class="mb-3">
+          <button class="btn btn-warning btn-custom" onclick="addImageField()">Add Image Field</button>
+        </div>
+        <div id="imageContainer" class="mb-3"></div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <button class="btn btn-primary btn-custom" onclick="convertAndAppend()">Convert &amp; Append</button>
+          </div>
+          <div class="col-md-6">
+            <button class="btn btn-success btn-custom" onclick="saveSubtopic()">Save Questions</button>
           </div>
         </div>
-        <textarea id="questionsText" class="form-control" rows="6" placeholder="Enter questions text..."></textarea>
-      </div>
-      <div class="mb-3">
-        <button class="btn btn-warning btn-custom" onclick="addImageField()">Add Image Field</button>
-      </div>
-      <div id="imageContainer" class="mb-3"></div>
-      <div class="row g-2 mb-3">
-        <div class="col-md-6">
-          <button class="btn btn-primary btn-custom" onclick="convertAndAppend()">Convert &amp; Append</button>
-        </div>
-        <div class="col-md-6">
-          <button class="btn btn-success btn-custom" onclick="saveSubtopic()">Save Questions</button>
-        </div>
-      </div>
-      <div class="mb-3">
-        <label for="deletePrefix" class="form-label">Delete by Bold Prefix</label>
-        <div class="input-group">
-          <input type="text" id="deletePrefix" class="form-control" placeholder="e.g. Dr. Golshan">
-          <button class="btn btn-danger" onclick="deleteByPrefix()">Delete</button>
+        <div class="mb-3">
+          <label for="deletePrefix" class="form-label">Delete by Bold Prefix</label>
+          <div class="input-group">
+            <input type="text" id="deletePrefix" class="form-control" placeholder="e.g. Dr. Golshan">
+            <button class="btn btn-danger" onclick="deleteByPrefix()">Delete</button>
+          </div>
         </div>
       </div>
     </div>
     
     <!-- Edit Questions Section -->
-    <div class="section">
-      <h2>Edit Questions</h2>
-      <div class="mb-3">
-        <input type="number" id="jumpToQuestion" class="form-control" placeholder="Enter question number to jump" min="1">
+    <div class="card card-section">
+      <div class="card-header">Edit Questions</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <input type="number" id="jumpToQuestion" class="form-control" placeholder="Enter question number to jump" min="1">
+        </div>
+        <div class="mb-3">
+          <button class="btn btn-primary btn-custom" onclick="jumpToQuestion()">Jump to Question</button>
+        </div>
+        <div id="questionsEditList"></div>
       </div>
-      <div class="mb-3">
-        <button class="btn btn-primary btn-custom" onclick="jumpToQuestion()">Jump to Question</button>
-      </div>
-      <div id="questionsEditList"></div>
     </div>
     
-    <!-- Bulk Reorder Section -->
-    <div class="section">
-      <h2>Bulk Reorder Questions</h2>
-      <div class="mb-3">
-        <button class="btn btn-primary btn-custom" onclick="loadBoldGroups()">Load Bold Groups</button>
+    <!-- Bulk Reorder Questions Section -->
+    <div class="card card-section">
+      <div class="card-header">Bulk Reorder Questions</div>
+      <div class="card-body">
+        <div class="mb-3">
+          <button class="btn btn-primary btn-custom" onclick="loadBoldGroups()">Load Bold Groups</button>
+        </div>
+        <div id="boldGroupsList"></div>
       </div>
-      <div id="boldGroupsList"></div>
     </div>
   </div>
   
@@ -430,12 +439,12 @@
         };
         d.appendChild(edBtn);
     
-        // subtopics
+        // subtopics (نعرض اسم الفرع فقط دون مسار الملف)
         if(t.subTopics && t.subTopics.length > 0){
           t.subTopics.forEach((st, stidx) => {
             let stDiv = document.createElement('div');
             stDiv.className = "ms-3 mt-2";
-            stDiv.innerHTML = `${st.name} => ${st.file}`;
+            stDiv.innerHTML = `${st.name}`;
     
             // reorder sub
             let subUp = document.createElement('button');
@@ -462,7 +471,7 @@
             };
             stDiv.appendChild(subDown);
     
-            // حذف subtopic + حذف ملفها
+            // حذف subtopic
             let sdel = document.createElement('button');
             sdel.className = 'btn btn-danger btn-sm me-1';
             sdel.textContent = 'X';
@@ -576,7 +585,7 @@
         renderEditableQuestions();
       } catch(e){}
     }
-    // نقوم بإخفاء عرض الأسئلة في قسم subtopicQuestions
+    // إخفاء عرض الأسئلة في قسم subtopicQuestions
     function renderSubtopicQuestions(){
       let box = document.getElementById('subtopicQuestions');
       box.innerHTML = '';
@@ -801,8 +810,7 @@
       currentQuestions.forEach((q, index) => {
         let qDiv = document.createElement('div');
         qDiv.className = 'q-item p-3 mb-3 border rounded';
-        qDiv.id = `q-${index+1}`; // للانتقال للسؤال
-        // استخراج الجزء الغامق (إن وُجد) وفصل نص السؤال
+        qDiv.id = `q-${index+1}`;
         let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
         let boldPart = boldMatch ? boldMatch[2].trim() : '';
         let questionText = boldMatch ? q.question.replace(boldMatch[0], '').trim() : q.question;
@@ -832,7 +840,6 @@
           <button class="btn btn-primary btn-sm" onclick="saveQuestionChanges(${index})">Save Changes</button>
         `;
     
-        // عرض الخيارات
         let optionsContainer = qDiv.querySelector(`#options-${index}`);
         q.options.forEach((opt, optIndex) => {
           let optInput = document.createElement('input');
@@ -848,7 +855,6 @@
       });
     }
     
-    // Handle moving questions فردياً
     function handleMoveUp(index) {
       if(index > 0) {
         [currentQuestions[index-1], currentQuestions[index]] = [currentQuestions[index], currentQuestions[index-1]];
@@ -861,7 +867,6 @@
         renderEditableQuestions();
       }
     }
-    // Save changes for individual question
     function saveQuestionChanges(index) {
       const boldPrefix = document.querySelector(`.bold-prefix[data-index="${index}"]`).value;
       const questionText = document.querySelector(`.question-text[data-index="${index}"]`).value;
@@ -881,17 +886,13 @@
     }
     
     /********** Bulk Reorder Section **********/
-    // دالة استخراج المجموعات من الأسئلة باستخدام تعبير نمطي معدل
     function detectBoldGroups() {
       const groups = [];
-      // استخدام تعبير نمطي أكثر شمولاً للتعرف على النص داخل وسم <span> الذي يحتوي على font-weight:bold
       const regex = /<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i;
       currentQuestions.forEach((q, index) => {
         const match = q.question.match(regex);
         if (match) {
-          // match[2] يحتوي على المحتوى داخل الوسم
           let boldContent = match[2];
-          // نقسم النص عند ظهور "- Question" (بشكل غير حساس للحالة)
           let parts = boldContent.split(/- Question/i);
           if (parts.length > 0) {
             let groupName = parts[0].trim();
@@ -910,7 +911,6 @@
       return groups;
     }
     
-    // عرض المجموعات مع التنسيق المطلوب: "Group Name ( Q : start - end )"
     function renderBoldGroups(boldGroups) {
       const container = document.getElementById('boldGroupsList');
       container.innerHTML = '';
@@ -945,7 +945,6 @@
       });
     }
     
-    // تحميل المجموعات وعرضها
     async function loadBoldGroups() {
       try {
         if (!currentSubtopicPath) {
@@ -965,12 +964,11 @@
       }
     }
     
-    // نقل المجموعة للأعلى: تبديل كتلتين كاملةً
     function moveGroupUp(groupTitle) {
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
       const targetIndex = groups.findIndex(g => g.title === groupTitle);
-      if (targetIndex <= 0) return; // لا يوجد مجموعة سابقة
+      if (targetIndex <= 0) return;
       const prevGroup = groups[targetIndex - 1];
       const targetGroup = groups[targetIndex];
       const prevStart = Math.min(...prevGroup.indices);
@@ -978,25 +976,22 @@
       const targetStart = Math.min(...targetGroup.indices);
       const targetEnd = Math.max(...targetGroup.indices);
     
-      // تقسيم currentQuestions إلى أجزاء وإعادة ترتيبها
       const before = currentQuestions.slice(0, prevStart);
       const blockPrev = currentQuestions.slice(prevStart, prevEnd + 1);
       const middle = currentQuestions.slice(prevEnd + 1, targetStart);
       const blockTarget = currentQuestions.slice(targetStart, targetEnd + 1);
       const after = currentQuestions.slice(targetEnd + 1);
     
-      // تبديل الكتل: المجموعة المستهدفة توضع قبل المجموعة السابقة
       currentQuestions = before.concat(blockTarget, middle, blockPrev, after);
       renderEditableQuestions();
       loadBoldGroups();
     }
     
-    // نقل المجموعة للأسفل: تبديل كتلتين كاملةً
     function moveGroupDown(groupTitle) {
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
       const targetIndex = groups.findIndex(g => g.title === groupTitle);
-      if (targetIndex === -1 || targetIndex === groups.length - 1) return; // لا يوجد مجموعة تالفة
+      if (targetIndex === -1 || targetIndex === groups.length - 1) return;
       const targetGroup = groups[targetIndex];
       const nextGroup = groups[targetIndex + 1];
       const targetStart = Math.min(...targetGroup.indices);
@@ -1010,7 +1005,6 @@
       const blockNext = currentQuestions.slice(nextStart, nextEnd + 1);
       const after = currentQuestions.slice(nextEnd + 1);
     
-      // تبديل الكتل: المجموعة التالية توضع قبل المجموعة المستهدفة
       currentQuestions = before.concat(blockNext, middle, blockTarget, after);
       renderEditableQuestions();
       loadBoldGroups();
