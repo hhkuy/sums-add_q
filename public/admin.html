@@ -893,14 +893,23 @@ function saveQuestionChanges(index) {
 // Bulk reorder by bold groups
 async function loadBoldGroups() {
   try {
-    const boldGroups = detectBoldGroups();
-    if (boldGroups.length === 0) {
-      alert('No bold groups found. Ensure questions have bold text containing "Question".');
+    if (!currentSubtopicPath) {
+      alert("Please select and load a subtopic first!");
+      return;
     }
+
+    const boldGroups = detectBoldGroups();
+    
+    if (boldGroups.length === 0) {
+      alert(`No groups found! Ensure questions have this format:
+        <span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>`);
+      return;
+    }
+
     renderBoldGroups(boldGroups);
   } catch (error) {
-    console.error('Error loading bold groups:', error);
-    alert('Failed to load bold groups. Check the console for details.');
+    console.error("Load Bold Groups Error:", error);
+    alert("Error loading groups. Check console.");
   }
 }
 
@@ -909,46 +918,33 @@ function detectBoldGroups() {
   let currentGroup = null;
 
   currentQuestions.forEach((q, index) => {
-    // البحث عن النمط المحدد: <span style...>النص المطلوب - Question X</span>
+    // البحث عن النمط: <span style...>[النص] - Question X</span>
     const boldMatch = q.question.match(
-      /<span style=['"]color: darkred; font-weight:bold;['"]>(.+?) - Question \d+<\/span>/i
+      /<span style=['"]color: darkred; font-weight:bold;['"]>(.+?)\s*-\s*Question\s+\d+<\/span>/i
     );
 
     if (boldMatch) {
       const groupName = boldMatch[1].trim(); // "Second Batch (2024) - Dr. Zeinab Hamidizad"
       
       if (currentGroup) {
-        // إذا كانت المجموعة الحالية مختلفة عن المكتشفة
         if (currentGroup.title !== groupName) {
           groups.push(currentGroup);
-          currentGroup = {
-            title: groupName,
-            indices: [index],
-            start: index
-          };
+          currentGroup = { title: groupName, indices: [index], start: index };
         } else {
-          // نفس المجموعة، أضف المؤشر
           currentGroup.indices.push(index);
         }
       } else {
-        // بداية مجموعة جديدة
-        currentGroup = {
-          title: groupName,
-          indices: [index],
-          start: index
-        };
+        currentGroup = { title: groupName, indices: [index], start: index };
       }
     } else if (currentGroup) {
-      // أسئلة تتبع المجموعة الحالية بدون عنوان
       currentGroup.indices.push(index);
     }
   });
 
-  // أضف المجموعة الأخيرة إذا موجودة
   if (currentGroup) groups.push(currentGroup);
-  
   return groups;
 }
+  
 function moveGroupUp(groupIndex) {
   const groups = detectBoldGroups();
   if(groupIndex === 0) return;
