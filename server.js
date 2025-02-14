@@ -12,10 +12,9 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.REPO_OWNER;
 const REPO_NAME = process.env.REPO_NAME;       // المستودع الخاص بالمواضيع والملفات الفرعية
 const REPO_NAME_PIC = process.env.REPO_NAME_PIC; // المستودع الخاص بالصور (مثلاً "Sums_Q_Pic")
-// يمكن ضبط الفرع الخاص بمستودع الصور، افتراضي "main"
 const BRANCH_PIC = process.env.BRANCH_PIC || 'main';
 
-// دوال المساعدة الخاصة بـ GitHub مع تمرير اسم المستودع كمعامل
+// دوال المساعدة الخاصة بـ GitHub
 async function getGitHubFile(repo, path) {
   const url = `https://api.github.com/repos/${REPO_OWNER}/${repo}/contents/${path}`;
   const res = await fetch(url, {
