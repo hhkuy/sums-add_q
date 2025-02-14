@@ -72,7 +72,7 @@
     .group-actions button {
       margin-right: 10px;
     }
-    /* Floating Scroll Buttons */
+    /* Floating Scroll Buttons (موضوعة الآن في الأعلى) */
     #floatScrollBtn, #floatSaveBtn {
       position: fixed;
       width: 50px;
@@ -91,14 +91,14 @@
     #floatScrollBtn:hover, #floatSaveBtn:hover {
       opacity: 0.8;
     }
-    /* الزر العائم الأساسي للنقل */
+    /* الزر العائم الأساسي للنقل (أعلى الصفحة) */
     #floatScrollBtn {
-      bottom: 30px;
+      top: 30px;
       right: 30px;
     }
-    /* زر عائم إضافي للنقل السريع إلى Save Questions */
+    /* زر عائم إضافي للنقل السريع إلى Save Questions (أعلى الصفحة) */
     #floatSaveBtn {
-      bottom: 100px;
+      top: 100px;
       right: 30px;
       background: #dc3545;
     }
@@ -259,7 +259,7 @@
   <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script>
-    /********** Modal Functions **********/
+    / Modal Functions /
     let alertOverlay = document.getElementById('alertOverlay');
     let alertMsg = document.getElementById('alertMsg');
     let alertOkBtn = document.getElementById('alertOkBtn');
@@ -395,10 +395,8 @@
       cachedTopics.forEach((t, idx) => {
         let d = document.createElement('div');
         d.className = "p-3 mb-2 border rounded";
-        d.innerHTML = `
-          <strong>${t.topicName}</strong> (sub: ${t.subTopics ? t.subTopics.length : 0})
-          <br>${t.description || ''}
-        `;
+        d.innerHTML = `<strong>${t.topicName}</strong> (sub: ${t.subTopics ? t.subTopics.length : 0})
+          <br>${t.description || ''}`;
         let upBtn = document.createElement('button');
         upBtn.className = 'btn btn-secondary btn-sm me-1';
         upBtn.textContent = '▲';
@@ -669,7 +667,6 @@
           await handleImagesAndBind(arr);
           currentQuestions = currentQuestions.concat(arr);
           renderEditableQuestions();
-          // عرض رسالة اكتمال العملية
           alert("Conversion completed!");
           return;
         }
@@ -727,10 +724,10 @@
           let file = fileIn.files[0];
           let prog = row.querySelector('.progress');
           let pbar = prog.querySelector('.progress-bar');
-          let url = await uploadImageToImgHippo(file, prog, pbar);
-          if(url){
+          let result = await uploadImageToGitHub(file, prog, pbar);
+          if(result.url){
             if(!dataMap[qnum]) dataMap[qnum] = [];
-            dataMap[qnum].push(url);
+            dataMap[qnum].push(`<br><img src='${result.url}' alt='Image for Q${qnum}' style='max-width:100%; height:auto;' data-filepath='${result.filePath}'>`);
           }
         }
       }
@@ -739,18 +736,18 @@
         if(match){
           let qn = parseInt(match[1], 10);
           if(dataMap[qn]){
-            dataMap[qn].forEach(imgUrl => {
-              obj.question += `<br><img src='${imgUrl}' alt='Image for Q${qn}' style='max-width:100%; height:auto;'>`;
+            dataMap[qn].forEach(imgHtml => {
+              obj.question += imgHtml;
             });
           }
         }
       });
     }
     
-    function uploadImageToImgHippo(file, progressContainer, progressBar) {
+    function uploadImageToGitHub(file, progressContainer, progressBar) {
       return new Promise((resolve) => {
         if (!file) {
-          return resolve("");
+          return resolve({url:"", filePath:""});
         }
         if (progressContainer) {
           progressContainer.style.display = "block";
@@ -759,56 +756,41 @@
           progressBar.style.width = "0%";
           progressBar.textContent = "0%";
         }
-    
-        let formData = new FormData();
-        formData.append("api_key", "076dd2c00a3cf16634d6029f1b25b16c");
-        formData.append("file", file);
-    
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://api.imghippo.com/v1/upload", true);
-        xhr.setRequestHeader("Accept", "application/json");
-    
-        xhr.upload.onprogress = function(event) {
-          if (event.lengthComputable) {
-            let percent = Math.floor((event.loaded / event.total) * 100);
-            progressBar.style.width = percent + "%";
-            progressBar.textContent = percent + "%";
-          }
-        };
-        xhr.onload = function(){
-          if(xhr.status === 200){
-            try{
-              let response = JSON.parse(xhr.responseText);
-              if(response.success && response.data && response.data.url){
-                progressBar.style.width = "100%";
-                progressBar.textContent = "تم الرفع";
-                return resolve(response.data.url);
-              } else {
-                console.error("فشل رفع الصورة:", response);
-                progressBar.textContent = "فشل الرفع";
-                return resolve("");
-              }
-            } catch(e){
-              console.error("خطأ في تحليل الاستجابة:", e);
-              progressBar.textContent = "فشل الرفع";
-              return resolve("");
+        const reader = new FileReader();
+        reader.onload = async function() {
+          const base64 = reader.result.split(',')[1];
+          progressBar.style.width = "50%";
+          progressBar.textContent = "Uploading";
+          try {
+            const response = await fetch('/api/upload-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: file.name,
+                base64: base64
+              })
+            });
+            const result = await response.json();
+            if(result.success) {
+              progressBar.style.width = "100%";
+              progressBar.textContent = "Uploaded";
+              resolve({url: result.url, filePath: result.filePath});
+            } else {
+              console.error("Image upload failed:", result.error);
+              progressBar.textContent = "Failed";
+              resolve({url: "", filePath: ""});
             }
-          } else {
-            console.error("فشل الرفع. حالة الطلب:", xhr.status);
-            progressBar.textContent = "فشل الرفع";
-            return resolve("");
+          } catch(e) {
+            console.error("Error uploading image:", e);
+            progressBar.textContent = "Failed";
+            resolve({url: "", filePath: ""});
           }
         };
-        xhr.onerror = function(){
-          console.error("حدث خطأ أثناء الاتصال.");
-          progressBar.textContent = "فشل الرفع";
-          resolve("");
-        };
-        xhr.send(formData);
+        reader.readAsDataURL(file);
       });
     }
     
-    /********** Edit Questions Section **********/
+    / Edit Questions Section /
     function renderEditableQuestions() {
       let container = document.getElementById('questionsEditList');
       container.innerHTML = '';
@@ -826,8 +808,8 @@
         let textWithoutImg = textWithoutBr.replace(/<img\s+[^>]*>/gi, "").trim();
         let questionText = boldMatch ? textWithoutImg.replace(boldMatch[0], "").trim() : textWithoutImg;
     
-        let html = `
-          <div class="mb-2">
+        let html = 
+          `<div class="mb-2">
             <strong>Question ${index + 1}</strong>
             <button class="btn btn-secondary btn-sm" onclick="handleMoveUp(${index})">▲</button>
             <button class="btn btn-secondary btn-sm" onclick="handleMoveDown(${index})">▼</button>
@@ -842,7 +824,7 @@
           <div class="mb-2">
             <label>Image:</label>
             <div id="imagePreview-${index}" class="mb-2">
-              ${ currentImage ? `<img src="${currentImage}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">` : 'No image' }
+              ${ currentImage ? `<img src="${currentImage}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;" data-filepath="">` : 'No image' }
             </div>
             <input type="file" class="form-control mt-2 image-file" data-index="${index}" accept="image/*">
             <button class="btn btn-danger btn-sm mt-2" onclick="deleteImage(${index})">Delete Image</button>
@@ -859,8 +841,7 @@
             <label>Explanation:</label>
             <textarea class="form-control explanation" data-index="${index}" rows="3" style="resize: vertical;" placeholder="Enter explanation...">${q.explanation || ''}</textarea>
           </div>
-          <button class="btn btn-primary btn-sm" id="updateBtn-${index}" onclick="saveQuestionChanges(${index})">Update Question</button>
-        `;
+          <button class="btn btn-primary btn-sm" id="updateBtn-${index}" onclick="saveQuestionChanges(${index})">Update Question</button>`;
     
         let containerDiv = document.createElement('div');
         containerDiv.innerHTML = html;
@@ -937,7 +918,8 @@
         let newImageUrl = "";
         if(imageFileInput && imageFileInput.files.length > 0) {
           let progressContainer = document.getElementById(`uploadProgress-${index}`);
-          newImageUrl = await uploadImageToImgHippo(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild);
+          newImageUrl = await uploadImageToGitHub(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild);
+          newImageUrl = newImageUrl.url;
         } else {
           let previewDiv = document.getElementById(`imagePreview-${index}`);
           if(previewDiv && previewDiv.querySelector('img')) {
@@ -973,6 +955,22 @@
     function deleteImage(index) {
       let previewDiv = document.getElementById(`imagePreview-${index}`);
       if(previewDiv){
+        let img = previewDiv.querySelector('img');
+        if(img && img.getAttribute('data-filepath')){
+          let filePath = img.getAttribute('data-filepath');
+          fetch('/api/delete-file?filePath=' + encodeURIComponent(filePath), {
+            method: 'DELETE'
+          })
+          .then(res => res.json())
+          .then(result => {
+            if(result.success) {
+              console.log('Image deleted from GitHub');
+            } else {
+              console.error('Failed to delete image from GitHub:', result.error);
+            }
+          })
+          .catch(err => console.error('Error deleting image:', err));
+        }
         previewDiv.innerHTML = 'No image';
       }
       let fileInput = document.querySelector(`.image-file[data-index="${index}"]`);
@@ -981,7 +979,7 @@
       }
     }
     
-    /********** Bulk Reorder Section **********/
+    / Bulk Reorder Section /
     function detectBoldGroups() {
       const groups = [];
       const regex = /<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i;
