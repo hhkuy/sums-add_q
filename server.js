@@ -201,7 +201,7 @@ app.post('/api/delete-questions-by-prefix', async (req, res) => {
 });
 
 // 6) Upload image to GitHub (into folder pic in REPO_NAME_PIC)
-// الآن نضيف معطيات إضافية (topic, subtopic, questionNumber) في رسالة commit
+// يتم إرسال معطيات إضافية (topic, subtopic, questionNumber) لتضمينها في رسالة commit
 app.post('/api/upload-image', async (req, res) => {
   const { name, base64, topic, subtopic, questionNumber } = req.body;
   if (!base64) {
@@ -212,7 +212,6 @@ app.post('/api/upload-image', async (req, res) => {
     let timestamp = Date.now();
     let safeName = name ? name.replace(/[^a-zA-Z0-9.\-_]/g, '') : 'uploaded.jpg';
     let filePath = `pic/${timestamp}_${safeName}`;
-    // بناء رسالة commit تتضمن البيانات الإضافية إذا كانت متوفرة
     let commitMessage = '';
     if(topic && subtopic && questionNumber) {
       commitMessage = `Upload image for topic: ${topic}, subtopic: ${subtopic}, question: ${questionNumber}`;
@@ -220,7 +219,6 @@ app.post('/api/upload-image', async (req, res) => {
       commitMessage = `Upload image ${filePath}`;
     }
     const result = await uploadGitHubImage(REPO_NAME_PIC, filePath, buf, commitMessage);
-    // بناء الرابط الخام باستخدام الفرع المحدد
     const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME_PIC}/${BRANCH_PIC}/${filePath}`;
     res.json({ success: true, url: rawUrl, filePath });
   } catch (e) {
@@ -233,7 +231,6 @@ app.delete('/api/delete-file', async (req, res) => {
   const { filePath } = req.query;
   if (!filePath) return res.status(400).json({ success: false, error: 'No filePath param for deletion' });
   
-  // تحديد المستودع بحسب مسار الملف
   const repo = filePath.startsWith('pic/') ? REPO_NAME_PIC : REPO_NAME;
   
   try {
