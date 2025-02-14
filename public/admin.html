@@ -349,7 +349,7 @@
       }
     }
     
-    // original Vars
+    // المتغيرات الأصلية
     let cachedTopics = [];
     let topicsSha = null;
     let currentSubtopicPath = null;
@@ -647,7 +647,7 @@
       c.appendChild(row);
     }
     
-    // في دالة handleImagesAndBind نرسل معطيات إضافية (topic, subtopic, questionNumber)
+    // في handleImagesAndBind نرسل معطيات إضافية (topic, subtopic, questionNumber)
     async function handleImagesAndBind(questionsArr){
       let c = document.getElementById('imageContainer');
       let rows = c.querySelectorAll('.image-field-row');
@@ -687,7 +687,7 @@
       });
     }
     
-    // تعديل دالة uploadImageToGitHub لقبول معطيات إضافية وإرسالها إلى الخادم
+    // تعديل دالة uploadImageToGitHub لقبول معطيات إضافية
     function uploadImageToGitHub(file, progressContainer, progressBar, extraParams) {
       return new Promise((resolve) => {
         if (!file) {
@@ -749,16 +749,15 @@
         // استخراج النص الغامق من السؤال
         let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
         let boldPart = boldMatch ? boldMatch[2].trim() : '';
-        // استخراج الصورة إن وُجدت مع الحصول على data-filepath إن وُجد
+        // استخراج الصورة (إذا وجدت) مع الحصول على data-filepath
         let imgElement = null;
         let parser = new DOMParser();
         let doc = parser.parseFromString(q.question, 'text/html');
         imgElement = doc.querySelector('img');
         let currentImage = imgElement ? imgElement.getAttribute('src') : "";
         let currentFilePath = imgElement ? imgElement.getAttribute('data-filepath') : "";
-        // إزالة وسوم <br> من نص السؤال
+        // إزالة وسوم <br> والنص الغامق للحصول على نص السؤال الفعلي
         let textWithoutBr = q.question.replace(/<br\s*\/?>/gi, " ");
-        // إزالة وسم الصورة والنص الغامق للحصول على نص السؤال الفعلي
         let textWithoutImg = textWithoutBr.replace(/<img\s+[^>]*>/gi, "").trim();
         let questionText = boldMatch ? textWithoutImg.replace(boldMatch[0], "").trim() : textWithoutImg;
     
@@ -800,7 +799,7 @@
         let containerDiv = document.createElement('div');
         containerDiv.innerHTML = html;
         containerDiv.id = `q-${index+1}`;
-        // إذا كان السؤال يحتوي على صورة، نخزن مسار الصورة في data attribute
+        // إذا وجد لدينا مسار صورة سابق يتم تخزينه
         if(currentFilePath) {
           containerDiv.setAttribute('data-image-filepath', currentFilePath);
         }
@@ -836,11 +835,11 @@
         let newImageFilePath = "";
         const containerDiv = document.getElementById(`q-${index+1}`);
         const previewDiv = document.getElementById(`imagePreview-${index}`);
-        // إذا كان هناك علامة لحذف الصورة (يتم تعيينها عند الضغط على Delete Image)
+        
+        // إذا وُجدت علامة لحذف الصورة (data-delete-image) نتحقق ونحذفها من المستودع
         if(containerDiv.getAttribute('data-delete-image') === 'true') {
           newImageUrl = "";
           newImageFilePath = "";
-          // إذا كان للسؤال صورة سابقة (محفوظة في data attribute) نقوم بمحاولة حذفها من المستودع
           let oldFilePath = containerDiv.getAttribute('data-image-filepath');
           if(oldFilePath) {
             await fetch('/api/delete-file?filePath=' + encodeURIComponent(oldFilePath), { method: 'DELETE' });
@@ -867,11 +866,9 @@
         let newQuestion = `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`;
         if(newImageUrl) {
           newQuestion += `<br><img src="${newImageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;" data-filepath="${newImageFilePath}">`;
-          // نخزن مسار الصورة الجديد في العنصر لتستخدم لاحقاً
-          document.getElementById(`q-${index+1}`).setAttribute('data-image-filepath', newImageFilePath);
+          containerDiv.setAttribute('data-image-filepath', newImageFilePath);
         } else {
-          // نحذف السمة إذا لم توجد صورة
-          document.getElementById(`q-${index+1}`).removeAttribute('data-image-filepath');
+          containerDiv.removeAttribute('data-image-filepath');
         }
         
         currentQuestions[index] = {
@@ -893,11 +890,10 @@
       }
     }
     
-    // تعديل دالة deleteImage: عند الضغط نضع علامة في العنصر الأم لتحديد حذف الصورة
+    // عند الضغط على Delete Image في قسم Edit Questions يتم وضع علامة لحذف الصورة (ولن تُحذف فوراً)
     function deleteImage(index) {
       let containerDiv = document.getElementById(`q-${index+1}`);
       let previewDiv = document.getElementById(`imagePreview-${index}`);
-      // إذا كانت الصورة موجودة مع data-filepath نقوم بتعيين السمة لحذفها لاحقاً
       let img = previewDiv.querySelector('img');
       if(img && img.getAttribute('data-filepath')) {
         containerDiv.setAttribute('data-delete-image', 'true');
