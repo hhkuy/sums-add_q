@@ -1,7 +1,7 @@
 {
   "name": "quiz-manager-delete-subtopic-file",
   "version": "1.0.0",
-  "description": "All original code, with an added feature to delete subtopic file from repo when subtopic is removed.",
+  "description": "All original code, with an added feature to delete subtopic file from repo when subtopic is removed. Now using a separate repo for images (REPO_NAME_PIC).",
   "scripts": {
     "start": "node server.js"
   },
