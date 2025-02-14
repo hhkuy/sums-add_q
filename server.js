@@ -201,8 +201,9 @@ app.post('/api/delete-questions-by-prefix', async (req, res) => {
 });
 
 // 6) Upload image to GitHub (into folder pic in REPO_NAME_PIC)
+// الآن نضيف معطيات إضافية (topic, subtopic, questionNumber) في رسالة commit
 app.post('/api/upload-image', async (req, res) => {
-  const { name, base64 } = req.body;
+  const { name, base64, topic, subtopic, questionNumber } = req.body;
   if (!base64) {
     return res.status(400).json({ success: false, error: 'No base64 in request' });
   }
@@ -211,7 +212,14 @@ app.post('/api/upload-image', async (req, res) => {
     let timestamp = Date.now();
     let safeName = name ? name.replace(/[^a-zA-Z0-9.\-_]/g, '') : 'uploaded.jpg';
     let filePath = `pic/${timestamp}_${safeName}`;
-    const result = await uploadGitHubImage(REPO_NAME_PIC, filePath, buf, `Upload image ${filePath}`);
+    // بناء رسالة commit تتضمن البيانات الإضافية إذا كانت متوفرة
+    let commitMessage = '';
+    if(topic && subtopic && questionNumber) {
+      commitMessage = `Upload image for topic: ${topic}, subtopic: ${subtopic}, question: ${questionNumber}`;
+    } else {
+      commitMessage = `Upload image ${filePath}`;
+    }
+    const result = await uploadGitHubImage(REPO_NAME_PIC, filePath, buf, commitMessage);
     // بناء الرابط الخام باستخدام الفرع المحدد
     const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME_PIC}/${BRANCH_PIC}/${filePath}`;
     res.json({ success: true, url: rawUrl, filePath });
