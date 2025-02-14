@@ -1,7 +1,7 @@
 {
   "name": "quiz-manager-delete-subtopic-file",
   "version": "1.0.0",
-  "description": "Original code with deletion of subtopic files and separate image repo usage. Image commit messages include topic, subtopic and question number; and deletion of image from repository is handled when updating questions.",
+  "description": "Original code with deletion of subtopic files and separate image repo usage. Now the image upload commit message includes topic, subtopic and question number.",
   "scripts": {
     "start": "node server.js"
   },
