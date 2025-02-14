@@ -12,9 +12,10 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.REPO_OWNER;
 const REPO_NAME = process.env.REPO_NAME;       // المستودع الخاص بالمواضيع والملفات الفرعية
 const REPO_NAME_PIC = process.env.REPO_NAME_PIC; // المستودع الخاص بالصور (مثلاً "Sums_Q_Pic")
+// يمكن ضبط الفرع الخاص بمستودع الصور، افتراضي "main"
 const BRANCH_PIC = process.env.BRANCH_PIC || 'main';
 
-// دوال المساعدة الخاصة بـ GitHub
+// دوال المساعدة الخاصة بـ GitHub مع تمرير اسم المستودع كمعامل
 async function getGitHubFile(repo, path) {
   const url = `https://api.github.com/repos/${REPO_OWNER}/${repo}/contents/${path}`;
   const res = await fetch(url, {
@@ -200,7 +201,7 @@ app.post('/api/delete-questions-by-prefix', async (req, res) => {
 });
 
 // 6) Upload image to GitHub (into folder pic in REPO_NAME_PIC)
-// يتم إرسال معطيات إضافية (topic, subtopic, questionNumber) لتضمينها في رسالة commit
+// الآن نضيف معطيات إضافية (topic, subtopic, questionNumber) في رسالة commit
 app.post('/api/upload-image', async (req, res) => {
   const { name, base64, topic, subtopic, questionNumber } = req.body;
   if (!base64) {
@@ -211,6 +212,7 @@ app.post('/api/upload-image', async (req, res) => {
     let timestamp = Date.now();
     let safeName = name ? name.replace(/[^a-zA-Z0-9.\-_]/g, '') : 'uploaded.jpg';
     let filePath = `pic/${timestamp}_${safeName}`;
+    // بناء رسالة commit تتضمن البيانات الإضافية إذا كانت متوفرة
     let commitMessage = '';
     if(topic && subtopic && questionNumber) {
       commitMessage = `Upload image for topic: ${topic}, subtopic: ${subtopic}, question: ${questionNumber}`;
@@ -218,6 +220,7 @@ app.post('/api/upload-image', async (req, res) => {
       commitMessage = `Upload image ${filePath}`;
     }
     const result = await uploadGitHubImage(REPO_NAME_PIC, filePath, buf, commitMessage);
+    // بناء الرابط الخام باستخدام الفرع المحدد
     const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME_PIC}/${BRANCH_PIC}/${filePath}`;
     res.json({ success: true, url: rawUrl, filePath });
   } catch (e) {
@@ -230,6 +233,7 @@ app.delete('/api/delete-file', async (req, res) => {
   const { filePath } = req.query;
   if (!filePath) return res.status(400).json({ success: false, error: 'No filePath param for deletion' });
   
+  // تحديد المستودع بحسب مسار الملف
   const repo = filePath.startsWith('pic/') ? REPO_NAME_PIC : REPO_NAME;
   
   try {
