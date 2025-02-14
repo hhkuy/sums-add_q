@@ -92,16 +92,21 @@
       opacity: 0.8;
     }
     /* الزر العائم الأساسي للنقل (أعلى الصفحة) */
-    #floatScrollBtn {
-      top: 30px;
-      right: 30px;
-    }
-    /* زر عائم إضافي للنقل السريع إلى Save Questions (أعلى الصفحة) */
-    #floatSaveBtn {
-      top: 100px;
-      right: 30px;
-      background: #dc3545;
-    }
+    /* مثال: زر النقل الأساسي */
+#floatScrollBtn {
+  top: 50%;
+  right: 30px;
+  transform: translateY(calc(-50% - 30px));
+}
+
+/* مثال: زر النقل الإضافي */
+#floatSaveBtn {
+  top: 50%;
+  right: 30px;
+  transform: translateY(calc(-50% + 30px));
+  background: #dc3545;
+}
+
     /* Modal Overrides */
     .modal-overlay {
       position: fixed;
