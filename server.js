@@ -7,11 +7,13 @@ const app = express();
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// متغيرات البيئة يجب أن تُضبط في Vercel أو ملف .env
+// تأكد من ضبط متغيرات البيئة التالية في Vercel أو ملف .env
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.REPO_OWNER;
 const REPO_NAME = process.env.REPO_NAME;       // المستودع الخاص بالمواضيع والملفات الفرعية
-const REPO_NAME_PIC = process.env.REPO_NAME_PIC; // المستودع الخاص بالصور
+const REPO_NAME_PIC = process.env.REPO_NAME_PIC; // المستودع الخاص بالصور (مثلاً "Sums_Q_Pic")
+// يمكن ضبط الفرع الخاص بمستودع الصور، افتراضي "main"
+const BRANCH_PIC = process.env.BRANCH_PIC || 'main';
 
 // دوال المساعدة الخاصة بـ GitHub مع تمرير اسم المستودع كمعامل
 async function getGitHubFile(repo, path) {
@@ -105,11 +107,12 @@ async function uploadGitHubImage(repo, filePath, fileBuffer, commitMessage) {
 
 app.get('/api/test', (req, res) => {
   res.json({
-    message: "Server up, delete subtopic file if subtopic removed, no changes in other features",
+    message: "Server up, with separate image repo.",
     GITHUB_TOKEN: !!GITHUB_TOKEN,
     REPO_OWNER,
     REPO_NAME,
-    REPO_NAME_PIC
+    REPO_NAME_PIC,
+    BRANCH_PIC
   });
 });
 
@@ -140,7 +143,7 @@ app.post('/api/topics', async (req, res) => {
   }
 });
 
-// 3) get subtopic file
+// 3) Get subtopic file
 app.get('/api/get-subtopic-file', async (req, res) => {
   const path = req.query.path;
   if (!path) return res.status(400).json({ success: false, error: 'No path param' });
@@ -163,7 +166,7 @@ app.get('/api/get-subtopic-file', async (req, res) => {
   }
 });
 
-// 4) update subtopic file
+// 4) Update subtopic file
 app.post('/api/update-subtopic-file', async (req, res) => {
   const { path, content, sha } = req.body;
   if (!path || !content) {
@@ -178,7 +181,7 @@ app.post('/api/update-subtopic-file', async (req, res) => {
   }
 });
 
-// 5) delete prefix
+// 5) Delete questions by prefix
 app.post('/api/delete-questions-by-prefix', async (req, res) => {
   const { path, sha, prefix } = req.body;
   if (!path || !sha || !prefix)
@@ -197,7 +200,7 @@ app.post('/api/delete-questions-by-prefix', async (req, res) => {
   }
 });
 
-// 6) upload image to GitHub (into folder pic in REPO_NAME_PIC)
+// 6) Upload image to GitHub (into folder pic in REPO_NAME_PIC)
 app.post('/api/upload-image', async (req, res) => {
   const { name, base64 } = req.body;
   if (!base64) {
@@ -209,15 +212,15 @@ app.post('/api/upload-image', async (req, res) => {
     let safeName = name ? name.replace(/[^a-zA-Z0-9.\-_]/g, '') : 'uploaded.jpg';
     let filePath = `pic/${timestamp}_${safeName}`;
     const result = await uploadGitHubImage(REPO_NAME_PIC, filePath, buf, `Upload image ${filePath}`);
-    // بناء الرابط الخام للصورة (نفترض الفرع الرئيسي main)
-    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME_PIC}/main/${filePath}`;
+    // بناء الرابط الخام باستخدام الفرع المحدد
+    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME_PIC}/${BRANCH_PIC}/${filePath}`;
     res.json({ success: true, url: rawUrl, filePath });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
 });
 
-// 7) Delete subtopic file or image file
+// 7) Delete file (subtopic or image)
 app.delete('/api/delete-file', async (req, res) => {
   const { filePath } = req.query;
   if (!filePath) return res.status(400).json({ success: false, error: 'No filePath param for deletion' });
