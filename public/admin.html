@@ -647,75 +647,10 @@
       c.appendChild(row);
     }
     
-    async function convertAndAppend(){
-      if(!currentSubtopicPath) return;
-      let prefix = document.getElementById('prefixInput').value.trim();
-      let startNumber = parseInt(document.getElementById('startQNumber').value, 10);
-      if(isNaN(startNumber) || startNumber < 1) startNumber = 1;
-    
-      let text = document.getElementById('questionsText').value.trim();
-      if(!text) return;
-    
-      let arr = null;
-      try{
-        if(text.startsWith('let quizData =')){
-          text = text.replace('let quizData =','').trim();
-          if(text.endsWith(';')) text = text.slice(0,-1);
-        }
-        arr = JSON.parse(text);
-        if(Array.isArray(arr)){
-          await handleImagesAndBind(arr);
-          currentQuestions = currentQuestions.concat(arr);
-          renderEditableQuestions();
-          alert("Conversion completed!");
-          return;
-        }
-      } catch(e){}
-      let lines = text.split('\n');
-      let questionText = null, options = [], ansIdx = -1, ansText = null, explanation = null;
-      let out = [];
-      for(let i = 0; i < lines.length; i++){
-        let ln = lines[i].trim();
-        let qM = ln.match(/^(\d+)\.\s+(.*)/);
-        if(qM){
-          if(questionText !== null){
-            out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
-          }
-          questionText = `<span style='color: darkred; font-weight:bold;'>${prefix ? prefix + ' ' : ''}Question ${startNumber}</span> ${qM[2]}`;
-          startNumber++;
-          options = []; ansIdx = -1; ansText = null; explanation = null;
-        } else {
-          let opt = ln.match(/^([A-F])\.\s+(.*)/i);
-          if(opt){
-            let txt = opt[2].trim();
-            if(txt.endsWith('***')){
-              txt = txt.slice(0,-3).trim();
-              ansIdx = options.length;
-              ansText = txt;
-            }
-            options.push(txt);
-          } else {
-            let ex = ln.match(/^Explanation\s*:\s*(.*)/i);
-            if(ex){
-              explanation = ex[1];
-            }
-          }
-        }
-      }
-      if(questionText !== null){
-        out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
-      }
-      await handleImagesAndBind(out);
-      currentQuestions = currentQuestions.concat(out);
-      renderEditableQuestions();
-      alert("Conversion completed!");
-    }
-    
-    // تعديل دالة handleImagesAndBind لإرسال معطيات إضافية (topic, subtopic, questionNumber)
+    // في دالة handleImagesAndBind نرسل معطيات إضافية (topic, subtopic, questionNumber)
     async function handleImagesAndBind(questionsArr){
       let c = document.getElementById('imageContainer');
       let rows = c.querySelectorAll('.image-field-row');
-      // الحصول على بيانات الـ topic و الـ subtopic من select
       let subtopicSelect = document.getElementById('subtopicSelect');
       let optionText = subtopicSelect.options[subtopicSelect.selectedIndex].text;
       let parts = optionText.match(/^\[(.+)\]\s*-\s*(.+)$/);
@@ -732,8 +667,7 @@
           let file = fileIn.files[0];
           let prog = row.querySelector('.progress');
           let pbar = prog.querySelector('.progress-bar');
-          // إرسال معطيات إضافية: questionNumber, topic, subtopic
-          let result = await uploadImageToGitHub(file, prog, pbar, { questionNumber: qnum, topic, subtopic });
+          let result = await uploadImageToGitHub(file, prog, pbar, { topic, subtopic, questionNumber: qnum } );
           if(result.url){
             if(!dataMap[qnum]) dataMap[qnum] = [];
             dataMap[qnum].push(`<br><img src='${result.url}' alt='Image for Q${qnum}' style='max-width:100%; height:auto;' data-filepath='${result.filePath}'>`);
@@ -772,7 +706,6 @@
           progressBar.style.width = "50%";
           progressBar.textContent = "Uploading";
           try {
-            // إرسال معطيات إضافية إذا كانت موجودة
             let payload = { 
               name: file.name, 
               base64: base64 
@@ -816,9 +749,13 @@
         // استخراج النص الغامق من السؤال
         let boldMatch = q.question.match(/<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i);
         let boldPart = boldMatch ? boldMatch[2].trim() : '';
-        // استخراج الصورة إن وُجدت
-        let imgMatch = q.question.match(/<img\s+[^>]*src=['"]([^'"]+)['"]/i);
-        let currentImage = imgMatch ? imgMatch[1] : "";
+        // استخراج الصورة إن وُجدت مع الحصول على data-filepath إن وُجد
+        let imgElement = null;
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(q.question, 'text/html');
+        imgElement = doc.querySelector('img');
+        let currentImage = imgElement ? imgElement.getAttribute('src') : "";
+        let currentFilePath = imgElement ? imgElement.getAttribute('data-filepath') : "";
         // إزالة وسوم <br> من نص السؤال
         let textWithoutBr = q.question.replace(/<br\s*\/?>/gi, " ");
         // إزالة وسم الصورة والنص الغامق للحصول على نص السؤال الفعلي
@@ -841,7 +778,7 @@
           <div class="mb-2">
             <label>Image:</label>
             <div id="imagePreview-${index}" class="mb-2">
-              ${ currentImage ? `<img src="${currentImage}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;" data-filepath="">` : 'No image' }
+              ${ currentImage ? `<img src="${currentImage}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;" data-filepath="${currentFilePath}">` : 'No image' }
             </div>
             <input type="file" class="form-control mt-2 image-file" data-index="${index}" accept="image/*">
             <button class="btn btn-danger btn-sm mt-2" onclick="deleteImage(${index})">Delete Image</button>
@@ -863,46 +800,10 @@
         let containerDiv = document.createElement('div');
         containerDiv.innerHTML = html;
         containerDiv.id = `q-${index+1}`;
-    
-        // عرض خيارات السؤال مع زر راديو
-        let optionGroup = containerDiv.querySelector(`#optionGroup-${index}`);
-        q.options.forEach((opt, optIndex) => {
-          let groupDiv = document.createElement('div');
-          groupDiv.className = "input-group mb-1";
-    
-          let radio = document.createElement('input');
-          radio.type = "radio";
-          radio.name = "correctOption_" + index;
-          radio.className = "form-check-input";
-          radio.style.marginTop = "auto";
-          radio.style.marginBottom = "auto";
-          radio.value = optIndex;
-          if(q.answer === optIndex) radio.checked = true;
-          radio.onchange = function() {
-            q.answer = parseInt(this.value);
-            let opts = [];
-            let inputs = optionGroup.querySelectorAll('input[type="text"]');
-            inputs.forEach(inp => opts.push(inp.value));
-            q.answerText = opts[q.answer] || "";
-          };
-    
-          let optInput = document.createElement('input');
-          optInput.type = 'text';
-          optInput.value = opt.replace('***', '').trim();
-          optInput.className = 'form-control';
-          optInput.dataset.index = index;
-          optInput.dataset.optIndex = optIndex;
-          optInput.oninput = function(){
-            if(q.answer === parseInt(this.dataset.optIndex)) {
-              q.answerText = this.value;
-            }
-          };
-    
-          groupDiv.appendChild(radio);
-          groupDiv.appendChild(optInput);
-          optionGroup.appendChild(groupDiv);
-        });
-    
+        // إذا كان السؤال يحتوي على صورة، نخزن مسار الصورة في data attribute
+        if(currentFilePath) {
+          containerDiv.setAttribute('data-image-filepath', currentFilePath);
+        }
         container.appendChild(containerDiv);
       });
     }
@@ -930,26 +831,49 @@
         const correctAnswer = selectedRadio ? parseInt(selectedRadio.value) : 0;
         const explanation = document.querySelector(`.explanation[data-index="${index}"]`).value;
         const newAnswerText = options[correctAnswer] || "";
-    
-        let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
+        
         let newImageUrl = "";
-        if(imageFileInput && imageFileInput.files.length > 0) {
-          let progressContainer = document.getElementById(`uploadProgress-${index}`);
-          // في حالة تحديث الصورة لن يتم إرسال معطيات إضافية (يمكن تعديلها إذا لزم الأمر)
-          newImageUrl = await uploadImageToGitHub(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild);
-          newImageUrl = newImageUrl.url;
+        let newImageFilePath = "";
+        const containerDiv = document.getElementById(`q-${index+1}`);
+        const previewDiv = document.getElementById(`imagePreview-${index}`);
+        // إذا كان هناك علامة لحذف الصورة (يتم تعيينها عند الضغط على Delete Image)
+        if(containerDiv.getAttribute('data-delete-image') === 'true') {
+          newImageUrl = "";
+          newImageFilePath = "";
+          // إذا كان للسؤال صورة سابقة (محفوظة في data attribute) نقوم بمحاولة حذفها من المستودع
+          let oldFilePath = containerDiv.getAttribute('data-image-filepath');
+          if(oldFilePath) {
+            await fetch('/api/delete-file?filePath=' + encodeURIComponent(oldFilePath), { method: 'DELETE' });
+          }
         } else {
-          let previewDiv = document.getElementById(`imagePreview-${index}`);
-          if(previewDiv && previewDiv.querySelector('img')) {
-            newImageUrl = previewDiv.querySelector('img').src;
+          let imageFileInput = document.querySelector(`.image-file[data-index="${index}"]`);
+          if(imageFileInput && imageFileInput.files.length > 0) {
+            let progressContainer = document.getElementById(`uploadProgress-${index}`);
+            let subtopicSelect = document.getElementById('subtopicSelect');
+            let optionText = subtopicSelect.options[subtopicSelect.selectedIndex].text;
+            let parts = optionText.match(/^\[(.+)\]\s*-\s*(.+)$/);
+            let topic = parts ? parts[1].trim() : "";
+            let subtopic = parts ? parts[2].trim() : "";
+            let uploadResult = await uploadImageToGitHub(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild, { topic, subtopic, questionNumber: index+1 } );
+            newImageUrl = uploadResult.url;
+            newImageFilePath = uploadResult.filePath;
+          } else if(previewDiv && previewDiv.innerHTML.trim() !== "No image") {
+            let existingImg = previewDiv.querySelector('img');
+            newImageUrl = existingImg.src;
+            newImageFilePath = existingImg.getAttribute('data-filepath') || "";
           }
         }
-    
+        
         let newQuestion = `<span style="color: darkred; font-weight:bold;">${boldPrefix}</span> ${questionText}`;
         if(newImageUrl) {
-          newQuestion += `<br><img src="${newImageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;">`;
+          newQuestion += `<br><img src="${newImageUrl}" alt="Image for Q${index+1}" style="max-width:100%; height:auto;" data-filepath="${newImageFilePath}">`;
+          // نخزن مسار الصورة الجديد في العنصر لتستخدم لاحقاً
+          document.getElementById(`q-${index+1}`).setAttribute('data-image-filepath', newImageFilePath);
+        } else {
+          // نحذف السمة إذا لم توجد صورة
+          document.getElementById(`q-${index+1}`).removeAttribute('data-image-filepath');
         }
-    
+        
         currentQuestions[index] = {
           ...currentQuestions[index],
           question: newQuestion,
@@ -958,8 +882,7 @@
           answerText: newAnswerText,
           explanation: explanation
         };
-    
-        // إظهار علامة صح عند نجاح التحديث
+        
         let btn = document.getElementById("updateBtn-" + index);
         btn.innerHTML = "Update Question <i class='bi bi-check-circle-fill text-success'></i>";
         setTimeout(() => { btn.innerHTML = "Update Question"; }, 2000);
@@ -970,29 +893,16 @@
       }
     }
     
-    // تعديل دالة deleteImage لتأكيد حذف الصورة من الواجهة ومن المستودع
+    // تعديل دالة deleteImage: عند الضغط نضع علامة في العنصر الأم لتحديد حذف الصورة
     function deleteImage(index) {
+      let containerDiv = document.getElementById(`q-${index+1}`);
       let previewDiv = document.getElementById(`imagePreview-${index}`);
-      if(previewDiv){
-        let img = previewDiv.querySelector('img');
-        if(img && img.getAttribute('data-filepath')){
-          let filePath = img.getAttribute('data-filepath');
-          // حذف الصورة من المستودع عبر الـ API
-          fetch('/api/delete-file?filePath=' + encodeURIComponent(filePath), {
-            method: 'DELETE'
-          })
-          .then(res => res.json())
-          .then(result => {
-            if(result.success) {
-              console.log('Image deleted from GitHub');
-            } else {
-              console.error('Failed to delete image from GitHub:', result.error);
-            }
-          })
-          .catch(err => console.error('Error deleting image:', err));
-        }
-        previewDiv.innerHTML = 'No image';
+      // إذا كانت الصورة موجودة مع data-filepath نقوم بتعيين السمة لحذفها لاحقاً
+      let img = previewDiv.querySelector('img');
+      if(img && img.getAttribute('data-filepath')) {
+        containerDiv.setAttribute('data-delete-image', 'true');
       }
+      previewDiv.innerHTML = 'No image';
       let fileInput = document.querySelector(`.image-file[data-index="${index}"]`);
       if(fileInput){
         fileInput.value = "";
@@ -1054,7 +964,6 @@
         };
         actionsDiv.appendChild(downBtn);
     
-        // زر حذف المجموعة
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger btn-sm';
         deleteBtn.textContent = 'Delete Group';
