@@ -711,9 +711,17 @@
       alert("Conversion completed!");
     }
     
+    // تعديل دالة handleImagesAndBind لإرسال معطيات إضافية (topic, subtopic, questionNumber)
     async function handleImagesAndBind(questionsArr){
       let c = document.getElementById('imageContainer');
       let rows = c.querySelectorAll('.image-field-row');
+      // الحصول على بيانات الـ topic و الـ subtopic من select
+      let subtopicSelect = document.getElementById('subtopicSelect');
+      let optionText = subtopicSelect.options[subtopicSelect.selectedIndex].text;
+      let parts = optionText.match(/^\[(.+)\]\s*-\s*(.+)$/);
+      let topic = parts ? parts[1].trim() : "";
+      let subtopic = parts ? parts[2].trim() : "";
+      
       let dataMap = {};
       for(let row of rows){
         let inputs = row.querySelectorAll('input');
@@ -724,7 +732,8 @@
           let file = fileIn.files[0];
           let prog = row.querySelector('.progress');
           let pbar = prog.querySelector('.progress-bar');
-          let result = await uploadImageToGitHub(file, prog, pbar);
+          // إرسال معطيات إضافية: questionNumber, topic, subtopic
+          let result = await uploadImageToGitHub(file, prog, pbar, { questionNumber: qnum, topic, subtopic });
           if(result.url){
             if(!dataMap[qnum]) dataMap[qnum] = [];
             dataMap[qnum].push(`<br><img src='${result.url}' alt='Image for Q${qnum}' style='max-width:100%; height:auto;' data-filepath='${result.filePath}'>`);
@@ -744,7 +753,8 @@
       });
     }
     
-    function uploadImageToGitHub(file, progressContainer, progressBar) {
+    // تعديل دالة uploadImageToGitHub لقبول معطيات إضافية وإرسالها إلى الخادم
+    function uploadImageToGitHub(file, progressContainer, progressBar, extraParams) {
       return new Promise((resolve) => {
         if (!file) {
           return resolve({url:"", filePath:""});
@@ -762,13 +772,20 @@
           progressBar.style.width = "50%";
           progressBar.textContent = "Uploading";
           try {
+            // إرسال معطيات إضافية إذا كانت موجودة
+            let payload = { 
+              name: file.name, 
+              base64: base64 
+            };
+            if(extraParams){
+              payload.topic = extraParams.topic;
+              payload.subtopic = extraParams.subtopic;
+              payload.questionNumber = extraParams.questionNumber;
+            }
             const response = await fetch('/api/upload-image', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: file.name,
-                base64: base64
-              })
+              body: JSON.stringify(payload)
             });
             const result = await response.json();
             if(result.success) {
@@ -918,6 +935,7 @@
         let newImageUrl = "";
         if(imageFileInput && imageFileInput.files.length > 0) {
           let progressContainer = document.getElementById(`uploadProgress-${index}`);
+          // في حالة تحديث الصورة لن يتم إرسال معطيات إضافية (يمكن تعديلها إذا لزم الأمر)
           newImageUrl = await uploadImageToGitHub(imageFileInput.files[0], progressContainer, progressContainer.firstElementChild);
           newImageUrl = newImageUrl.url;
         } else {
@@ -952,12 +970,14 @@
       }
     }
     
+    // تعديل دالة deleteImage لتأكيد حذف الصورة من الواجهة ومن المستودع
     function deleteImage(index) {
       let previewDiv = document.getElementById(`imagePreview-${index}`);
       if(previewDiv){
         let img = previewDiv.querySelector('img');
         if(img && img.getAttribute('data-filepath')){
           let filePath = img.getAttribute('data-filepath');
+          // حذف الصورة من المستودع عبر الـ API
           fetch('/api/delete-file?filePath=' + encodeURIComponent(filePath), {
             method: 'DELETE'
           })
