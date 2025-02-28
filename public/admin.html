@@ -173,6 +173,21 @@
         <!-- رسالة تأكيد تحميل الأسئلة -->
         <div id="loadMessage"></div>
         <hr>
+        <!-- مكان إدخال الأسئلة الجديدة: prefix, startQNumber, questionsText, image fields -->
+        <div class="mb-3">
+          <label for="questionsText" class="form-label">Add New Questions</label>
+          <input type="text" id="prefixInput" class="form-control mb-2" placeholder="Prefix (optional) e.g. Dr. Ali -">
+          <div class="row g-2 mb-2">
+            <div class="col-md-3">
+              <input type="number" id="startQNumber" class="form-control" value="1" min="1" placeholder="Start Q#">
+            </div>
+          </div>
+          <textarea id="questionsText" class="form-control" rows="6" placeholder="Enter questions text..."></textarea>
+        </div>
+        <div class="mb-3">
+          <button class="btn btn-warning btn-custom" onclick="addImageField()">Add Image Field</button>
+        </div>
+        <div id="imageContainer" class="mb-3"></div>
         <div class="row g-2 mb-3">
           <div class="col-md-6">
             <button class="btn btn-primary btn-custom" onclick="convertAndAppend()">Convert &amp; Append</button>
@@ -351,7 +366,7 @@
       alert("Operation completed.");
     }
     
-    // Load/Save Topics Functions
+    // =========== Load/Save Topics ===========
     async function loadTopics(){
       try{
         let r = await fetch('/api/topics');
@@ -379,6 +394,7 @@
       } catch(e){}
     }
     
+    // =========== Render Topics + Subtopics ===========
     function renderTopics(){
       let list = document.getElementById('topicsList');
       list.innerHTML = '';
@@ -575,6 +591,7 @@
       } catch(e){}
     }
     
+    // =========== Render + Edit Questions ===========
     function renderEditableQuestions() {
       let container = document.getElementById('questionsEditList');
       container.innerHTML = '';
@@ -748,9 +765,7 @@
       });
     }
     
-    //////////////////////////////////////////////////////////////////////////////////
-    // [ إضافة دالة updateAllQuestionIds() ]
-    //////////////////////////////////////////////////////////////////////////////////
+    // =========== دالة تحديث المعرفات بعد تغيير الترتيب ===========
     function updateAllQuestionIds() {
       let subtopicSelect = document.getElementById('subtopicSelect');
       if (!subtopicSelect || subtopicSelect.selectedIndex < 0) return;
@@ -766,10 +781,8 @@
       }
       console.log("Updated question IDs:", currentQuestions.map(q => q.id));
     }
-    //////////////////////////////////////////////////////////////////////////////////
-    // [ نهاية دالة updateAllQuestionIds() ]
-    //////////////////////////////////////////////////////////////////////////////////
     
+    // =========== تحويل النص إلى أسئلة وإضافتها ===========
     async function convertAndAppend(){
       if(!currentSubtopicPath) return;
       let prefix = document.getElementById('prefixInput').value.trim();
@@ -795,6 +808,7 @@
           return;
         }
       } catch(e){}
+      
       let lines = text.split('\n');
       let questionText = null, options = [], ansIdx = -1, ansText = null, explanation = null;
       let out = [];
@@ -836,6 +850,45 @@
       alert("Conversion completed!");
     }
     
+    // =========== إضافة حقول الصور (Image Field) وربطها بالأسئلة ===========
+    function addImageField(){
+      let c = document.getElementById('imageContainer');
+      let row = document.createElement('div');
+      row.classList.add('image-field-row', 'mb-2');
+    
+      let qNum = document.createElement('input');
+      qNum.type = 'number';
+      qNum.placeholder = 'Q#';
+      qNum.min = 1;
+      qNum.className = 'form-control';
+      qNum.style.maxWidth = '100px';
+    
+      let fileIn = document.createElement('input');
+      fileIn.type = 'file';
+      fileIn.accept = 'image/*';
+      fileIn.className = 'form-control';
+    
+      let delBtn = document.createElement('button');
+      delBtn.textContent = 'Remove';
+      delBtn.className = 'btn btn-warning';
+      delBtn.onclick = () => c.removeChild(row);
+    
+      let prog = document.createElement('div');
+      prog.classList.add('progress');
+      prog.style.height = '24px';
+      prog.style.display = 'none';
+      let pbar = document.createElement('div');
+      pbar.classList.add('progress-bar');
+      pbar.textContent = '0%';
+      prog.appendChild(pbar);
+    
+      row.appendChild(qNum);
+      row.appendChild(fileIn);
+      row.appendChild(delBtn);
+      row.appendChild(prog);
+      c.appendChild(row);
+    }
+    
     async function handleImagesAndBind(questionsArr){
       let c = document.getElementById('imageContainer');
       let rows = c.querySelectorAll('.image-field-row');
@@ -850,16 +903,15 @@
         let inputs = row.querySelectorAll('input');
         let qnum = parseInt(inputs[0].value, 10);
         if(!qnum) continue;
-        let fileIn = inputs[1];
-        if(fileIn.files && fileIn.files.length > 0){
-          let file = fileIn.files[0];
-          let prog = row.querySelector('.progress');
-          let pbar = prog.querySelector('.progress-bar');
-          let result = await uploadImageToGitHub(file, prog, pbar, { questionNumber: qnum, topic, subtopic });
-          if(result.url){
-            if(!dataMap[qnum]) dataMap[qnum] = [];
-            dataMap[qnum].push(`<br><img src='${result.url}' alt='Image for Q${qnum}' style='max-width:100%; height:auto;' data-filepath='${result.filePath}'>`);
-          }
+        let file = inputs[1].files ? inputs[1].files[0] : null;
+        if(!file) continue;
+        
+        let prog = row.querySelector('.progress');
+        let pbar = prog.querySelector('.progress-bar');
+        let result = await uploadImageToGitHub(file, prog, pbar, { questionNumber: qnum, topic, subtopic });
+        if(result.url){
+          if(!dataMap[qnum]) dataMap[qnum] = [];
+          dataMap[qnum].push(`<br><img src='${result.url}' alt='Image for Q${qnum}' style='max-width:100%; height:auto;' data-filepath='${result.filePath}'>`);
         }
       }
       questionsArr.forEach(obj => {
@@ -893,10 +945,7 @@
           progressBar.style.width = "50%";
           progressBar.textContent = "Uploading";
           try {
-            let payload = { 
-              name: file.name, 
-              base64: base64 
-            };
+            let payload = { name: file.name, base64: base64 };
             if(extraParams){
               payload.topic = extraParams.topic;
               payload.subtopic = extraParams.subtopic;
@@ -927,7 +976,107 @@
       });
     }
     
-    // Bulk Reorder Functions (example for moveGroupUp and moveGroupDown)
+    // =========== Bulk Reorder (Groups) ===========
+    function detectBoldGroups() {
+      const groups = [];
+      const regex = /<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i;
+      currentQuestions.forEach((q, index) => {
+        const match = q.question.match(regex);
+        if(match) {
+          let boldContent = match[2];
+          let parts = boldContent.split(/- Question/i);
+          if(parts.length > 0) {
+            let groupName = parts[0].trim();
+            if(groupName) {
+              let existing = groups.find(g => g.title === groupName);
+              if(existing) {
+                existing.indices.push(index);
+              } else {
+                groups.push({ title: groupName, indices: [index] });
+              }
+            }
+          }
+        }
+      });
+      groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
+      return groups;
+    }
+    
+    function renderBoldGroups(boldGroups) {
+      const container = document.getElementById('boldGroupsList');
+      container.innerHTML = '';
+      boldGroups.forEach((group) => {
+        const start = Math.min(...group.indices) + 1;
+        const end = Math.max(...group.indices) + 1;
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'group-card';
+        groupDiv.innerHTML = `<h5>${group.title} ( Q : ${start} - ${end} )</h5>`;
+    
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'group-actions';
+    
+        const upBtn = document.createElement('button');
+        upBtn.className = 'btn btn-secondary btn-sm';
+        upBtn.textContent = 'Group Up';
+        upBtn.onclick = function() {
+          moveGroupUp(group.title);
+        };
+        actionsDiv.appendChild(upBtn);
+    
+        const downBtn = document.createElement('button');
+        downBtn.className = 'btn btn-secondary btn-sm';
+        downBtn.textContent = 'Group Down';
+        downBtn.onclick = function() {
+          moveGroupDown(group.title);
+        };
+        actionsDiv.appendChild(downBtn);
+    
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger btn-sm';
+        deleteBtn.textContent = 'Delete Group';
+        deleteBtn.onclick = async function() {
+          await deleteGroup(group.title);
+        };
+        actionsDiv.appendChild(deleteBtn);
+    
+        groupDiv.appendChild(actionsDiv);
+        container.appendChild(groupDiv);
+      });
+    }
+    
+    async function loadBoldGroups() {
+      try {
+        if (!currentSubtopicPath) {
+          alert("Please select and load a subtopic first!");
+          return;
+        }
+        const boldGroups = detectBoldGroups();
+        if(boldGroups.length === 0) {
+          alert("No groups found! Ensure questions have this format:\n<span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>");
+          return;
+        }
+        renderBoldGroups(boldGroups);
+      } catch (error) {
+        console.error("Load Bold Groups Error:", error);
+        alert("Error loading groups. Check console.");
+      }
+    }
+    
+    async function deleteGroup(groupTitle) {
+      let conf = await confirm("Are you sure you want to delete this group of questions?");
+      if(!conf) return;
+      let groups = detectBoldGroups();
+      let targetGroup = groups.find(g => g.title === groupTitle);
+      if(!targetGroup) return;
+      let indicesToDelete = targetGroup.indices.sort((a, b) => b - a);
+      indicesToDelete.forEach(i => {
+        currentQuestions.splice(i, 1);
+      });
+      updateAllQuestionIds();
+      renderEditableQuestions();
+      loadBoldGroups();
+    }
+    
     function moveGroupUp(groupTitle) {
       const groups = detectBoldGroups();
       groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
@@ -976,64 +1125,6 @@
       loadBoldGroups();
     }
     
-    function detectBoldGroups() {
-      const groups = [];
-      const regex = /<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i;
-      currentQuestions.forEach((q, index) => {
-        const match = q.question.match(regex);
-        if(match) {
-          let boldContent = match[2];
-          let parts = boldContent.split(/- Question/i);
-          if(parts.length > 0) {
-            let groupName = parts[0].trim();
-            if(groupName) {
-              let existing = groups.find(g => g.title === groupName);
-              if(existing) {
-                existing.indices.push(index);
-              } else {
-                groups.push({ title: groupName, indices: [index] });
-              }
-            }
-          }
-        }
-      });
-      groups.sort((a, b) => Math.min(...a.indices) - Math.min(...b.indices));
-      return groups;
-    }
-    
-    async function loadBoldGroups() {
-      try {
-        if (!currentSubtopicPath) {
-          alert("Please select and load a subtopic first!");
-          return;
-        }
-        const boldGroups = detectBoldGroups();
-        if(boldGroups.length === 0) {
-          alert("No groups found! Ensure questions have this format:\n<span style='color: darkred; font-weight:bold;'>Group Name - Question X</span>");
-          return;
-        }
-        renderBoldGroups(boldGroups);
-      } catch (error) {
-        console.error("Load Bold Groups Error:", error);
-        alert("Error loading groups. Check console.");
-      }
-    }
-    
-    async function deleteGroup(groupTitle) {
-      let conf = await confirm("Are you sure you want to delete this group of questions?");
-      if(!conf) return;
-      let groups = detectBoldGroups();
-      let targetGroup = groups.find(g => g.title === groupTitle);
-      if(!targetGroup) return;
-      let indicesToDelete = targetGroup.indices.sort((a, b) => b - a);
-      indicesToDelete.forEach(i => {
-        currentQuestions.splice(i, 1);
-      });
-      updateAllQuestionIds();
-      renderEditableQuestions();
-      loadBoldGroups();
-    }
-    
     function jumpToQuestion() {
       let qNum = parseInt(document.getElementById('jumpToQuestion').value);
       if(isNaN(qNum) || qNum < 1 || qNum > currentQuestions.length) return;
@@ -1042,6 +1133,78 @@
         target.scrollIntoView({behavior: 'smooth', block: 'start'});
         target.style.background = '#fff3e0';
         setTimeout(() => target.style.background = '', 2000);
+      }
+    }
+    
+    // =========== إضافة زر لإضافة IDs لكل الملفات ===========
+    async function addIdsToAllFiles() {
+      try {
+        if (!cachedTopics || cachedTopics.length === 0) {
+          await loadTopics();
+          if (!cachedTopics || cachedTopics.length === 0) {
+            alert("No topics found to process.");
+            return;
+          }
+        }
+        const usedIDs = new Set();
+
+        // التكرار على كل Topic وكل Subtopic
+        for (const topicObj of cachedTopics) {
+          if (!topicObj.subTopics) continue;
+          for (const sub of topicObj.subTopics) {
+            if (!sub.file) continue;
+            let getUrl = "/api/get-subtopic-file?path=" + encodeURIComponent(sub.file);
+            let resp = await fetch(getUrl);
+            let data = await resp.json();
+            if (!data.success) {
+              console.warn("Failed to load subtopic:", sub.file);
+              continue;
+            }
+            let questionsArr = data.content || [];
+            let shaVal = data.sha || null;
+            let updated = false;
+  
+            for (let i = 0; i < questionsArr.length; i++) {
+              let q = questionsArr[i];
+              if (!q.id) {
+                let topicPart = topicObj.topicName.toLowerCase().substring(0, 4);
+                let subPart = sub.name.toLowerCase().substring(0, 3);
+                let questionNumber = i + 1;
+                let newID = `${topicPart}-${subPart}-q${questionNumber}`;
+                q.id = newID;
+                usedIDs.add(newID);
+                updated = true;
+              } else {
+                usedIDs.add(q.id);
+              }
+            }
+  
+            if (updated) {
+              let saveBody = {
+                path: sub.file,
+                content: questionsArr,
+                sha: shaVal
+              };
+              let saveResp = await fetch('/api/update-subtopic-file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(saveBody)
+              });
+              let saveData = await saveResp.json();
+              if (!saveData.success) {
+                console.error("Failed to save subtopic:", sub.file, saveData.error);
+              } else {
+                console.log("IDs added/saved for:", sub.file);
+              }
+            } else {
+              console.log("No new IDs needed in:", sub.file);
+            }
+          }
+        }
+        alert("Add IDs operation completed for all subtopics.");
+      } catch (err) {
+        console.error("Error in addIdsToAllFiles:", err);
+        alert("Error occurred while adding IDs. Check console for details.");
       }
     }
   </script>
