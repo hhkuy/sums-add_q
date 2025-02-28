@@ -98,7 +98,6 @@
       right: 30px;
       transform: translateY(calc(-50% - 30px));
     }
-
     /* مثال: زر النقل الإضافي */
     #floatSaveBtn {
       top: 50%;
@@ -694,16 +693,25 @@
       let lines = text.split('\n');
       let questionText = null, options = [], ansIdx = -1, ansText = null, explanation = null;
       let out = [];
+      
+      // NEW CODE: لتعقب آخر قسم تم التعرّف عليه (question / option / explanation)
+      let lastSection = null;
+      
       for(let i = 0; i < lines.length; i++){
         let ln = lines[i].trim();
         let qM = ln.match(/^(\d+)\.\s+(.*)/);
         if(qM){
+          // إذا كانت هناك بيانات سؤال سابق قبل البدء بسؤال جديد
           if(questionText !== null){
             out.push({question: questionText, options, answer: ansIdx, answerText: ansText, explanation, userAnswer: null});
           }
           questionText = `<span style='color: darkred; font-weight:bold;'>${prefix ? prefix + ' ' : ''}Question ${startNumber}</span> ${qM[2]}`;
           startNumber++;
-          options = []; ansIdx = -1; ansText = null; explanation = null;
+          options = [];
+          ansIdx = -1;
+          ansText = null;
+          explanation = null;
+          lastSection = 'question'; // تعرفنا على سؤال جديد
         } else {
           let opt = ln.match(/^([A-F])\.\s+(.*)/i);
           if(opt){
@@ -714,10 +722,22 @@
               ansText = txt;
             }
             options.push(txt);
+            lastSection = 'option'; // تعرفنا على خيار
           } else {
             let ex = ln.match(/^Explanation\s*:\s*(.*)/i);
             if(ex){
               explanation = ex[1];
+              lastSection = 'explanation'; // تعرفنا على تفسير
+            } else {
+              // NEW CODE: إذا لم ينطبق أي نمط، نلحق النص بآخر قسم معروف
+              if(lastSection === 'question' && questionText !== null){
+                questionText += ' ' + ln;
+              } else if(lastSection === 'option' && options.length > 0){
+                let lastOptIndex = options.length - 1;
+                options[lastOptIndex] += ' ' + ln;
+              } else if(lastSection === 'explanation' && explanation !== null){
+                explanation += ' ' + ln;
+              }
             }
           }
         }
@@ -1095,6 +1115,15 @@
           await deleteGroup(group.title);
         };
         actionsDiv.appendChild(deleteBtn);
+        
+        // NEW CODE: زر إعادة التسمية بجانب زر الحذف
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'btn btn-info btn-sm me-1';
+        renameBtn.textContent = 'Rename Group';
+        renameBtn.onclick = async function() {
+          await renameGroup(group.title);
+        };
+        actionsDiv.appendChild(renameBtn);
     
         groupDiv.appendChild(actionsDiv);
         container.appendChild(groupDiv);
@@ -1220,17 +1249,14 @@
       }
     }
     
-    // NEW CODE: دالة مساعدة لتوليد ID بناءً على أول 4 أحرف من الموضوع وأول 4 أحرف من الـ subtopic ورقم السؤال
+    // NEW CODE: دالة مساعدة لتوليد ID
     function generateQuestionID(topicAbbr, subtopicAbbr, questionIndex){
-      // مثال: nerv-anat-q1
       return `${topicAbbr}-${subtopicAbbr}-q${questionIndex+1}`;
     }
     
     // NEW CODE: دالة لتحديث جميع الـ IDs بعد أي عملية
     function refreshAllIDs(){
-      // في حال لم يتم اختيار subtopic بعد
       if(!currentSubtopicPath) return;
-      
       let subtopicSelect = document.getElementById('subtopicSelect');
       if(!subtopicSelect.value) return;
       
@@ -1239,23 +1265,19 @@
       let topic = parts ? parts[1].trim() : "";
       let subtopic = parts ? parts[2].trim() : "";
       
-      // أخذ أول 4 أحرف (lowercase) من كل منهما
       let topicAbbr = topic.substring(0,4).toLowerCase();
       let subtopicAbbr = subtopic.substring(0,4).toLowerCase();
       
       for(let i=0; i<currentQuestions.length; i++){
-        // إعادة ضبط الـ ID ليعكس ترتيبه الحالي
         currentQuestions[i].qID = generateQuestionID(topicAbbr, subtopicAbbr, i);
       }
     }
     
-    // NEW CODE: دالة لإضافة IDs لجميع الملفات (جميع الـ subtopics) بضغطة زر واحدة
+    // NEW CODE: زر عام لتحديث كل ملفات الـ subtopics في جميع المواضيع
     async function assignIdsToAllSubtopics(){
-      // نحتاج لتحميل جميع الـ subtopics وتحديثها وإعادة حفظها إذا تغيرت
       let confirmAction = await confirm("This will assign IDs to all subtopics. Continue?");
       if(!confirmAction) return;
       
-      // تأكد من أن لدينا قائمة بالمواضيع المحمّلة
       if(!cachedTopics || !Array.isArray(cachedTopics) || cachedTopics.length===0){
         alert("Load topics first!");
         return;
@@ -1271,34 +1293,26 @@
           let st = topicObj.subTopics[s];
           if(!st.file) continue;
           
-          // 1) جلب محتوى subtopic
-          let subtopicFile = st.file;
           try {
-            let res = await fetch('/api/get-subtopic-file?path=' + encodeURIComponent(subtopicFile));
+            let res = await fetch('/api/get-subtopic-file?path=' + encodeURIComponent(st.file));
             let j = await res.json();
             if(!j.success) continue;
             
             let arr = j.content || [];
             let fileSha = j.sha;
             if(!Array.isArray(arr)) arr = [];
-            
-            // إذا الملف فارغ أو لا يحتوي أسئلة، أكمل
             if(arr.length===0) continue;
             
-            // 2) الحصول على أوائل الأحرف من اسم الموضوع وهذا الـ subtopic
             let topicName = topicObj.topicName || "";
             let subtopicName = st.name || "";
             let topicAbbr = topicName.substring(0,4).toLowerCase();
             let subtopicAbbr = subtopicName.substring(0,4).toLowerCase();
             
-            // 3) توليد الـ IDs لجميع الأسئلة التي لا تحتوي على qID أو سنقوم دائمًا بتحديث ترتيبها
             for(let i=0; i<arr.length; i++){
               arr[i].qID = generateQuestionID(topicAbbr, subtopicAbbr, i);
             }
             
-            // 4) حفظ التحديث في المستودع
-            let newContent = JSON.stringify(arr, null, 2);
-            let saveBody = { path: subtopicFile, content: arr, sha: fileSha };
+            let saveBody = { path: st.file, content: arr, sha: fileSha };
             let saveReq = await fetch('/api/update-subtopic-file', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -1308,14 +1322,41 @@
             if(saveRes.success){
               updatedFilesCount++;
             }
-            
           } catch(e) {
-            console.error("Error in assignIdsToAllSubtopics for file:", subtopicFile, e);
+            console.error("Error in assignIdsToAllSubtopics for file:", st.file, e);
           }
         }
       }
       
       alert(`Done assigning IDs for all subtopics! Updated files count: ${updatedFilesCount}`);
+    }
+    
+    // NEW CODE: دالة إعادة تسمية المجموعة
+    async function renameGroup(oldTitle){
+      let newName = await prompt("Enter new group name:", oldTitle);
+      if(!newName || !newName.trim()) return;
+      
+      const regex = /<span\s+style=(["'])(?:(?!\1).)*font-weight:\s*bold;?(?:(?!\1).)*\1>(.*?)<\/span>/i;
+      for (let i=0; i<currentQuestions.length; i++){
+        let q = currentQuestions[i];
+        let match = q.question.match(regex);
+        if(match){
+          let boldContent = match[2].trim();
+          let parts = boldContent.split(/- Question/i);
+          if(parts.length > 0){
+            let groupName = parts[0].trim();
+            if(groupName === oldTitle){
+              let rest = boldContent.substring(groupName.length);
+              let newBold = newName + rest;
+              let newSpan = `<span style="color: darkred; font-weight:bold;">${newBold}</span>`;
+              q.question = q.question.replace(match[0], newSpan);
+            }
+          }
+        }
+      }
+      // إعادة العرض
+      renderEditableQuestions();
+      loadBoldGroups();
     }
   </script>
 </body>
